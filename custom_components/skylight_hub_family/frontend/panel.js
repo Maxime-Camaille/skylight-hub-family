@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.6';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.7';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -69,113 +69,141 @@ const CSS = `
 .rail .ri svg.fl,.tabbar .ri svg.fl{display:none}
 .rail .ri.on svg.fl,.tabbar .ri.on svg.fl{display:block}
 .rail .ri.on svg.ov,.tabbar .ri.on svg.ov{display:none}
-/* ---------- installation (onboarding) ----------
-   DA Apple. Les valeurs viennent de DA-APPLE.md §« Annexe » (pages HIG
-   typography et color : table Dynamic Type « Large », couleurs système iOS).
-   Inter remplace SF Pro hors Apple, et le tracking SF est multiplié par 0,72
-   (l'annexe le prévoit : les valeurs SF étouffent Inter). */
-@font-face{font-family:"InterVar";src:url("/skylight-static/fonts/InterVariable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
-.onb{height:100vh;overflow:auto;background:#F2F2F7;color:#000;
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","InterVar","Segoe UI",system-ui,sans-serif;
+/* ---------- installation (onboarding) — porté de maquettes/onboarding_exemple ---------- */
+.onb{min-height:100vh;background:#FAF9F7;color:#1B1B1D;
+  font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   -webkit-font-smoothing:antialiased;
-  --ob-blue:#007AFF;--ob-blue-ring:rgba(0,122,255,.35);
-  --ob-label2:rgba(60,60,67,.6);--ob-sep:rgba(60,60,67,.12);
-  --ob-card:#FFFFFF;--ob-r:28px;--ob-r-in:18px}
-.ob-shell{max-width:1120px;margin:0 auto;padding:clamp(24px,4vw,56px) clamp(20px,4.5vw,56px) 48px;min-height:100%;display:flex;flex-direction:column;box-sizing:border-box}
-.ob-top{display:flex;align-items:center;gap:14px;margin-bottom:clamp(28px,4vw,56px)}
-.ob-mark{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:0 0 44px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.ob-mark img{width:100%;height:100%;display:block;object-fit:cover}
-.ob-brand{font-size:17px;font-weight:600;letter-spacing:-.0187em}
-.ob-progress{margin-left:auto;display:flex;align-items:center;gap:12px;color:var(--ob-label2);font-size:13px;letter-spacing:-.0043em}
-.ob-progress .short{display:none}
-.ob-bar{width:88px;height:4px;border-radius:999px;background:rgba(60,60,67,.16);overflow:hidden}
-.ob-bar i{display:block;height:100%;border-radius:999px;background:var(--ob-blue);transition:width .32s cubic-bezier(.32,.72,0,1)}
-.ob-main{flex:1 1 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,440px);gap:clamp(28px,4vw,64px);align-items:center}
-.ob-main.solo{grid-template-columns:minmax(0,720px);justify-content:center}
-.ob-copy{min-width:0}
-.ob-step{animation:obIn .32s cubic-bezier(.32,.72,0,1)}
-@keyframes obIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.ob-kicker{font-size:13px;font-weight:600;letter-spacing:-.0043em;color:var(--ob-blue);margin:0 0 10px}
-.ob-h1{font-size:clamp(30px,3.4vw,40px);line-height:1.08;font-weight:600;letter-spacing:.006em;margin:0 0 14px;text-wrap:balance}
-.ob-lead{font-size:17px;line-height:1.32;letter-spacing:-.0187em;color:var(--ob-label2);max-width:46ch;margin:0}
-.ob-actions{display:flex;align-items:center;gap:8px;margin-top:clamp(28px,3.4vw,40px);flex-wrap:wrap}
-.ob-actions .end{margin-left:auto}
-.ob-btn{min-height:52px;padding:0 24px;border:0;border-radius:999px;font:inherit;font-size:17px;font-weight:600;letter-spacing:-.0187em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;transition:transform .1s cubic-bezier(.2,.7,.3,1),background-color .16s ease}
-.ob-btn:active{transform:scale(.97)}
-.ob-btn.primary{background:var(--ob-blue);color:#fff}
-.ob-btn.primary:disabled{background:rgba(60,60,67,.18);color:rgba(255,255,255,.9);cursor:default;transform:none}
-.ob-btn.ghost{background:transparent;color:var(--ob-blue);font-weight:500}
-.ob-btn.ghost:active{background:rgba(0,122,255,.1)}
-.ob-btn:focus-visible{outline:3px solid var(--ob-blue-ring);outline-offset:2px}
-.ob-foot{margin-top:16px;font-size:13px;letter-spacing:-.0043em;color:var(--ob-label2)}
-.ob-hero{background:var(--ob-card);border-radius:var(--ob-r);aspect-ratio:1;display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.08)}
-.ob-hero::before{content:'';position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,#EAF3FF 0%,rgba(234,243,255,0) 62%)}
-.ob-hero img{width:44%;max-width:200px;border-radius:26%;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.16)}
-.ob-field{display:block;margin-top:28px}
-.ob-field span{display:block;font-size:13px;letter-spacing:-.0043em;color:var(--ob-label2);margin:0 0 8px 4px}
-.ob-input{width:100%;box-sizing:border-box;height:56px;border:0;border-radius:var(--ob-r-in);background:#fff;padding:0 18px;font:inherit;font-size:17px;letter-spacing:-.0187em;color:#000;outline:none;box-shadow:0 0 0 1px rgba(60,60,67,.08)}
-.ob-input:focus{box-shadow:0 0 0 3px var(--ob-blue-ring)}
-.ob-preview{margin-top:28px;background:var(--ob-card);border-radius:var(--ob-r);padding:22px;box-shadow:0 12px 30px rgba(0,0,0,.06)}
-.ob-preview .initial{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#EAF3FF;color:var(--ob-blue);font-size:20px;font-weight:600;margin-bottom:14px}
-.ob-preview .nm{font-family:inherit;font-size:28px;line-height:1.21;letter-spacing:-.0086em;font-weight:600;overflow-wrap:anywhere}
-.ob-preview .cap{margin-top:10px;font-size:13px;color:var(--ob-label2);letter-spacing:-.0043em}
-.ob-group{background:var(--ob-card);border-radius:var(--ob-r);overflow:hidden;margin-top:28px}
-.ob-row{display:flex;align-items:center;gap:14px;min-height:64px;padding:10px 16px}
-.ob-row + .ob-row{box-shadow:inset 0 1px 0 var(--ob-sep)}
-.ob-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:17px;font-weight:600;flex:0 0 44px;letter-spacing:0}
-.ob-row .txt{min-width:0;display:flex;flex-direction:column;gap:1px}
-.ob-row .nm{display:block;font-family:inherit;font-size:17px;font-weight:600;line-height:1.29;letter-spacing:-.0187em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ob-row .sub{display:block;font-size:13px;line-height:1.38;color:var(--ob-label2);letter-spacing:-.0043em}
-.ob-del{margin-left:auto;width:44px;height:44px;border:0;background:transparent;border-radius:50%;color:rgba(60,60,67,.45);display:grid;place-items:center;cursor:pointer}
-.ob-del:hover{background:rgba(60,60,67,.08)}
-.ob-empty{padding:20px 16px;font-size:15px;letter-spacing:-.0115em;color:var(--ob-label2)}
-.ob-editor{margin-top:16px;background:var(--ob-card);border-radius:var(--ob-r);padding:20px}
-.ob-editor .row{display:flex;gap:12px;align-items:center}
-.ob-editor .row .ob-input{flex:1 1 auto}
-.ob-editor .row .ob-btn{flex:0 0 auto}
-.ob-swatches{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px}
-.ob-sw{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
-.ob-sw.on::after{content:'';position:absolute;inset:-5px;border:2.5px solid var(--ob-blue);border-radius:50%}
-.ob-switch{display:flex;align-items:center;gap:12px;margin-top:18px;font-size:15px;letter-spacing:-.0115em;color:#000;background:none;border:0;padding:0;font-family:inherit;cursor:pointer;text-align:left}
-.ob-track{width:44px;height:26px;border-radius:999px;background:rgba(60,60,67,.22);position:relative;flex:0 0 44px;border:0;padding:0;transition:background-color .2s cubic-bezier(.32,.72,0,1)}
-.ob-track::after{content:'';position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .22s cubic-bezier(.32,.72,0,1)}
-.ob-track.on{background:#34C759}
-.ob-track.on::after{transform:translateX(18px)}
-.ob-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
-.ob-card{background:var(--ob-card);border-radius:var(--ob-r);padding:20px;display:flex;gap:14px;align-items:flex-start}
-.ob-card.wide{grid-column:1/-1;align-items:center}
-.ob-tile{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:0 0 44px;color:var(--ob-blue);background:#EAF3FF;font-size:22px}
-.ob-tile svg{width:22px;height:22px;display:block;fill:currentColor}
-.ob-card h3{font-family:inherit;font-size:17px;font-weight:600;letter-spacing:-.0187em;margin:0 0 2px}
-.ob-card p{font-size:15px;line-height:1.3;letter-spacing:-.0115em;color:var(--ob-label2);margin:0}
-.ob-ready{margin:auto;text-align:center;max-width:560px}
-.ob-ready .avs{display:flex;justify-content:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
-.ob-ready .av{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:24px;font-weight:600;box-shadow:0 0 0 4px #fff,0 6px 16px rgba(0,0,0,.12);letter-spacing:0}
-.ob-ready h1{font-family:inherit;font-size:clamp(30px,3.4vw,40px);line-height:1.08;font-weight:600;letter-spacing:.006em;margin:0 0 12px}
-.ob-ready p{font-size:17px;letter-spacing:-.0187em;color:var(--ob-label2);margin:0}
-.ob-ready .sum{margin-top:8px;font-size:13px;letter-spacing:-.0043em;color:var(--ob-label2)}
-.ob-err{background:#FFE5E3;color:#8A1F1A;border-radius:14px;padding:12px 14px;font-size:15px;letter-spacing:-.0115em;margin-top:16px}
+  --o-ink:#1B1B1D;--o-ink2:#3C3C3E;--o-muted:#8B8B90;--o-muted2:#A8A8AC;
+  --o-line:#EBE8E3;--o-line2:#E4E1DB;--o-blue:#007AFF;--o-blue2:#0A66D6;
+  --o-blue050:#F4F8FE;--o-blue100:#E3EDFD;--o-blue200:#CFE0FB;--o-lav:#E4DBFC;
+  --o-sand:#FDE2CB;--o-mint:#D6F0DE;--o-green:#34C759;--o-red:#F66951;
+  --o-card:#fff;--o-shadow:0 1px 2px rgba(28,28,30,.04),0 10px 30px rgba(28,32,45,.06);
+  --o-soft:0 18px 50px rgba(30,55,110,.10)}
+.onb .nm,.onb .nm b{font-family:inherit;letter-spacing:inherit}\n.o-wrap{min-height:100vh;display:flex;flex-direction:column;max-width:1024px;margin:0 auto;width:100%}
+.o-screen{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.o-left{display:none}
+.o-right{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;padding:0 24px}
+.o-content{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.o-prog{display:flex;gap:6px;justify-content:center;padding:14px 0 4px}
+.o-prog.left{justify-content:flex-start;padding-left:0}
+.o-prog i{display:block;width:26px;height:4px;border-radius:2px;background:#DEDBD6}
+.o-prog i.on{background:var(--o-blue)}
+.o-h1{font-size:34px;line-height:1.206;letter-spacing:.006em;font-weight:700;margin:0;color:var(--o-ink)}
+.o-h1.sm{font-size:30px}
+.o-sub{font-size:17px;line-height:1.38;letter-spacing:-.01em;color:var(--o-muted);margin:12px 0 0;font-weight:400}
+.o-sub.tight{font-size:15.5px;line-height:1.4}
+.o-eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--o-muted2);font-weight:600}
+.o-appicon{border-radius:22%;overflow:hidden;box-shadow:0 6px 18px rgba(0,90,220,.18);display:block}
+.o-btn{display:flex;align-items:center;justify-content:center;height:52px;border-radius:26px;background:var(--o-blue);color:#fff;
+  font:inherit;font-size:17px;font-weight:600;letter-spacing:-.01em;box-shadow:0 1px 2px rgba(16,24,40,.08);width:100%;border:0;cursor:pointer}
+.o-btn:active{transform:scale(.985)}
+.o-btn.ghost{background:transparent;color:var(--o-blue);box-shadow:none;font-weight:500}
+.o-btn.dim{background:#E8E6E2;color:#A9A7A4;box-shadow:none}
+.o-btn.soft{background:var(--o-blue100);color:var(--o-blue2);box-shadow:none}
+.o-btnrow{display:flex;gap:10px;align-items:center}
+.o-back{flex:0 0 auto;width:96px;height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--o-muted);font-weight:500;letter-spacing:-.01em;background:none;border:0;font-family:inherit;cursor:pointer}
+.o-foot{flex:0 0 auto;padding:0;margin-top:auto}
+.o-legal{text-align:center;font-size:13px;color:var(--o-muted2);margin-top:12px;letter-spacing:-.005em}
+.o-link{display:block;text-align:center;font-size:15px;color:var(--o-blue);font-weight:500;margin-top:14px;background:none;border:0;font-family:inherit;cursor:pointer;width:100%}
+.o-benefits{display:flex;flex-direction:column;gap:16px;margin-top:22px;text-align:left;width:100%}
+.o-ben{display:flex;gap:13px;align-items:flex-start}
+.o-ben .ic{flex:0 0 auto;width:38px;height:38px;border-radius:12px;background:var(--o-blue100);display:flex;align-items:center;justify-content:center}
+.o-ben .tx{font-size:15px;line-height:1.32;color:var(--o-ink2);letter-spacing:-.008em}
+.o-ben .tx b{font-weight:650;color:var(--o-ink);font-size:15.5px;display:block;margin-bottom:1px;letter-spacing:-.012em}
+.o-field{margin-top:22px}
+.o-field .lab{font-size:13px;font-weight:600;color:var(--o-ink2);letter-spacing:-.005em;margin:0 0 7px 2px}
+.o-input{height:54px;border-radius:15px;background:#fff;border:1.5px solid var(--o-line2);display:flex;align-items:center;padding:0 16px;
+  font-family:inherit;font-size:17px;letter-spacing:-.012em;color:var(--o-ink);box-shadow:0 1px 2px rgba(28,28,30,.03);width:100%;outline:none}
+.o-input:focus{border-color:var(--o-blue);box-shadow:0 0 0 3.5px rgba(0,122,255,.12)}
+.o-input::placeholder{color:#B4B2AE}
+.o-preview{margin-top:14px;background:#fff;border:1px solid var(--o-line);border-radius:16px;padding:13px 15px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 18px rgba(28,32,45,.045)}
+.o-preview .meta{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--o-muted2);font-weight:600;margin-top:2px}
+.o-preview .nm{font-size:16px;font-weight:650;letter-spacing:-.015em}
+.o-av{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:650;letter-spacing:-.01em;flex:0 0 auto}
+.o-people{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.o-prow{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--o-line);border-radius:15px;padding:8px 12px 8px 10px;box-shadow:0 1px 2px rgba(28,28,30,.025)}
+.o-prow .nm{font-size:15.5px;font-weight:650;letter-spacing:-.012em;line-height:1.15}
+.o-prow .sub{font-size:12.5px;color:var(--o-muted);letter-spacing:-.004em;margin-top:2px}
+.o-prow .x{width:26px;height:26px;border-radius:50%;background:#F2F0EC;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:0;cursor:pointer}
+.o-addzone{margin-top:14px;background:#fff;border:1px solid var(--o-line);border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(28,32,45,.05)}
+.o-addzone .row1{display:flex;gap:10px;align-items:center}
+.o-addzone .mini{height:44px;border-radius:12px;border:1.5px solid var(--o-line2);display:flex;align-items:center;padding:0 13px;font-size:15.5px;color:#B4B2AE;flex:1 1 auto;letter-spacing:-.01em;background:none;font-family:inherit;outline:none;min-width:0}
+.o-addzone .mini:focus{border-color:var(--o-blue)}
+.o-addzone .plus{width:32px;height:32px;border-radius:50%;background:var(--o-blue100);display:grid;place-items:center;border:0;cursor:pointer;flex:0 0 32px}
+.o-swatches{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;align-items:center}
+
+.o-sw{width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;position:relative;border:0;cursor:pointer;padding:0}
+.o-sw.on::after{content:"";width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.95);position:absolute;inset:0;box-shadow:0 0 0 2px rgba(28,28,30,.10)}
+.o-togglerow{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid #F1EFEB;gap:12px}
+.o-togglerow .lab{font-size:13.5px;color:var(--o-ink2);letter-spacing:-.008em;max-width:210px;line-height:1.25;text-align:left}
+.o-tg{width:48px;height:29px;border-radius:15px;background:#E3E1DD;position:relative;flex:0 0 auto;border:0;cursor:pointer;padding:0}
+.o-tg.on{background:var(--o-blue)}
+.o-tg::after{content:"";position:absolute;top:2.5px;left:2.5px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.o-tg.on::after{left:21.5px}
+.o-selrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--o-line);border-radius:15px;padding:11px 12px;box-shadow:0 1px 2px rgba(28,28,30,.025);position:relative;flex-wrap:wrap}
+.o-selrow .nm{font-size:15.5px;font-weight:650;letter-spacing:-.012em}
+.o-selrow .sub{font-size:12px;color:var(--o-muted);margin-top:1px}
+.o-select{-webkit-appearance:none;appearance:none;border:1px solid #DCE8FA;background:var(--o-blue050);color:var(--o-blue2);border-radius:11px;
+  padding:7px 26px 7px 9px;font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:-.008em;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'><path d='M1 1.2 4.5 4.8 8 1.2' stroke='%230A66D6' stroke-width='1.7' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 9px center}
+.o-select.alt{background-color:#F7F5F1;border-color:#EAE7E2;color:#8B8B90;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'><path d='M1 1.2 4.5 4.8 8 1.2' stroke='%238B8B90' stroke-width='1.7' fill='none' stroke-linecap='round'/></svg>")}
+.o-callist{flex:1 1 100%;display:flex;gap:8px;align-items:center;margin-top:2px}
+.o-callist .o-select{flex:1 1 auto;font-size:13px;padding:8px 26px 8px 10px}
+.o-table{margin-top:22px;background:#fff;border:1px solid var(--o-line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(28,32,45,.055)}
+.o-table .r{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid #F2F0EC;font-size:15px;letter-spacing:-.01em;color:var(--o-ink2)}
+.o-table .r:first-child{border-top:0}
+.o-table .n{font-size:15px;font-weight:650;color:var(--o-ink);font-variant-numeric:tabular-nums;background:#F5F3EF;border-radius:8px;min-width:30px;height:26px;display:flex;align-items:center;justify-content:center;padding:0 7px}
+.o-pillsum{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--o-line);border-radius:999px;padding:10px 16px;font-size:14.5px;color:var(--o-ink2);letter-spacing:-.01em;box-shadow:0 4px 14px rgba(28,32,45,.05);white-space:nowrap}
+.o-pillsum b{font-weight:650;color:var(--o-ink)}
+.o-dotsep{width:3px;height:3px;border-radius:50%;background:#CFCCC7;flex:0 0 3px}
+.o-check{width:84px;height:84px;border-radius:50%;background:var(--o-green);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 34px rgba(52,199,89,.28);position:relative}
+.o-check::after{content:"";position:absolute;inset:-14px;border-radius:50%;background:rgba(52,199,89,.10)}
+.o-err{background:#FDECEA;color:#8A1F1A;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
+.o-footrow{display:flex;gap:10px;align-items:center}
+.o-phone-only{display:flex;flex-direction:column;align-items:center}
+
+/* illustrations (tablette) */
+.o-appprev{background:#fff;border:1px solid var(--o-line);border-radius:20px;box-shadow:var(--o-shadow);padding:15px 16px 14px;overflow:hidden;width:100%}
+.o-appprev .top{display:flex;align-items:flex-start;justify-content:space-between}
+.o-appprev .nm{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.o-appprev .clock{font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--o-muted2);font-variant-numeric:tabular-nums}
+.o-appprev .pills{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+.o-ppill{display:flex;align-items:center;gap:6px;background:#F7F5F1;border-radius:999px;padding:4px 9px 4px 4px;font-size:11.5px;color:var(--o-ink2);letter-spacing:-.005em}
+.o-appprev .cols{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+.o-daycol{background:#FBFAF8;border:1px solid #F1EFEB;border-radius:12px;padding:8px}
+.o-daycol .d{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--o-muted2);font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between}
+.o-ev{height:20px;border-radius:6px;margin-bottom:5px}
+.o-ev:last-child{margin-bottom:0}
+.o-cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;padding:16px;border-radius:22px;background:linear-gradient(180deg,#F4F8FE,#EEF4FD);width:100%}
+.o-col3{display:flex;flex-direction:column;gap:7px;align-items:stretch}
+.o-col3 .h{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:650;letter-spacing:-.005em;color:var(--o-ink2);opacity:.9}
+.o-col3 .tile{background:#fff;border-radius:11px;padding:7px;box-shadow:0 6px 16px rgba(28,40,70,.07);display:flex;flex-direction:column;gap:4px}
+.o-col3 .star{align-self:flex-start;background:#fff;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:650;color:var(--o-ink2);box-shadow:0 4px 10px rgba(28,40,70,.08);display:flex;align-items:center;gap:3px}
+.o-week{background:#fff;border:1px solid var(--o-line);border-radius:20px;box-shadow:var(--o-shadow);padding:14px;width:100%}
+.o-week .head{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.o-week .hd{text-align:center;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--o-muted2);font-weight:600}
+.o-week .med{width:26px;height:26px;border-radius:50%;background:var(--o-red);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:4px auto 0;box-shadow:0 5px 12px rgba(246,105,81,.32)}
+.o-week .cells{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.o-week .c{background:#FBFAF8;border:1px solid #F2F0EC;border-radius:10px;height:74px;padding:6px;display:flex;flex-direction:column;gap:4px}
+.o-week .c.hi{background:#F6FAFF;border-color:#E3EDFD}
+.o-illu-panel{background:linear-gradient(180deg,#F4F8FE,#EDF4FD);border-radius:24px;padding:16px;width:100%}
+
+@media (min-width:900px){
+  .o-phone-only{display:none}
+  .o-content{justify-content:center}
+  .o-wrap{max-width:1120px}
+  .o-screen{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:clamp(24px,4vw,56px);align-items:stretch;padding:0 clamp(24px,3vw,48px);min-height:calc(100vh - 24px)}
+  .o-left{display:flex;align-items:center;justify-content:center;min-width:0}
+  .o-right{padding:36px 0 8px;justify-content:flex-start;min-height:0}
+  .o-foot{padding:0}
+  .o-h1{font-size:35px}
+}
 @media (max-width:899px){
-  .ob-main{grid-template-columns:1fr;gap:28px}
-  .ob-hero{aspect-ratio:16/10;order:-1}
-  .ob-cards{grid-template-columns:1fr}
-  .ob-actions{flex-direction:column;align-items:stretch}
-  .ob-actions .end{margin-left:0}
-  .ob-btn{width:100%}
-  .ob-top{gap:10px}
-  .ob-brand{font-size:15px;white-space:nowrap}
-  .ob-progress{font-size:12px;gap:8px}
-  .ob-progress .long{display:none}
-  .ob-progress .short{display:inline}
-  .ob-bar{width:56px}
-  .ob-editor .row{flex-wrap:nowrap}
-  .ob-editor .row .ob-input{flex:1 1 auto;min-width:0;width:auto}
-  .ob-editor .row .ob-btn{width:auto;flex:0 0 auto;padding:0 16px}
+  .o-split-phone{display:flex;flex-direction:column}
 }
-@media (prefers-reduced-motion:reduce){
-  .ob-step{animation:none!important}
-  .ob-btn,.ob-track,.ob-track::after,.ob-bar i{transition:none!important}
-}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
 /* ---------- v2 : pages provisoires ---------- */
 .v2page{height:100%;overflow:auto;padding:28px 24px;box-sizing:border-box}
 .v2page h1{font-family:var(--skylight-serif,Georgia,serif);font-size:26px;margin:0 0 6px}
@@ -349,11 +377,134 @@ ${CSS}</style>
     });
   }
 
-  /* ---------- installation (onboarding) ---------- */
+  /* ---------- installation (onboarding) — porté de maquettes/onboarding_exemple ---------- */
+
+  _oIcon(name, c = '#007AFF', s = 20) {
+    const open = `<svg viewBox="0 0 24 24" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg" fill="none">`;
+    const paths = {
+      spark: `<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" fill="${c}"/><path d="M18.2 15.6l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="${c}" opacity=".55"/>`,
+      bolt: `<path d="M13.4 2.5 4.8 13.2c-.5.6-.1 1.5.7 1.5h4.9l-1.6 6.6c-.2.9.9 1.4 1.5.7l8.6-10.7c.5-.6.1-1.5-.7-1.5h-4.9l1.6-6.6c.2-.9-.9-1.4-1.5-.7z" fill="${c}"/>`,
+      people: `<circle cx="9" cy="8.6" r="3.4" stroke="${c}" stroke-width="1.9"/><path d="M3 19.4c.6-3.2 3-4.9 6-4.9s5.4 1.7 6 4.9" stroke="${c}" stroke-width="1.9" stroke-linecap="round"/><circle cx="17.6" cy="9.6" r="2.5" stroke="${c}" stroke-width="1.7" opacity=".55"/><path d="M16.4 14.8c2.4.2 4 1.7 4.6 4.2" stroke="${c}" stroke-width="1.7" stroke-linecap="round" opacity=".55"/>`,
+      cal: `<rect x="3" y="4.5" width="18" height="16.5" rx="4" stroke="${c}" stroke-width="1.9"/><path d="M3.5 9.5h17" stroke="${c}" stroke-width="1.9"/><path d="M8 2.8v3.4M16 2.8v3.4" stroke="${c}" stroke-width="1.9" stroke-linecap="round"/><circle cx="8.6" cy="14" r="1.5" fill="${c}"/><circle cx="13" cy="14" r="1.5" fill="${c}"/>`,
+      check: `<rect x="3" y="3" width="18" height="18" rx="5.5" stroke="${c}" stroke-width="1.9"/><path d="M7.8 12.3l2.9 2.9 5.6-6" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+      star: `<path d="M12 3.2l2.5 5.3 5.8.8-4.2 4.1 1 5.8-5.1-2.8-5.1 2.8 1-5.8L3.7 9.3l5.8-.8z" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/>`,
+      meal: `<rect x="3.2" y="11.6" width="17.6" height="3.4" rx="1.7" fill="${c}" opacity=".28"/><path d="M4.6 11.2c.9-3.4 3.7-5.4 7.4-5.4s6.5 2 7.4 5.4" stroke="${c}" stroke-width="1.9" stroke-linecap="round"/><path d="M5.4 15.4c0 2.9 2.9 5.2 6.6 5.2s6.6-2.3 6.6-5.2" stroke="${c}" stroke-width="1.9" stroke-linecap="round"/>`,
+    };
+    return open + (paths[name] || '') + '</svg>';
+  }
+
+  _oAv(init, color, size = 36) {
+    return `<span class="o-av" style="width:${size}px;height:${size}px;background:${esc(color)};font-size:${Math.round(size * 0.42)}px">${esc(init)}</span>`;
+  }
+
+  _oAppIcon(size) {
+    return `<img class="o-appicon" src="/skylight-static/icon.png" width="${size}" height="${size}" style="width:${size}px;height:${size}px" alt="">`;
+  }
+
+  _oProgress(n, total = 3, left = false) {
+    return `<div class="o-prog${left ? ' left' : ''}">${Array.from({ length: total }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>`;
+  }
+
+  _oBenefits() {
+    return `<div class="o-benefits">
+      <div class="o-ben"><span class="ic">${this._oIcon('check', '#007AFF', 21)}</span><span class="tx"><b>Chacun ses tâches</b>Les routines du matin et du soir, une colonne par personne.</span></div>
+      <div class="o-ben"><span class="ic">${this._oIcon('star', '#007AFF', 21)}</span><span class="tx"><b>Des étoiles à gagner</b>Chaque tâche cochée en rapporte ; elles s'échangent.</span></div>
+      <div class="o-ben"><span class="ic">${this._oIcon('cal', '#007AFF', 21)}</span><span class="tx"><b>Les repas et le calendrier</b>La semaine entière, et les rendez-vous de tous.</span></div>
+    </div>`;
+  }
+
+  _oPreviewApp(name) {
+    const people = (this._ob.people || []).slice(0, 3);
+    const fallback = [{ name: 'Camille', color: '#7FA9E8' }, { name: 'Léo', color: '#79CBA6' }];
+    const list = people.length ? people : fallback;
+    return `<div class="o-appprev">
+      <div class="top"><div class="nm">${esc(name || 'Ma famille')}</div><div class="clock">9:35</div></div>
+      <div class="pills">${list.map((p) => `<span class="o-ppill">${this._oAv((p.name || '?')[0], p.color, 18)}${esc(p.name)}</span>`).join('')}</div>
+      <div class="cols">
+        <div class="o-daycol"><div class="d"><span>Lun.</span><span>9</span></div>
+          <div class="o-ev" style="background:#CFE0FB;width:100%"></div><div class="o-ev" style="background:#E4DBFC;width:72%"></div><div class="o-ev" style="background:#EAF1FC;width:88%"></div><div class="o-ev" style="background:#D6F0DE;width:64%"></div><div class="o-ev" style="background:#EAF1FC;width:80%"></div></div>
+        <div class="o-daycol"><div class="d"><span>Mar.</span><span>10</span></div>
+          <div class="o-ev" style="background:#FDE2CB;width:84%"></div><div class="o-ev" style="background:#D6F0DE;width:100%"></div><div class="o-ev" style="background:#EAF1FC;width:64%"></div><div class="o-ev" style="background:#CFE0FB;width:74%"></div><div class="o-ev" style="background:#EAF1FC;width:52%"></div></div>
+      </div>
+    </div>`;
+  }
+
+  _oBoard() {
+    const bcol = (ini, name, pastel, accent, pills) => `
+      <div style="background:${pastel};border-radius:12px;padding:7px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="width:19px;height:19px;border-radius:50%;background:#fff;color:${accent};display:grid;place-items:center;font-size:9px;font-weight:700">${ini}</span>
+          <span style="font-size:10.5px;font-weight:600;color:#1F2328">${name}</span>
+          <span style="margin-left:auto;display:flex;gap:3px">${pills.map((p) => `<i style="font-style:normal;background:rgba(255,255,255,.9);border-radius:999px;padding:1px 5px;font-size:8px;font-weight:700;color:#1F2328">${p}</i>`).join('')}</span>
+        </div>
+        <div style="font-size:8.5px;font-weight:600;color:rgba(31,35,40,.5)">Matin</div>
+        ${[[14, 'rgba(255,255,255,.95)'], [10, 'rgba(255,255,255,.7)']].map(([h, c]) => `<div style="background:#fff;border-radius:9px;padding:5px 6px;display:flex;flex-direction:column;gap:3px"><span style="height:${h}px;border-radius:4px;background:${c}"></span><span style="height:5px;width:70%;border-radius:3px;background:#F1F4F9"></span></div>`).join('')}
+      </div>`;
+    return `<div style="width:100%;max-width:420px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(24,44,84,.14),0 1px 2px rgba(24,44,84,.08);text-align:left">
+      <div style="display:flex;align-items:baseline;gap:8px;padding:10px 12px 8px"><b style="font-size:12.5px;letter-spacing:-.01em">Ma famille</b><span style="font-size:11px;color:#8B8B90">9:41</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 10px 10px">
+        ${bcol('C', 'Camille', '#CFE0FB', '#4677A8', ['✓ 1/3', '★ 320'])}
+        ${bcol('L', 'Léo', '#D6F0DE', '#2E9E63', ['✓ 0/2', '★ 45'])}
+      </div>
+    </div>`;
+  }
+
+  _oColumns() {
+    const list = (this._ob.people && this._ob.people.length ? this._ob.people : [
+      { name: 'Camille', color: '#7FA9E8' }, { name: 'Léo', color: '#79CBA6' }, { name: 'Papa', color: '#F0A0B4' },
+    ]).slice(0, 3);
+    const tones = ['#D6F0DE', '#FBE3EA', '#CFE0FB'];
+    return `<div class="o-cols3">${list.map((p, i) => `
+      <div class="o-col3">
+        <div class="h">${this._oAv((p.name || '?')[0], p.color, 20)} ${esc(p.name)}</div>
+        <div class="tile"><div style="height:16px;border-radius:5px;background:${tones[i % 3]}"></div><div style="height:10px;border-radius:4px;background:#F1F4F9;width:70%"></div></div>
+        <div class="tile"><div style="height:10px;border-radius:4px;background:#F1F4F9;width:60%"></div><div style="height:16px;border-radius:5px;background:${tones[i % 3]}"></div></div>
+        <div class="star">${this._oIcon('star', '#8A6A16', 10)} <span style="opacity:.7">2</span></div>
+      </div>`).join('')}</div>`;
+  }
+
+  _oWeek() {
+    return `<div class="o-week">
+      <div class="head"><div class="hd">Lun.</div><div class="hd">Mar.</div><div class="hd">Mer.</div><div class="hd">Jeu.</div></div>
+      <div class="head" style="margin:0 0 10px"><div style="text-align:center;font-size:12px;color:#9B9990">7</div><div class="med">8</div><div style="text-align:center;font-size:12px;color:#9B9990">9</div><div style="text-align:center;font-size:12px;color:#9B9990">10</div></div>
+      <div class="cells">
+        <div class="c"><div class="o-ev" style="background:#CFE0FB;height:16px;border-radius:5px;width:100%"></div><div class="o-ev" style="background:#EAF1FC;height:12px;border-radius:4px;width:76%"></div></div>
+        <div class="c hi"><div class="o-ev" style="background:#D6F0DE;height:16px;border-radius:5px;width:94%"></div><div class="o-ev" style="background:#FDE2CB;height:12px;border-radius:4px;width:70%"></div><div class="o-ev" style="background:#E4DBFC;height:12px;border-radius:4px;width:86%"></div></div>
+        <div class="c"><div class="o-ev" style="background:#E4DBFC;height:16px;border-radius:5px;width:88%"></div></div>
+        <div class="c"><div class="o-ev" style="background:#FDE2CB;height:16px;border-radius:5px;width:100%"></div><div class="o-ev" style="background:#EAF1FC;height:12px;border-radius:4px;width:64%"></div></div>
+      </div>
+    </div>`;
+  }
+
+  _oShapes() {
+    return `<svg viewBox="0 0 340 200" width="100%" height="auto" style="display:block" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="170" cy="100" r="82" fill="#F1F6FD"/>
+      <rect x="112" y="112" width="116" height="34" rx="17" fill="#E3EDFD"/>
+      <rect x="100" y="80" width="100" height="34" rx="17" fill="#EAF1FC"/>
+      <rect x="126" y="48" width="132" height="34" rx="17" fill="#CFE0FB" opacity=".85"/>
+      <circle cx="228" cy="60" r="9" fill="#E4DBFC"/>
+      <circle cx="112" cy="134" r="7" fill="#D6F0DE"/>
+    </svg>`;
+  }
+
+  _oCheckAvatars() {
+    const list = (this._ob.people && this._ob.people.length ? this._ob.people : [{ color: '#7FA9E8' }, { color: '#79CBA6' }, { color: '#F0A0B4' }, { color: '#B3A0EA' }]).slice(0, 4);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:26px">
+      <div class="o-check"><svg viewBox="0 0 24 24" width="40" height="40" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.6l4.6 4.6L19 6.8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div style="display:flex;justify-content:center;padding-left:6px">${list.map((p) => `<div style="margin-left:-8px">${this._oAv((p.name || '?')[0], p.color, 64)}</div>`).join('')}</div>
+    </div>`;
+  }
+
+  _oCalendars() {
+    const st = (this._hass && this._hass.states) || {};
+    return Object.values(st)
+      .filter((s) => s.entity_id && s.entity_id.indexOf('calendar.') === 0 && s.state !== 'unavailable')
+      .map((s) => ({ id: s.entity_id, name: (s.attributes && s.attributes.friendly_name) || s.entity_id }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  }
 
   _renderOnboarding() {
-    this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style>
-      <div class="onb"><div class="ob-shell" id="ob"></div></div>`;
+    this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb"><div class="o-wrap" id="ob"></div></div>`;
     this._ob = {
       step: (this._app && this._app.existing) ? 'existing' : 0,
       family: '',
@@ -366,19 +517,8 @@ ${CSS}</style>
     this._obPaint();
   }
 
-  _icon(name) {
-    const ic = CORE && CORE.NAV_ICON && CORE.NAV_ICON[name];
-    return ic ? ic.p : '';
-  }
-
-  _obTop(step) {
-    const total = 3;
-    const on = step >= 1 && step <= total;
-    return `<div class="ob-top">
-      <div class="ob-mark"><img src="/skylight-static/icon.png" alt=""></div>
-      <span class="ob-brand">Skylight Hub Family</span>
-      ${on ? `<div class="ob-progress"><span class="long">Étape ${step} sur ${total}</span><span class="short">${step}/${total}</span><span class="ob-bar"><i style="width:${Math.round(step / total * 100)}%"></i></span></div>` : ''}
-    </div>`;
+  _oboFoot(html) {
+    return `<div class="o-foot">${html}</div>`;
   }
 
   _obPaint() {
@@ -386,189 +526,197 @@ ${CSS}</style>
     if (!root) return;
     const ob = this._ob;
     const step = ob.step;
+    const family = ob.family || 'Ma famille';
+    let left = '';
+    let body = '';
+    let foot = '';
 
     if (step === 'existing') {
-      root.innerHTML = `${this._obTop(0)}
-        <div class="ob-main solo">
-          <div class="ob-step ob-copy">
-            <p class="ob-kicker">Données trouvées</p>
-            <h1 class="ob-h1">Des données existent déjà</h1>
-            <p class="ob-lead">Cette installation contient déjà des profils Skylight. Reprenez-les, ou repartez de zéro : dans ce cas l'application crée ses propres objets, sans toucher aux anciens.</p>
-            <div class="ob-actions">
-              <button class="ob-btn primary" id="reuse" type="button">Reprendre mes données</button>
-              <button class="ob-btn ghost" id="fresh" type="button">Repartir de zéro</button>
-            </div>
-          </div>
-        </div>`;
-      root.querySelector('#reuse').addEventListener('click', () => this._obInstall(true));
-      root.querySelector('#fresh').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
+      const profs = (this._app && this._app.profiles) || [];
+      const stars = Object.values((this._app && this._app.stars) || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+      let tasks = 0;
+      for (const items of Object.values((this._app && this._app.lists) || {})) tasks += (items || []).length;
+      body = `<div style="padding-top:24px"><h2 class="o-h1 sm">Des données<br>existent déjà</h2>
+        <p class="o-sub tight">Vous avez déjà une famille sur cet appareil. Reprenez-la, ou partez d'une famille vide.</p>
+        <div class="o-table"><div class="r"><span>${esc((this._app && this._app.family_name) || 'Ma famille')}</span><span class="n">${profs.length}</span></div>
+          <div class="r"><span>Profils</span><span class="n">${profs.length}</span></div>
+          <div class="r"><span>Tâches et routines</span><span class="n">${tasks}</span></div>
+          <div class="r"><span>Étoiles cumulées</span><span class="n">${stars}</span></div></div></div>`;
+      foot = this._oboFoot(`<button class="o-btn soft" id="o-reuse" type="button">Reprendre mes données</button><button class="o-btn ghost" id="o-fresh" type="button" style="margin-top:6px">Repartir de zéro</button>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left"></div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      root.querySelector('#o-reuse').addEventListener('click', () => this._obInstall(true));
+      root.querySelector('#o-fresh').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
       return;
     }
 
     if (step === 0) {
-      root.innerHTML = `${this._obTop(0)}
-        <div class="ob-main">
-          <div class="ob-step ob-copy">
-            <p class="ob-kicker">Bienvenue</p>
-            <h1 class="ob-h1">Votre famille,<br>au même endroit.</h1>
-            <p class="ob-lead">Les tâches de chacun, les étoiles gagnées, les repas de la semaine et les rendez-vous — réunis dans une seule application, sur votre Home Assistant.</p>
-            <div class="ob-actions"><button class="ob-btn primary" id="go" type="button">Commencer</button></div>
-            <p class="ob-foot">2 minutes · tout reste chez vous</p>
-          </div>
-          <div class="ob-hero"><img src="/skylight-static/icon.png" alt="Skylight Hub Family"></div>
-        </div>`;
-      root.querySelector('#go').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
+      left = this._oBoard();
+      body = `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:22px">
+        ${this._oAppIcon(56)}<h2 class="o-h1" style="margin-top:16px">Votre famille,<br>au même endroit.</h2>
+        <p class="o-sub" style="max-width:318px">Les tâches de chacun, les étoiles gagnées, les repas de la semaine et les rendez-vous.</p>
+        <div style="width:100%;text-align:left;margin-top:20px">${this._oBenefits()}</div></div>`;
+      foot = this._oboFoot(`<button class="o-btn" id="o-go" type="button">Commencer</button><div class="o-legal">2 minutes · tout reste chez vous</div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      root.querySelector('#o-go').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
       return;
     }
 
     if (step === 1) {
-      const name = ob.family || 'Ma famille';
-      root.innerHTML = `${this._obTop(1)}
-        <div class="ob-main">
-          <div class="ob-step ob-copy">
-            <h1 class="ob-h1">Comment s'appelle<br>votre famille ?</h1>
-            <p class="ob-lead">C'est le nom affiché en haut de chaque écran. Vous pourrez le changer plus tard.</p>
-            <label class="ob-field"><span>Nom de la famille</span>
-              <input class="ob-input" id="fam" maxlength="40" value="${esc(ob.family)}" placeholder="Ma famille" autocomplete="off">
-            </label>
-            <div class="ob-actions">
-              <button class="ob-btn ghost" id="back" type="button">Retour</button>
-              <button class="ob-btn primary end" id="next" type="button">Continuer</button>
-            </div>
-          </div>
-          <div class="ob-preview ob-step">
-            <div class="initial" id="pvInit">${esc((name[0] || 'M').toUpperCase())}</div>
-            <div class="nm" id="pvName">${esc(name)}</div>
-            <p class="cap">Aperçu en direct — le nom se met à jour ici.</p>
-          </div>
-        </div>`;
-      const inp = root.querySelector('#fam');
-      const pvN = root.querySelector('#pvName');
-      const pvI = root.querySelector('#pvInit');
-      inp.addEventListener('input', () => {
+      left = `<div class="o-illu-panel" style="max-width:446px;padding:20px">${this._oPreviewApp(family)}</div>`;
+      body = `${this._oProgress(1)}<div style="padding-top:26px"><h2 class="o-h1">Comment s'appelle<br>votre famille ?</h2>
+        <p class="o-sub">C'est le nom affiché en haut de chaque écran.</p></div>
+        <div class="o-field"><div class="lab">Nom de la famille</div><input class="o-input" id="o-fam" maxlength="40" placeholder="Ma famille" autocomplete="off" value="${esc(ob.family)}"></div>
+        <div class="o-preview"><span id="o-prev-av">${this._oAv((family[0] || 'M').toUpperCase(), '#B4A6E6', 38)}</span><div><div class="nm" id="o-prev-nm">${esc(family)}</div><div class="meta">Aperçu en direct</div></div></div>`;
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      const inp = root.querySelector('#o-fam');
+      const nm = root.querySelector('#o-prev-nm');
+      const av = root.querySelector('#o-prev-av');
+      const sync = () => {
         const v = inp.value.trim() || 'Ma famille';
-        pvN.textContent = v;
-        pvI.textContent = (v[0] || 'M').toUpperCase();
-      });
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') root.querySelector('#next').click(); });
-      root.querySelector('#back').addEventListener('click', () => { ob.family = inp.value.trim(); ob.step = 0; this._obPaint(); });
-      root.querySelector('#next').addEventListener('click', () => {
-        ob.family = inp.value.trim() || 'Ma famille';
-        ob.step = 2;
-        this._obPaint();
-      });
+        nm.textContent = v;
+        av.innerHTML = this._oAv((v[0] || 'M').toUpperCase(), '#B4A6E6', 38);
+        const pv = root.querySelector('.o-appprev .nm');
+        if (pv) pv.textContent = v;
+      };
+      inp.addEventListener('input', sync);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') root.querySelector('#o-next').click(); });
+      root.querySelector('#o-back').addEventListener('click', () => { ob.family = inp.value.trim(); ob.step = 0; this._obPaint(); });
+      root.querySelector('#o-next').addEventListener('click', () => { ob.family = inp.value.trim() || 'Ma famille'; ob.step = 2; this._obPaint(); });
       setTimeout(() => inp.focus(), 40);
       return;
     }
 
     if (step === 2) {
-      const rows = ob.people.map((p, i) => `<div class="ob-row">
-        <span class="ob-av" style="background:${p.color}">${esc((p.name[0] || '?').toUpperCase())}</span>
-        <span class="txt"><span class="nm">${esc(p.name)}</span><span class="sub">${p.cal ? 'Calendrier créé' : 'Sans calendrier'}</span></span>
-        <button class="ob-del" data-rm="${i}" type="button" aria-label="Retirer ${esc(p.name)}">×</button>
+      left = this._oColumns();
+      const rows = ob.people.map((p, i) => `<div class="o-prow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 34)}
+        <div style="flex:1 1 auto"><div class="nm">${esc(p.name)}</div><div class="sub">${p.cal ? 'Calendrier créé' : 'Sans calendrier'}</div></div>
+        <button class="x" data-rm="${i}" type="button" aria-label="Retirer ${esc(p.name)}"><svg viewBox="0 0 24 24" width="12" height="12" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#8B8B90" stroke-width="2.4" stroke-linecap="round"/></svg></button>
       </div>`).join('');
-      root.innerHTML = `${this._obTop(2)}
-        <div class="ob-main solo">
-          <div class="ob-step">
-            <h1 class="ob-h1">Qui vit ici ?</h1>
-            <p class="ob-lead">Chaque personne aura sa colonne, sa couleur et son solde d'étoiles. Vous pourrez en ajouter d'autres plus tard.</p>
-            <div class="ob-group">${rows || `<p class="ob-empty">Aucune personne pour l'instant. Ajoutez la première ci-dessous.</p>`}</div>
-            <div class="ob-editor">
-              <div class="row">
-                <input class="ob-input" id="pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}">
-                <button class="ob-btn primary" id="add" type="button" ${ob.draft.name.trim() ? '' : 'disabled'}>Ajouter</button>
-              </div>
-              <div class="ob-swatches">${OB_COLORS.map((c) => `<button class="ob-sw${c === ob.draft.color ? ' on' : ''}" type="button" data-color="${c}" style="background:${c}" aria-label="Couleur ${c}"></button>`).join('')}</div>
-              <button class="ob-switch" id="cal" type="button" aria-pressed="${ob.draft.cal ? 'true' : 'false'}">
-                <span class="ob-track${ob.draft.cal ? ' on' : ''}"></span>
-                Créer un calendrier pour cette personne
-              </button>
-            </div>
-            ${ob.err ? `<div class="ob-err">${esc(ob.err)}</div>` : ''}
-            <div class="ob-actions">
-              <button class="ob-btn ghost" id="back" type="button">Retour</button>
-              <button class="ob-btn primary end" id="next" type="button" ${ob.people.length ? '' : 'disabled'}>Continuer</button>
-            </div>
-          </div>
-        </div>`;
-      const name = root.querySelector('#pname');
-      const addBtn = root.querySelector('#add');
-      name.addEventListener('input', () => { ob.draft.name = name.value; addBtn.disabled = !name.value.trim(); });
+      body = `${this._oProgress(2)}<div style="padding-top:22px"><h2 class="o-h1 sm">Qui vit ici ?</h2>
+        <p class="o-sub tight">Une couleur par personne : elle devient sa colonne, ses tuiles et sa pastille du calendrier.</p></div>
+        <div class="o-people">${rows || ''}</div>
+        <div class="o-addzone">
+          <div class="row1"><input class="mini" id="o-pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}"><button class="plus" id="o-add" type="button" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M12 5v14M5 12h14" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
+          <div class="o-swatches">${OB_COLORS.map((c) => `<button class="o-sw${c === ob.draft.color ? ' on' : ''}" type="button" data-color="${c}" style="background:${c}" aria-label="Couleur ${c}">${c === ob.draft.color ? '<svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</button>`).join('')}</div>
+          <div class="o-togglerow"><div class="lab">Créer un calendrier pour cette personne</div><button class="o-tg${ob.draft.cal ? ' on' : ''}" id="o-cal" type="button" role="switch" aria-checked="${ob.draft.cal ? 'true' : 'false'}" aria-label="Créer un calendrier"></button></div>
+        </div>
+        ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn${ob.people.length ? '' : ' dim'}" id="o-next" type="button" ${ob.people.length ? '' : 'disabled'}>Continuer</button></div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      const name = root.querySelector('#o-pname');
       const add = () => {
         const v = name.value.trim();
         if (!v) return;
-        ob.people.push({ name: v, color: ob.draft.color, cal: ob.draft.cal });
+        ob.people.push({ name: v, color: ob.draft.color, cal: ob.draft.cal, mode: ob.draft.cal ? 'create' : 'later', calendar: '' });
         ob.draft.name = '';
         this._obPaint();
       };
-      addBtn.addEventListener('click', add);
       name.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-      root.querySelectorAll('.ob-sw').forEach((b) => b.addEventListener('click', () => {
+      root.querySelector('#o-add').addEventListener('click', add);
+      root.querySelectorAll('.o-sw').forEach((b) => b.addEventListener('click', () => {
         ob.draft.color = b.dataset.color;
-        root.querySelectorAll('.ob-sw').forEach((x) => x.classList.toggle('on', x === b));
+        root.querySelectorAll('.o-sw').forEach((x) => x.classList.toggle('on', x === b));
       }));
-      const cal = root.querySelector('#cal');
-      cal.addEventListener('click', () => {
+      root.querySelector('#o-cal').addEventListener('click', (e) => {
         ob.draft.cal = !ob.draft.cal;
-        cal.setAttribute('aria-pressed', ob.draft.cal ? 'true' : 'false');
-        cal.querySelector('.ob-track').classList.toggle('on', ob.draft.cal);
+        e.currentTarget.classList.toggle('on', ob.draft.cal);
+        e.currentTarget.setAttribute('aria-checked', ob.draft.cal ? 'true' : 'false');
       });
-      root.querySelectorAll('.ob-del').forEach((b) => b.addEventListener('click', () => {
-        ob.people.splice(Number(b.dataset.rm), 1);
-        this._obPaint();
-      }));
-      root.querySelector('#back').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
-      root.querySelector('#next').addEventListener('click', () => { ob.step = 3; this._obPaint(); });
+      root.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { ob.people.splice(Number(b.dataset.rm), 1); this._obPaint(); }));
+      root.querySelector('#o-back').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
+      root.querySelector('#o-next').addEventListener('click', () => { if (!ob.people.length) return; ob.step = 3; this._obPaint(); });
       setTimeout(() => name.focus(), 40);
       return;
     }
 
     if (step === 3) {
-      const cards = [
-        ['cal', 'Le calendrier', 'La semaine de chacun, avec les vrais calendriers de Home Assistant.'],
-        ['check', 'Les tâches', 'Une colonne par personne, les routines du matin et du soir.'],
-        ['star', 'Les récompenses', 'Chaque tâche cochée rapporte des étoiles à échanger.'],
-        ['meals', 'Les repas', 'La semaine entière, midi et soir, avec vos plats.'],
-      ].map(([ic, t, d]) => `<div class="ob-card"><span class="ob-tile">${this._icon(ic)}</span><span><h3>${t}</h3><p>${d}</p></span></div>`).join('');
-      root.innerHTML = `${this._obTop(3)}
-        <div class="ob-main solo">
-          <div class="ob-step">
-            <h1 class="ob-h1">Voilà ce que vous aurez</h1>
-            <p class="ob-lead">Rien d'autre à configurer. Chaque écran explique son fonctionnement la première fois.</p>
-            <div class="ob-cards">
-              ${cards}
-              <div class="ob-card wide"><span class="ob-tile">${this._icon('people')}</span><span><h3>Les profils</h3><p>Un prénom, une couleur : toute l'application suit, sans rien reconfigurer.</p></span></div>
-            </div>
-            ${ob.err ? `<div class="ob-err">${esc(ob.err)}</div>` : ''}
-            <div class="ob-actions">
-              <button class="ob-btn ghost" id="back" type="button" ${ob.busy ? 'disabled' : ''}>Retour</button>
-              <button class="ob-btn primary end" id="install" type="button" ${ob.busy ? 'disabled' : ''}>${ob.busy ? 'Installation…' : 'Installer'}</button>
-            </div>
-          </div>
-        </div>`;
-      root.querySelector('#back').addEventListener('click', () => { ob.step = 2; this._obPaint(); });
-      root.querySelector('#install').addEventListener('click', () => this._obInstall(false));
+      left = this._oWeek();
+      const cals = this._oCalendars();
+      const LABEL = { create: 'Créer un calendrier', link: 'Relier un calendrier', later: 'Plus tard' };
+      const rows = ob.people.map((p, i) => `<div class="o-selrow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 32)}
+        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${esc(LABEL[p.mode || 'create'])}${p.mode === 'link' && p.calendar ? ' · ' + esc((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : ''}</div></div>
+        <select class="o-select${p.mode === 'later' ? ' alt' : ''}" data-mode="${i}" aria-label="Calendrier de ${esc(p.name)}">
+          <option value="create"${(p.mode || 'create') === 'create' ? ' selected' : ''}>Créer</option>
+          <option value="link"${p.mode === 'link' ? ' selected' : ''}>Relier</option>
+          <option value="later"${p.mode === 'later' ? ' selected' : ''}>Plus tard</option>
+        </select>
+        ${p.mode === 'link' ? `<div class="o-callist"><select class="o-select" data-cal="${i}" aria-label="Calendrier de ${esc(p.name)}">
+          <option value="">Choisir un calendrier</option>
+          ${cals.map((c) => `<option value="${esc(c.id)}"${p.calendar === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
+        </select></div>` : ''}
+      </div>`).join('');
+      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Les calendriers</h2>
+        <p class="o-sub tight">Reliez le calendrier de chaque personne. Si elle n'en a pas, on en crée un.</p></div>
+        <div class="o-people" style="margin-top:18px;gap:10px">${rows}</div>
+        ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      root.querySelectorAll('[data-mode]').forEach((s) => s.addEventListener('change', () => {
+        const i = Number(s.dataset.mode);
+        ob.people[i].mode = s.value;
+        if (s.value === 'create') ob.people[i].cal = true;
+        if (s.value !== 'link') ob.people[i].calendar = '';
+        this._obPaint();
+      }));
+      root.querySelectorAll('[data-cal]').forEach((s) => s.addEventListener('change', () => {
+        ob.people[Number(s.dataset.cal)].calendar = s.value;
+        this._obPaint();
+      }));
+      root.querySelector('#o-back').addEventListener('click', () => { ob.step = 2; this._obPaint(); });
+      root.querySelector('#o-next').addEventListener('click', () => {
+        const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
+        if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + ', ou passez à « Plus tard ».'; this._obPaint(); return; }
+        ob.err = null;
+        ob.step = 4;
+        this._obPaint();
+      });
       return;
     }
 
+    if (step === 4) {
+      left = this._oShapes();
+      const create = ob.people.filter((p) => (p.mode || 'create') === 'create').length;
+      const link = ob.people.filter((p) => p.mode === 'link' && p.calendar).length;
+      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Voilà ce qui va<br>être créé</h2>
+        <p class="o-sub tight">Les personnes vivent dans l'application. Seuls les calendriers demandés deviennent des objets Home Assistant.</p></div>
+        <div class="o-table">
+          <div class="r"><span>Personnes</span><span class="n">${ob.people.length}</span></div>
+          <div class="r"><span>Calendriers à créer</span><span class="n">${create}</span></div>
+          <div class="r"><span>Calendriers reliés</span><span class="n">${link}</span></div>
+          <div class="r"><span>Autres entités</span><span class="n">0</span></div>
+        </div>
+        ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button" ${ob.busy ? 'disabled' : ''}>Retour</button><button class="o-btn" id="o-install" type="button" ${ob.busy ? 'disabled' : ''}>${ob.busy ? 'Installation…' : 'Installer'}</button></div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      root.querySelector('#o-back').addEventListener('click', () => { ob.step = 3; this._obPaint(); });
+      root.querySelector('#o-install').addEventListener('click', () => this._obInstall(false));
+      return;
+    }
+
+    /* prêt */
     const rep = ob.report || {};
     const profs = (rep.config && rep.config.profiles) || [];
     const cals = profs.filter((p) => p.calendar).length;
-    const avs = profs.map((p) => `<span class="ob-av" style="background:${p.color}">${esc((p.name[0] || '?').toUpperCase())}</span>`).join('');
-    root.innerHTML = `${this._obTop(0)}
-      <div class="ob-ready ob-step">
-        <div class="avs">${avs}</div>
-        <h1>Votre famille est prête</h1>
-        <p>Les tâches, les étoiles et les repas vous attendent.</p>
-        <p class="sum">${esc((rep.config && rep.config.family_name) || ob.family)} · ${profs.length} personne${profs.length > 1 ? 's' : ''} · ${cals} calendrier${cals > 1 ? 's' : ''}</p>
-        <div class="ob-actions" style="justify-content:center"><button class="ob-btn primary" id="enter" type="button">Entrer dans Skylight Hub Family</button></div>
-      </div>`;
-    root.querySelector('#enter').addEventListener('click', () => this._obEnter());
+    left = this._oCheckAvatars();
+    body = `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:18px">
+      <div class="o-phone-only" style="gap:18px">${this._oCheckAvatars()}</div>
+      <h2 class="o-h1" style="margin-top:30px">Votre famille<br>est prête.</h2>
+      <p class="o-sub" style="max-width:318px">Les tâches, les étoiles et les repas vous attendent. Chaque écran s'expliquera la première fois.</p>
+      <div class="o-pillsum" style="margin-top:22px"><b>${esc((rep.config && rep.config.family_name) || ob.family || 'Ma famille')}</b><span class="o-dotsep"></span>${profs.length} personne${profs.length > 1 ? 's' : ''}<span class="o-dotsep"></span>${cals} calendrier${cals > 1 ? 's' : ''}</div>
+    </div>`;
+    foot = this._oboFoot(`<button class="o-btn" id="o-enter" type="button">Entrer dans Skylight Hub Family</button>`);
+    root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+    root.querySelector('#o-enter').addEventListener('click', () => this._obEnter());
   }
 
   async _obInstall(keep) {
     const ob = this._ob;
     if (ob.busy) return;
+    if (!keep) {
+      const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
+      if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
+    }
     ob.busy = true;
     ob.err = null;
     this._obPaint();
@@ -576,13 +724,18 @@ ${CSS}</style>
       const res = await this._hass.callWS({
         type: 'skylight_hub_family/onboard',
         family_name: keep ? ((this._app && this._app.family_name) || 'Ma famille') : (ob.family || 'Ma famille'),
-        people: keep ? [] : ob.people.map((p) => ({ name: p.name, color: p.color, create_calendar: !!p.cal })),
+        people: keep ? [] : ob.people.map((p) => ({
+          name: p.name,
+          color: p.color,
+          create_calendar: (p.mode || 'create') === 'create',
+          calendar: p.mode === 'link' ? (p.calendar || '') : '',
+        })),
         keep: !!keep,
       });
       if (res && res.ok === false) throw new Error("L'installation a renvoyé une erreur.");
       ob.report = res || {};
       ob.busy = false;
-      ob.step = 4;
+      ob.step = 5;
       this._obPaint();
     } catch (e) {
       ob.busy = false;
