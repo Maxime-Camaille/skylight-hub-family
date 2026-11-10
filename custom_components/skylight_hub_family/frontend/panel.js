@@ -451,9 +451,9 @@ ${CSS}</style>
     if (inner && inner.uix) cal.uix = inner.uix;
 
     const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-    const days = Object.keys(meals).length
-      ? Object.keys(meals).map((k) => ({ label: k.charAt(0).toUpperCase() + k.slice(1), entity: meals[k] }))
-      : DAYS.map((d) => ({ label: d.charAt(0).toUpperCase() + d.slice(1), entity: 'input_text.repas_' + d }));
+    /* Les jours sont TOUJOURS les sept mêmes clés : le magasin de l'app stocke
+       `entité -> valeur`, jamais l'inverse. */
+    const days = DAYS.map((d) => ({ label: d.charAt(0).toUpperCase() + d.slice(1), entity: 'input_text.repas_' + d }));
 
     return {
       calendrier: cal,
@@ -482,6 +482,9 @@ ${CSS}</style>
         days,
         rows: [{ label: 'Midi', band: '#EEF6F6', pill: '#D3E9E9' }, { label: 'Soir', band: '#FFF3E2', pill: '#FEE1B6' }],
         library: lists.recipes || 'todo.plats',
+        rows_entity: 'input_text.repas_lignes',
+        colors_entity: 'input_text.repas_couleurs',
+        report_entity: 'input_text.repas_report',
         time_entity: time,
         weather_entity: weather,
         profiles: profs,
@@ -656,6 +659,10 @@ ${CSS}</style>
       const key = 'input_text.repas_' + day;
       st[key] = { entity_id: key, state: String((app.meals || {})[key] || ''), attributes: {} };
     }
+    for (const extra of ['lignes', 'couleurs', 'report']) {
+      const key = 'input_text.repas_' + extra;
+      st[key] = { entity_id: key, state: String((app.meals || {})[key] || ''), attributes: {} };
+    }
     for (const p of app.profiles || []) {
       const id = 'counter.etoiles_' + p.id;
       st[id] = { entity_id: id, state: String((app.stars || {})[p.id] || 0), attributes: {} };
@@ -760,7 +767,30 @@ ${CSS}</style>
           return;
         }
       }
+      if (domain === 'calendar' && service === 'delete_event') {
+        /* Home Assistant n'a pas de service `calendar.delete_event` : la
+           suppression passe par WebSocket. Si le calendrier ne l'autorise pas
+           (Google, par exemple), on le dit clairement au lieu de laisser
+           remonter « Service not found ». */
+        const st = this._hass.states && this._hass.states[ent];
+        const flags = st && st.attributes ? Number(st.attributes.supported_features || 0) : 0;
+        if (!(flags & 2)) {
+          throw new Error('Ce calendrier ne permet pas la suppression depuis Home Assistant. Supprimez l\'événement depuis l\'application du calendrier.');
+        }
+        const payload = { type: 'calendar/event/delete', entity_id: ent, uid: d.uid };
+        if (d.recurrence_id) payload.recurrence_id = d.recurrence_id;
+        if (d.recurrence_range) payload.recurrence_range = d.recurrence_range;
+        await this._hass.callWS(payload);
+        await this._refreshData();
+        return;
+      }
       if (domain === 'input_text' && service === 'set_value') {
+        /* Garde-fou : seules les clés de repas connues sont acceptées. Une carte
+           qui se tromperait d'`entity_id` ne doit pas créer de clé parasite. */
+        if (!/^input_text\.repas_(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lignes|couleurs|report)$/.test(ent)) {
+          this._trace('input_text ignore ' + ent);
+          return;
+        }
         await this._hass.callWS({ type: 'skylight_hub_family/text', entity: ent, value: String(d.value == null ? '' : d.value) });
         await this._refreshData();
         return;
