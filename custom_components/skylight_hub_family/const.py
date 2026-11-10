@@ -2,7 +2,7 @@
 
 DOMAIN = "skylight_hub_family"
 NAME = "Skylight Hub Family"
-VERSION = "0.5.11"
+VERSION = "0.5.12"
 
 PANEL_URL = "skylight"
 PANEL_TITLE = "Skylight Hub Family"

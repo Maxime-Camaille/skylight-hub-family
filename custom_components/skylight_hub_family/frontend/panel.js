@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.11';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.12';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -654,7 +654,12 @@ ${CSS}</style>
       addBtn.addEventListener('click', commit);
       root.querySelectorAll('.o-sw').forEach((b) => b.addEventListener('click', () => {
         ob.draft.color = b.dataset.color;
-        root.querySelectorAll('.o-sw').forEach((x) => x.classList.toggle('on', x === b));
+        const tick = '<svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        root.querySelectorAll('.o-sw').forEach((x) => {
+          const on = x === b;
+          x.classList.toggle('on', on);
+          x.innerHTML = on ? tick : '';
+        });
       }));
       root.querySelector('#o-cal').addEventListener('click', (e) => {
         ob.draft.cal = !ob.draft.cal;
