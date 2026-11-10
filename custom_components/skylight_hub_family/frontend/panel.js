@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.7';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.8';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -162,6 +162,8 @@ const CSS = `
 .o-err{background:#FDECEA;color:#8A1F1A;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
 .o-footrow{display:flex;gap:10px;align-items:center}
 .o-phone-only{display:flex;flex-direction:column;align-items:center}
+.o-welcome{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:22px}
+.o-welcome-foot{margin-top:28px;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center}
 
 /* illustrations (tablette) */
 .o-appprev{background:#fff;border:1px solid var(--o-line);border-radius:20px;box-shadow:var(--o-shadow);padding:15px 16px 14px;overflow:hidden;width:100%}
@@ -191,6 +193,10 @@ const CSS = `
 
 @media (min-width:900px){
   .o-phone-only{display:none}
+  .o-welcome{align-items:flex-start;text-align:left}
+  .o-welcome-foot{align-items:flex-start}
+  .o-welcome-foot .o-btn{max-width:300px}
+  .o-welcome-foot .o-legal{text-align:left;margin-left:4px}
   .o-content{justify-content:center}
   .o-wrap{max-width:1120px}
   .o-screen{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:clamp(24px,4vw,56px);align-items:stretch;padding:0 clamp(24px,3vw,48px);min-height:calc(100vh - 24px)}
@@ -551,11 +557,13 @@ ${CSS}</style>
 
     if (step === 0) {
       left = this._oBoard();
-      body = `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:22px">
-        ${this._oAppIcon(56)}<h2 class="o-h1" style="margin-top:16px">Votre famille,<br>au même endroit.</h2>
-        <p class="o-sub" style="max-width:318px">Les tâches de chacun, les étoiles gagnées, les repas de la semaine et les rendez-vous.</p>
-        <div style="width:100%;text-align:left;margin-top:20px">${this._oBenefits()}</div></div>`;
-      foot = this._oboFoot(`<button class="o-btn" id="o-go" type="button">Commencer</button><div class="o-legal">2 minutes · tout reste chez vous</div>`);
+      body = `<div class="o-welcome">
+        ${this._oAppIcon(52)}<h2 class="o-h1" style="margin-top:16px">Votre famille,<br>au même endroit.</h2>
+        <p class="o-sub" style="max-width:420px">Les tâches de chacun, les étoiles gagnées, les repas de la semaine et les rendez-vous.</p>
+        <div style="width:100%;text-align:left;margin-top:20px">${this._oBenefits()}</div>
+        <div class="o-welcome-foot"><button class="o-btn" id="o-go" type="button">Commencer</button><div class="o-legal">2 minutes · tout reste chez vous</div></div>
+      </div>`;
+      foot = '';
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
       root.querySelector('#o-go').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
       return;
