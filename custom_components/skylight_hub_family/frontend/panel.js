@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.9';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.10';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -413,7 +413,7 @@ ${CSS}</style>
 
   _oBenefits() {
     return `<div class="o-benefits">
-      <div class="o-ben"><span class="ic">${this._oIcon('check', '#007AFF', 21)}</span><span class="tx"><b>Chacun ses tâches</b>Les routines du matin et du soir, une colonne par personne.</span></div>
+      <div class="o-ben"><span class="ic">${this._oIcon('check', '#007AFF', 21)}</span><span class="tx"><b>Chacun ses tâches</b>Les routines du matin et du soir, pour chaque personne.</span></div>
       <div class="o-ben"><span class="ic">${this._oIcon('star', '#007AFF', 21)}</span><span class="tx"><b>Des étoiles à gagner</b>Chaque tâche cochée en rapporte ; elles s'échangent.</span></div>
       <div class="o-ben"><span class="ic">${this._oIcon('cal', '#007AFF', 21)}</span><span class="tx"><b>Les repas et le calendrier</b>La semaine entière, et les rendez-vous de tous.</span></div>
     </div>`;
@@ -602,7 +602,7 @@ ${CSS}</style>
         <button class="x" data-rm="${i}" type="button" aria-label="Retirer ${esc(p.name)}"><svg viewBox="0 0 24 24" width="12" height="12" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#8B8B90" stroke-width="2.4" stroke-linecap="round"/></svg></button>
       </div>`).join('');
       body = `${this._oProgress(2)}<div style="padding-top:22px"><h2 class="o-h1 sm">Qui vit ici ?</h2>
-        <p class="o-sub tight">Une couleur par personne : elle devient sa colonne, ses tuiles et sa pastille du calendrier.</p></div>
+        <p class="o-sub tight">Ajoutez les personnes du foyer. Vous pourrez en ajouter d'autres plus tard.</p></div>
         <div class="o-people">${rows || ''}</div>
         <div class="o-addzone">
           <div class="row1"><input class="mini" id="o-pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}"><button class="plus" id="o-add" type="button" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M12 5v14M5 12h14" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
@@ -710,7 +710,7 @@ ${CSS}</style>
     body = `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:18px">
       <div class="o-phone-only" style="gap:18px">${this._oCheckAvatars()}</div>
       <h2 class="o-h1" style="margin-top:30px">Votre famille<br>est prête.</h2>
-      <p class="o-sub" style="max-width:318px">Les tâches, les étoiles et les repas vous attendent. Chaque écran s'expliquera la première fois.</p>
+      <p class="o-sub" style="max-width:318px">Les tâches, les étoiles et les repas vous attendent.</p>
       <div class="o-pillsum" style="margin-top:22px"><b>${esc((rep.config && rep.config.family_name) || ob.family || 'Ma famille')}</b><span class="o-dotsep"></span>${profs.length} personne${profs.length > 1 ? 's' : ''}<span class="o-dotsep"></span>${cals} calendrier${cals > 1 ? 's' : ''}</div>
     </div>`;
     foot = this._oboFoot(`<button class="o-btn" id="o-enter" type="button">Entrer dans Skylight Hub Family</button>`);
