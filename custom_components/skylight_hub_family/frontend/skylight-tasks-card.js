@@ -50,7 +50,7 @@ const CSS = `
 .bfade.on{opacity:1}
 /* quatre colonnes visibles, à largeur FIXE : les profils suivants débordent à
    droite (défilement) au lieu de rétrécir les colonnes affichées */
-.col{flex:0 0 calc((100% - 36px) / 4);min-width:250px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0;scroll-snap-align:start}
+.col{flex:1 1 0;min-width:250px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0;scroll-snap-align:start}
 /* feuille « Affichage » : deux blocs dans un seul panneau */
 .sect2{font-family:var(--skylight-serif,Literata,Georgia,serif);font-size:17px;margin:14px 2px 5px}
 .sect2:first-child{margin-top:2px}
@@ -386,7 +386,7 @@ const CARD_VERSION = 'v127';
  * ressource `famille-core` (voir ETAT-CHANTIER.md). En production la ressource
  * est déjà chargée : cet import retrouve le MÊME module, évalué une seule fois.
  * Hors Home Assistant, le banc d'essai pose `window.FAMILLE_CORE_URL`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.20';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.21';
 
 let CORE = null;
 let esc; let mix; let alpha; let localDay; let pastelOf; let tokens;
