@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.14';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.15';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -471,14 +471,16 @@ ${CSS}</style>
     const list = (this._ob.people && this._ob.people.length ? this._ob.people : [
       { name: 'Camille', color: '#7FA9E8' }, { name: 'Léo', color: '#79CBA6' }, { name: 'Papa', color: '#F0A0B4' },
     ]).slice(0, 3);
-    const tones = ['#D6F0DE', '#FBE3EA', '#CFE0FB'];
-    return `<div class="o-cols3">${list.map((p, i) => `
+    return `<div class="o-cols3">${list.map((p) => {
+      const tone = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : '#EAF1FC';
+      return `
       <div class="o-col3">
-        <div class="h">${this._oAv((p.name || '?')[0], p.color, 20)} ${esc(p.name)}</div>
-        <div class="tile"><div style="height:16px;border-radius:5px;background:${tones[i % 3]}"></div><div style="height:10px;border-radius:4px;background:#F1F4F9;width:70%"></div></div>
-        <div class="tile"><div style="height:10px;border-radius:4px;background:#F1F4F9;width:60%"></div><div style="height:16px;border-radius:5px;background:${tones[i % 3]}"></div></div>
+        <div class="h">${this._oAv((p.name || '?')[0].toUpperCase(), p.color, 20)} ${esc(p.name)}</div>
+        <div class="tile"><div style="height:16px;border-radius:5px;background:${tone}"></div><div style="height:10px;border-radius:4px;background:#F1F4F9;width:70%"></div></div>
+        <div class="tile"><div style="height:10px;border-radius:4px;background:#F1F4F9;width:60%"></div><div style="height:16px;border-radius:5px;background:${tone}"></div></div>
         <div class="star">${this._oIcon('star', '#8A6A16', 10)} <span style="opacity:.7">2</span></div>
-      </div>`).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
   }
 
   _oWeek() {
