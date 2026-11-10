@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Skylight Hub Family",
+        "description": "L'application s'installe en un clic. Elle ne crée aucune entité dans Home Assistant : profils, tâches, récompenses et repas restent dans son propre fichier de données."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Skylight Hub Family est déjà installé. Ouvre l'application depuis la barre latérale."
+    }
+  }
+}

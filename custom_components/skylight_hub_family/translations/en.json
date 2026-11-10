@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Skylight Hub Family",
+        "description": "The app installs in one click. It creates no entities in Home Assistant: profiles, tasks, rewards and meals stay in its own data file."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Skylight Hub Family is already installed. Open the app from the sidebar."
+    }
+  }
+}

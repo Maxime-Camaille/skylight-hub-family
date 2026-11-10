@@ -1,4 +1,9 @@
-"""Ajout de l'intégration d'essai Skylight V2."""
+"""Ajout de l'intégration Skylight Hub Family.
+
+L'application ne demande rien à l'installation : un seul appui sur
+« Ajouter » crée l'entrée, puis c'est l'écran d'accueil de l'app qui pose
+les questions (nom de la famille, personnes).
+"""
 
 from __future__ import annotations
 
@@ -6,13 +11,16 @@ from homeassistant import config_entries
 
 from .const import DOMAIN
 
+TITLE = "Skylight Hub Family"
 
-class SkylightV2ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+class SkylightHubFamilyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Une seule instance, créée sans formulaire."""
+
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
+        """Crée l'entrée directement : aucun champ à remplir."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        if user_input is not None:
-            return self.async_create_entry(title="Skylight Hub Family", data={})
-        return self.async_show_form(step_id="user")
+        return self.async_create_entry(title=TITLE, data={})
