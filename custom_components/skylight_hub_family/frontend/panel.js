@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.12';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.13';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -25,6 +25,7 @@ const ready = import(CORE_URL).then((m) => { CORE = m; return m; }).catch(() => 
 /* Le nuancier de l'application (14 teintes vives, mêmes valeurs que
  * `COLORS` dans skylight-profiles-card.js). L'ordre est celui de la fiche
  * profil, pour qu'une couleur choisie ici se retrouve au même endroit. */
+const OB_KEY = 'skylight.onboarding.v1';
 const OB_COLORS = [
   '#2E9E63', '#A8D46A', '#4FC3D0', '#0F5F6E', '#4677A8', '#8E5BD9', '#D9548C',
   '#C2185B', '#C22F2F', '#E0622A', '#7A4B2A', '#A9762F', '#F5A623', '#2B3038',
@@ -520,13 +521,62 @@ ${CSS}</style>
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   }
 
+  _obClearDraft() {
+    try { localStorage.removeItem(OB_KEY); } catch (e) { /* stockage indisponible */ }
+  }
+
+  _obSave() {
+    const ob = this._ob;
+    if (!ob || ob.step === 'existing') return;
+    try {
+      if (typeof ob.step === 'number' && ob.step >= 5) { localStorage.removeItem(OB_KEY); return; }
+      localStorage.setItem(OB_KEY, JSON.stringify({
+        step: ob.step,
+        family: ob.family || '',
+        people: ob.people || [],
+        draft: ob.draft || { name: '', color: OB_COLORS[0], cal: true },
+        updated: Date.now(),
+      }));
+    } catch (e) { /* stockage indisponible */ }
+  }
+
+  _obRestore() {
+    if (this._app && this._app.existing) { this._obClearDraft(); return null; }
+    try {
+      const raw = localStorage.getItem(OB_KEY);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== 'object' || typeof d.step !== 'number') return null;
+      if (d.updated && Date.now() - d.updated > 7 * 86400000) { this._obClearDraft(); return null; }
+      if (d.step >= 5) { this._obClearDraft(); return null; }
+      d.step = Math.max(0, Math.min(4, d.step));
+      if (typeof d.family !== 'string') d.family = '';
+      if (!Array.isArray(d.people)) d.people = [];
+      d.people = d.people.filter((p) => p && typeof p.name === 'string' && p.name.trim()).map((p) => ({
+        name: String(p.name).slice(0, 20),
+        color: typeof p.color === 'string' ? p.color : OB_COLORS[0],
+        cal: !!p.cal,
+        mode: ['create', 'link', 'later'].indexOf(p.mode) >= 0 ? p.mode : (p.cal ? 'create' : 'later'),
+        calendar: typeof p.calendar === 'string' ? p.calendar : '',
+      }));
+      if (!d.draft || typeof d.draft !== 'object') d.draft = { name: '', color: OB_COLORS[0], cal: true };
+      d.draft = {
+        name: String(d.draft.name || '').slice(0, 20),
+        color: typeof d.draft.color === 'string' ? d.draft.color : OB_COLORS[0],
+        cal: d.draft.cal !== false,
+      };
+      return d;
+    } catch (e) { return null; }
+  }
+
   _renderOnboarding() {
     this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb"><div class="o-wrap" id="ob"></div></div>`;
+    const saved = this._obRestore();
     this._ob = {
-      step: (this._app && this._app.existing) ? 'existing' : 0,
-      family: '',
-      people: [],
-      draft: { name: '', color: OB_COLORS[0], cal: true },
+      step: saved ? saved.step : ((this._app && this._app.existing) ? 'existing' : 0),
+      family: saved ? saved.family : '',
+      people: saved ? saved.people : [],
+      draft: saved ? saved.draft : { name: '', color: OB_COLORS[0], cal: true },
       edit: -1,
       err: null,
       busy: false,
@@ -543,6 +593,7 @@ ${CSS}</style>
     const root = this.shadowRoot.getElementById('ob');
     if (!root) return;
     const ob = this._ob;
+    this._obSave();
     const step = ob.step;
     const family = ob.family || 'Ma famille';
     let left = '';
@@ -593,6 +644,8 @@ ${CSS}</style>
       const nm = root.querySelector('#o-prev-nm');
       const av = root.querySelector('#o-prev-av');
       const sync = () => {
+        ob.family = inp.value;
+        this._obSave();
         const v = inp.value.trim() || 'Ma famille';
         nm.textContent = v;
         av.innerHTML = this._oAv((v[0] || 'M').toUpperCase(), '#B4A6E6', 38);
@@ -649,11 +702,12 @@ ${CSS}</style>
         this._obPaint();
       };
       addBtn.disabled = !name.value.trim();
-      name.addEventListener('input', () => { ob.draft.name = name.value; addBtn.disabled = !name.value.trim(); });
+      name.addEventListener('input', () => { ob.draft.name = name.value; this._obSave(); addBtn.disabled = !name.value.trim(); });
       name.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); });
       addBtn.addEventListener('click', commit);
       root.querySelectorAll('.o-sw').forEach((b) => b.addEventListener('click', () => {
         ob.draft.color = b.dataset.color;
+        this._obSave();
         const tick = '<svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         root.querySelectorAll('.o-sw').forEach((x) => {
           const on = x === b;
@@ -663,6 +717,7 @@ ${CSS}</style>
       }));
       root.querySelector('#o-cal').addEventListener('click', (e) => {
         ob.draft.cal = !ob.draft.cal;
+        this._obSave();
         e.currentTarget.classList.toggle('on', ob.draft.cal);
         e.currentTarget.setAttribute('aria-checked', ob.draft.cal ? 'true' : 'false');
       });
@@ -827,6 +882,7 @@ ${CSS}</style>
       this._trace('app-err ' + (e && e.message));
     }
     this._app = app || {};
+    if (this._app && this._app.onboarding_done) this._obClearDraft();
     this._profiles = (app && app.profiles) || [];
 
     /* 2. Plus de repli sur un dashboard : chez un nouvel arrivant il n'existe
