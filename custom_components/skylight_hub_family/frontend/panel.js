@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.1';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.2';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -775,7 +775,10 @@ ${CSS}</style>
         const st = this._hass.states && this._hass.states[ent];
         const flags = st && st.attributes ? Number(st.attributes.supported_features || 0) : 0;
         if (!(flags & 2)) {
-          throw new Error('Ce calendrier ne permet pas la suppression depuis Home Assistant. Supprimez l\'événement depuis l\'application du calendrier.');
+          throw new Error('Ce calendrier autorise seulement la création depuis Home Assistant (Google, par exemple) : supprimez l\'événement depuis l\'application du calendrier.');
+        }
+        if (!d.uid) {
+          throw new Error('Home Assistant ne transmet pas l\'identifiant de cet événement à l\'application : supprimez-le depuis l\'application Calendrier de Home Assistant.');
         }
         const payload = { type: 'calendar/event/delete', entity_id: ent, uid: d.uid };
         if (d.recurrence_id) payload.recurrence_id = d.recurrence_id;
