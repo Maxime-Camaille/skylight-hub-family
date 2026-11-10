@@ -94,7 +94,7 @@ function slug(s) {
  * Jetons, en-tête et calculs viennent de famille-core.js : cette carte n'en
  * garde plus de copie. `CORE_URL` porte la version — l'incrémenter en même
  * temps que la ressource `famille-core` (ETAT-CHANTIER.md §9.2). */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.1';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.2';
 let CORE = null;
 let localDay;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
