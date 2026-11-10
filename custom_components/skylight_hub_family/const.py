@@ -2,11 +2,11 @@
 
 DOMAIN = "skylight_hub_family"
 NAME = "Skylight Hub Family"
-VERSION = "0.5.2"
+VERSION = "0.5.3"
 
 PANEL_URL = "skylight"
 PANEL_TITLE = "Skylight Hub Family"
-PANEL_ICON = "mdi:flask-outline"
+PANEL_ICON = "mdi:home-group"
 STATIC_PATH = "/skylight-static"
 FRONTEND_DIRNAME = "frontend"
 
