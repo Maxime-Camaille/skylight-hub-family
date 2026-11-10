@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.15';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.16';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -203,6 +203,25 @@ const CSS = `
 .o-week .c.hi{background:#F6FAFF;border-color:#E3EDFD}
 .o-illu-panel{background:linear-gradient(180deg,#F4F8FE,#EDF4FD);border-radius:24px;padding:16px;width:100%}
 
+/* feuille de choix (remplace les menus natifs) */
+.o-sheetwrap{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.o-sheet-backdrop{position:absolute;inset:0;background:rgba(20,20,25,.28);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.o-sheet{position:relative;width:100%;max-width:520px;max-height:84vh;overflow:auto;background:#fff;border-radius:22px 22px 0 0;padding:10px 12px 14px;box-shadow:0 -12px 50px rgba(0,0,0,.22);animation:o-sheet-in .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes o-sheet-in{from{transform:translateY(22px);opacity:.5}to{transform:none;opacity:1}}
+.o-sheet-grab{width:36px;height:4px;border-radius:2px;background:#D8D6D2;margin:2px auto 10px}
+.o-sheet-title{font-size:17px;font-weight:650;letter-spacing:-.015em;text-align:center;margin:2px 0 2px}
+.o-sheet-sub{font-size:12.5px;color:var(--o-muted);text-align:center;margin-bottom:10px;line-height:1.3}
+.o-sheet-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.o-sheet-opt{display:flex;align-items:center;gap:10px;width:100%;padding:12px 10px;border-radius:13px;background:none;border:0;text-align:left;font-family:inherit;cursor:pointer}
+.o-sheet-opt:hover,.o-sheet-opt.on{background:#F5F7FA}
+.o-sheet-opt .tx{flex:1 1 auto;display:flex;flex-direction:column;gap:2px;min-width:0}
+.o-sheet-opt .tx b{font-size:15.5px;font-weight:600;letter-spacing:-.012em;color:var(--o-ink)}
+.o-sheet-opt .tx span{font-size:12.5px;color:var(--o-muted);line-height:1.3}
+.o-sheet-opt svg{flex:0 0 auto}
+.o-sheet-empty{padding:16px 10px;font-size:13px;color:var(--o-muted);text-align:center;line-height:1.35}
+.o-sheet-cancel{margin-top:8px;width:100%;height:50px;border-radius:13px;background:#F2F0EC;border:0;font-family:inherit;font-size:16px;font-weight:600;color:var(--o-ink);cursor:pointer}
+button.o-select{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+@keyframes o-sheet-pop{from{transform:scale(.97);opacity:.5}to{transform:none;opacity:1}}
 @media (min-width:900px){
   .o-phone-only{display:none}
   .o-welcome{align-items:flex-start;text-align:left}
@@ -210,6 +229,9 @@ const CSS = `
   .o-welcome-foot .o-btn{max-width:300px}
   .o-welcome-foot .o-legal{text-align:left;margin-left:4px}
   .o-content{justify-content:center}
+  .o-sheetwrap{align-items:center}
+  .o-sheet{border-radius:22px;max-width:420px;padding:14px 14px 16px;animation:o-sheet-pop .18s cubic-bezier(.2,.8,.2,1)}
+  .o-sheet-grab{display:none}
   .o-wrap{max-width:1120px}
   .o-screen{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:clamp(24px,4vw,56px);align-items:stretch;padding:0 clamp(24px,3vw,48px);min-height:calc(100vh - 24px)}
   .o-left{display:flex;align-items:center;justify-content:center;min-width:0}
@@ -583,6 +605,7 @@ ${CSS}</style>
       err: null,
       busy: false,
       report: null,
+      sheet: null,
     };
     this._obPaint();
   }
@@ -597,6 +620,7 @@ ${CSS}</style>
     const ob = this._ob;
     this._obSave();
     const step = ob.step;
+    if (step !== 3) ob.sheet = null;
     const family = ob.family || 'Ma famille';
     let left = '';
     let body = '';
@@ -733,36 +757,24 @@ ${CSS}</style>
     if (step === 3) {
       left = this._oWeek();
       const cals = this._oCalendars();
-      const LABEL = { create: 'Créer un calendrier', link: 'Relier un calendrier', later: 'Plus tard' };
-      const rows = ob.people.map((p, i) => `<div class="o-selrow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 32)}
-        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${esc(LABEL[p.mode || 'later'])}${p.mode === 'link' && p.calendar ? ' · ' + esc((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : ''}</div></div>
-        <select class="o-select${(p.mode || 'later') === 'later' ? ' alt' : ''}" data-mode="${i}" aria-label="Calendrier de ${esc(p.name)}">
-          <option value="create"${p.mode === 'create' ? ' selected' : ''}>Créer</option>
-          <option value="link"${p.mode === 'link' ? ' selected' : ''}>Relier</option>
-          <option value="later"${(p.mode || 'later') === 'later' ? ' selected' : ''}>Plus tard</option>
-        </select>
-        ${p.mode === 'link' ? `<div class="o-callist"><select class="o-select" data-cal="${i}" aria-label="Calendrier de ${esc(p.name)}">
-          <option value="">Choisir un calendrier</option>${cals.length ? '' : '<option value="" disabled>Aucun calendrier connecté</option>'}
-          ${cals.map((c) => `<option value="${esc(c.id)}"${p.calendar === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
-        </select></div>` : ''}
-      </div>`).join('');
+      const LABEL = { create: 'Créer', link: 'Relier', later: 'Plus tard' };
+      const rows = ob.people.map((p, i) => {
+        const mode = p.mode || 'later';
+        const calName = p.calendar ? ((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : '';
+        return `<div class="o-selrow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 32)}
+        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${mode === 'create' ? 'Créer un calendrier' : (mode === 'link' ? 'Relier un calendrier' : 'Plus tard')}${mode === 'link' && calName ? ' · ' + esc(calName) : ''}</div></div>
+        <button class="o-select${mode === 'later' ? ' alt' : ''}" data-mode-open="${i}" type="button" aria-haspopup="dialog">${LABEL[mode]}</button>
+        ${mode === 'link' ? `<div class="o-callist"><button class="o-select" data-cal-open="${i}" type="button" aria-haspopup="dialog">${esc(calName || 'Choisir un calendrier')}</button></div>` : ''}
+      </div>`;
+      }).join('');
       body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Les calendriers</h2>
         <p class="o-sub tight">Choisissez pour chaque personne : créer un calendrier, relier un calendrier déjà connecté à Home Assistant (Google, Apple, CalDAV…), ou plus tard.</p></div>
         <div class="o-people" style="margin-top:18px;gap:10px">${rows}</div>
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
       foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
-      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
-      root.querySelectorAll('[data-mode]').forEach((s) => s.addEventListener('change', () => {
-        const i = Number(s.dataset.mode);
-        ob.people[i].mode = s.value;
-
-        if (s.value !== 'link') ob.people[i].calendar = '';
-        this._obPaint();
-      }));
-      root.querySelectorAll('[data-cal]').forEach((s) => s.addEventListener('change', () => {
-        ob.people[Number(s.dataset.cal)].calendar = s.value;
-        this._obPaint();
-      }));
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>${this._oSheetHtml()}`;
+      root.querySelectorAll('[data-mode-open]').forEach((b) => b.addEventListener('click', () => this._obOpenSheet('mode', Number(b.dataset.modeOpen))));
+      root.querySelectorAll('[data-cal-open]').forEach((b) => b.addEventListener('click', () => this._obOpenSheet('cal', Number(b.dataset.calOpen))));
       root.querySelector('#o-back').addEventListener('click', () => { ob.step = 2; this._obPaint(); });
       root.querySelector('#o-next').addEventListener('click', () => {
         const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
@@ -771,6 +783,24 @@ ${CSS}</style>
         ob.step = 4;
         this._obPaint();
       });
+      const sheet = root.querySelector('#o-sheet');
+      if (sheet) {
+        sheet.querySelectorAll('[data-sheet-close]').forEach((b) => b.addEventListener('click', () => { ob.sheet = null; this._obPaint(); }));
+        sheet.querySelectorAll('[data-sheet-opt]').forEach((b) => b.addEventListener('click', () => {
+          const i = Number(b.dataset.person);
+          const p = ob.people[i];
+          if (!p) return;
+          if (b.dataset.sheetOpt === 'mode') {
+            p.mode = b.dataset.value;
+            if (p.mode !== 'link') p.calendar = '';
+          } else {
+            p.mode = 'link';
+            p.calendar = b.dataset.value;
+          }
+          ob.sheet = null;
+          this._obPaint();
+        }));
+      }
       return;
     }
 
@@ -821,6 +851,53 @@ ${CSS}</style>
       const el = this.shadowRoot.getElementById('o-pname');
       if (el) { el.focus(); el.select(); }
     }, 40);
+  }
+
+  _obOpenSheet(kind, i) {
+    const ob = this._ob;
+    if (!ob || !ob.people[i]) return;
+    ob.sheet = { kind, person: i };
+    this._obPaint();
+  }
+
+  _oSheetOpt(kind, person, value, label, desc, on) {
+    return `<button class="o-sheet-opt${on ? ' on' : ''}" data-sheet-opt="${kind}" data-value="${esc(value)}" data-person="${person}" type="button">
+      <span class="tx"><b>${esc(label)}</b>${desc ? `<span>${esc(desc)}</span>` : ''}</span>
+      ${on ? '<svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#0A7CFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+    </button>`;
+  }
+
+  _oSheetHtml() {
+    const ob = this._ob;
+    const s = ob && ob.sheet;
+    if (!s) return '';
+    const p = ob.people[s.person];
+    if (!p) return '';
+    const cals = this._oCalendars();
+    let title = 'Calendrier de ' + p.name;
+    let sub = 'Choisissez ce qui doit être fait.';
+    let opts = '';
+    if (s.kind === 'mode') {
+      const mode = p.mode || 'later';
+      opts = [
+        ['create', 'Créer un calendrier', 'Un calendrier local dans Home Assistant.'],
+        ['link', 'Relier un calendrier', 'Un calendrier déjà connecté (Google, Apple, CalDAV…).'],
+        ['later', 'Plus tard', 'Aucun calendrier pour cette personne.'],
+      ].map(([v, l, d]) => this._oSheetOpt('mode', s.person, v, l, d, mode === v)).join('');
+    } else {
+      sub = 'Les calendriers déjà connectés à Home Assistant.';
+      opts = cals.length ? cals.map((c) => this._oSheetOpt('cal', s.person, c.id, c.name, '', p.calendar === c.id)).join('') : '<div class="o-sheet-empty">Aucun calendrier connecté. Choisissez « Créer un calendrier » ou « Plus tard ».</div>';
+    }
+    return `<div class="o-sheetwrap" id="o-sheet">
+      <div class="o-sheet-backdrop" data-sheet-close></div>
+      <div class="o-sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="o-sheet-grab"></div>
+        <div class="o-sheet-title">${esc(title)}</div>
+        <div class="o-sheet-sub">${esc(sub)}</div>
+        <div class="o-sheet-list">${opts}</div>
+        <button class="o-sheet-cancel" data-sheet-close type="button">Annuler</button>
+      </div>
+    </div>`;
   }
 
   async _obInstall(keep) {
