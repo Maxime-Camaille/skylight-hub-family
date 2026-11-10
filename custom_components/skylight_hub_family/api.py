@@ -56,7 +56,10 @@ async def async_get_data(hass: HomeAssistant) -> dict[str, Any]:
             data[key] = raw.get(key) or []
     holder = {"store": store, "data": data}
     hass.data[DATA] = holder
-    if _ensure_routines(data):
+    changed = _ensure_routines(data)
+    if _clean_meals(data):
+        changed = True
+    if changed:
         await store.async_save(data)
     return holder
 
@@ -80,6 +83,31 @@ def _slug(text: str) -> str:
         elif out and out[-1] != "_":
             out.append("_")
     return "".join(out).strip("_") or f"p{uuid.uuid4().hex[:4]}"
+
+
+MEAL_KEYS = {
+    "input_text.repas_lundi",
+    "input_text.repas_mardi",
+    "input_text.repas_mercredi",
+    "input_text.repas_jeudi",
+    "input_text.repas_vendredi",
+    "input_text.repas_samedi",
+    "input_text.repas_dimanche",
+    "input_text.repas_lignes",
+    "input_text.repas_couleurs",
+    "input_text.repas_report",
+}
+
+
+def _clean_meals(data: dict[str, Any]) -> bool:
+    """Retire les clés de repas qui ne sont pas des clés connues (valeurs
+    écrites par erreur comme entité)."""
+    meals = data.get("meals") or {}
+    cleaned = {k: v for k, v in meals.items() if k in MEAL_KEYS}
+    if cleaned != meals:
+        data["meals"] = cleaned
+        return True
+    return False
 
 
 def _ensure_routines(data: dict[str, Any]) -> bool:
