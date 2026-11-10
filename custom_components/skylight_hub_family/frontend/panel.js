@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.13';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.14';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -665,7 +665,7 @@ ${CSS}</style>
       const editing = (ob.edit != null && ob.edit >= 0 && ob.edit < ob.people.length) ? ob.edit : -1;
       const rows = ob.people.map((p, i) => `<div class="o-prow${i === editing ? ' editing' : ''}" data-row="${i}">
         ${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 34)}
-        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${i === editing ? 'Modification en cours' : (p.mode === 'link' ? 'Calendrier relié' : (p.cal ? 'Calendrier créé' : 'Sans calendrier'))}</div></div>
+        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${i === editing ? 'Modification en cours' : (p.mode === 'create' ? 'Calendrier à créer' : (p.mode === 'link' ? 'Calendrier relié' : 'Sans calendrier'))}</div></div>
         <button class="edit" data-edit="${i}" type="button" aria-label="Modifier ${esc(p.name)}"><svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M4 20l4.3-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" stroke="#8B8B90" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
         <button class="x" data-rm="${i}" type="button" aria-label="Retirer ${esc(p.name)}"><svg viewBox="0 0 24 24" width="12" height="12" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#8B8B90" stroke-width="2.4" stroke-linecap="round"/></svg></button>
       </div>`).join('');
@@ -677,7 +677,7 @@ ${CSS}</style>
           ${editing >= 0 ? `<div class="o-edithead"><span>Modifier ${esc(ob.people[editing].name)}</span><button id="o-cancel" type="button">Annuler</button></div>` : ''}
           <div class="row1"><input class="mini" id="o-pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}"><button class="plus${editing >= 0 ? ' save' : ''}" id="o-add" type="button" aria-label="${editing >= 0 ? 'Enregistrer' : 'Ajouter'}">${editing >= 0 ? '<svg viewBox="0 0 24 24" width="15" height="15" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M12 5v14M5 12h14" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/></svg>'}</button></div>
           <div class="o-swatches">${OB_COLORS.map((c) => `<button class="o-sw${c === ob.draft.color ? ' on' : ''}" type="button" data-color="${c}" style="background:${c}" aria-label="Couleur ${c}">${c === ob.draft.color ? '<svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</button>`).join('')}</div>
-          <div class="o-togglerow"><div class="lab">Créer un calendrier pour cette personne</div><button class="o-tg${ob.draft.cal ? ' on' : ''}" id="o-cal" type="button" role="switch" aria-checked="${ob.draft.cal ? 'true' : 'false'}" aria-label="Créer un calendrier"></button></div>
+
         </div>
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
       foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn${canNext ? '' : ' dim'}" id="o-next" type="button" ${canNext ? '' : 'disabled'}>Continuer</button></div>`);
@@ -691,11 +691,8 @@ ${CSS}</style>
           const p = ob.people[editing];
           p.name = v;
           p.color = ob.draft.color;
-          p.cal = ob.draft.cal;
-          if (p.cal && p.mode === 'later') p.mode = 'create';
-          if (!p.cal && p.mode === 'create') p.mode = 'later';
         } else {
-          ob.people.push({ name: v, color: ob.draft.color, cal: ob.draft.cal, mode: ob.draft.cal ? 'create' : 'later', calendar: '' });
+          ob.people.push({ name: v, color: ob.draft.color, cal: false, mode: 'later', calendar: '' });
         }
         ob.edit = -1;
         ob.draft = { name: '', color: OB_COLORS[0], cal: true };
@@ -715,12 +712,7 @@ ${CSS}</style>
           x.innerHTML = on ? tick : '';
         });
       }));
-      root.querySelector('#o-cal').addEventListener('click', (e) => {
-        ob.draft.cal = !ob.draft.cal;
-        this._obSave();
-        e.currentTarget.classList.toggle('on', ob.draft.cal);
-        e.currentTarget.setAttribute('aria-checked', ob.draft.cal ? 'true' : 'false');
-      });
+
       root.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this._obStartEdit(Number(b.dataset.edit)); }));
       root.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); ob.people.splice(Number(b.dataset.rm), 1); ob.edit = -1; this._obPaint(); }));
       root.querySelectorAll('[data-row]').forEach((r) => r.addEventListener('click', (e) => { if (e.target.closest('button')) return; this._obStartEdit(Number(r.dataset.row)); }));
@@ -741,19 +733,19 @@ ${CSS}</style>
       const cals = this._oCalendars();
       const LABEL = { create: 'Créer un calendrier', link: 'Relier un calendrier', later: 'Plus tard' };
       const rows = ob.people.map((p, i) => `<div class="o-selrow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 32)}
-        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${esc(LABEL[p.mode || 'create'])}${p.mode === 'link' && p.calendar ? ' · ' + esc((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : ''}</div></div>
-        <select class="o-select${p.mode === 'later' ? ' alt' : ''}" data-mode="${i}" aria-label="Calendrier de ${esc(p.name)}">
-          <option value="create"${(p.mode || 'create') === 'create' ? ' selected' : ''}>Créer</option>
+        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${esc(LABEL[p.mode || 'later'])}${p.mode === 'link' && p.calendar ? ' · ' + esc((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : ''}</div></div>
+        <select class="o-select${(p.mode || 'later') === 'later' ? ' alt' : ''}" data-mode="${i}" aria-label="Calendrier de ${esc(p.name)}">
+          <option value="create"${p.mode === 'create' ? ' selected' : ''}>Créer</option>
           <option value="link"${p.mode === 'link' ? ' selected' : ''}>Relier</option>
-          <option value="later"${p.mode === 'later' ? ' selected' : ''}>Plus tard</option>
+          <option value="later"${(p.mode || 'later') === 'later' ? ' selected' : ''}>Plus tard</option>
         </select>
         ${p.mode === 'link' ? `<div class="o-callist"><select class="o-select" data-cal="${i}" aria-label="Calendrier de ${esc(p.name)}">
-          <option value="">Choisir un calendrier</option>
+          <option value="">Choisir un calendrier</option>${cals.length ? '' : '<option value="" disabled>Aucun calendrier connecté</option>'}
           ${cals.map((c) => `<option value="${esc(c.id)}"${p.calendar === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
         </select></div>` : ''}
       </div>`).join('');
       body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Les calendriers</h2>
-        <p class="o-sub tight">Reliez le calendrier de chaque personne. Si elle n'en a pas, on en crée un.</p></div>
+        <p class="o-sub tight">Choisissez pour chaque personne : créer un calendrier, relier un calendrier déjà connecté à Home Assistant (Google, Apple, CalDAV…), ou plus tard.</p></div>
         <div class="o-people" style="margin-top:18px;gap:10px">${rows}</div>
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
       foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
@@ -761,7 +753,7 @@ ${CSS}</style>
       root.querySelectorAll('[data-mode]').forEach((s) => s.addEventListener('change', () => {
         const i = Number(s.dataset.mode);
         ob.people[i].mode = s.value;
-        if (s.value === 'create') ob.people[i].cal = true;
+
         if (s.value !== 'link') ob.people[i].calendar = '';
         this._obPaint();
       }));
@@ -782,7 +774,7 @@ ${CSS}</style>
 
     if (step === 4) {
       left = this._oShapes();
-      const create = ob.people.filter((p) => (p.mode || 'create') === 'create').length;
+      const create = ob.people.filter((p) => p.mode === 'create').length;
       const link = ob.people.filter((p) => p.mode === 'link' && p.calendar).length;
       body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Voilà ce qui va<br>être créé</h2>
         <p class="o-sub tight">Les personnes vivent dans l'application. Seuls les calendriers demandés deviennent des objets Home Assistant.</p></div>
@@ -846,7 +838,7 @@ ${CSS}</style>
         people: keep ? [] : ob.people.map((p) => ({
           name: p.name,
           color: p.color,
-          create_calendar: (p.mode || 'create') === 'create',
+          create_calendar: p.mode === 'create',
           calendar: p.mode === 'link' ? (p.calendar || '') : '',
         })),
         keep: !!keep,
