@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.8';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.9';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -574,7 +574,7 @@ ${CSS}</style>
       body = `${this._oProgress(1)}<div style="padding-top:26px"><h2 class="o-h1">Comment s'appelle<br>votre famille ?</h2>
         <p class="o-sub">C'est le nom affiché en haut de chaque écran.</p></div>
         <div class="o-field"><div class="lab">Nom de la famille</div><input class="o-input" id="o-fam" maxlength="40" placeholder="Ma famille" autocomplete="off" value="${esc(ob.family)}"></div>
-        <div class="o-preview"><span id="o-prev-av">${this._oAv((family[0] || 'M').toUpperCase(), '#B4A6E6', 38)}</span><div><div class="nm" id="o-prev-nm">${esc(family)}</div><div class="meta">Aperçu en direct</div></div></div>`;
+        <div class="o-preview"><span id="o-prev-av">${this._oAv((family[0] || 'M').toUpperCase(), '#B4A6E6', 38)}</span><div><div class="nm" id="o-prev-nm">${esc(family)}</div></div></div>`;
       foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
       const inp = root.querySelector('#o-fam');
