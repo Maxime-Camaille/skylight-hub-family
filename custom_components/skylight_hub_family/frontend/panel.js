@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.17';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.18';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -174,6 +174,23 @@ const CSS = `
 .o-err{background:#FDECEA;color:#8A1F1A;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
 .o-footrow{display:flex;gap:10px;align-items:center}
 .o-phone-only{display:flex;flex-direction:column;align-items:center}
+.o-ready-body{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:18px}
+.o-ready{position:relative;width:100%;max-width:430px;margin:0 auto;padding:10px}
+.o-ready-back{position:absolute;inset:24px -6px -6px 24px;border-radius:24px;background:linear-gradient(180deg,#F4F8FE,#EAF2FD)}
+.o-ready-card{position:relative;background:#fff;border-radius:20px;padding:12px;box-shadow:0 18px 50px rgba(24,44,84,.12),0 2px 6px rgba(24,44,84,.05)}
+.o-ready-top{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px 10px;font-size:15px;font-weight:700;letter-spacing:-.02em}
+.o-ready-top span{font-size:12px;color:var(--o-muted2);font-weight:600;font-variant-numeric:tabular-nums}
+.o-ready-cols{display:grid;gap:8px}
+.o-rcol{background:#FBFAF8;border:1px solid #F1EFEB;border-radius:13px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.o-rhead{display:flex;align-items:center;gap:5px;min-width:0}
+.o-rhead b{font-size:10px;font-weight:650;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-rstar{margin-left:auto;display:flex;align-items:center;opacity:.8}
+.o-rtile{background:#fff;border-radius:9px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 3px 8px rgba(28,40,70,.05)}
+.o-rtile i{display:block;height:13px;border-radius:4px}
+.o-rtile i.g{height:7px;background:#F1F4F9;width:72%}
+.o-rtile i.g.short{width:54%}
+.o-ready-check{position:absolute;top:-14px;right:-10px;width:64px;height:64px;box-shadow:0 12px 28px rgba(52,199,89,.32)}
+.o-ready-check svg{width:30px;height:30px}
 .o-welcome{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:22px}
 .o-welcome-foot{margin-top:28px;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center}
 
@@ -228,6 +245,8 @@ button.o-select{display:inline-flex;align-items:center;justify-content:space-bet
   .o-welcome-foot{align-items:flex-start}
   .o-welcome-foot .o-btn{max-width:300px}
   .o-welcome-foot .o-legal{text-align:left;margin-left:4px}
+  .o-br{display:none}
+  .o-ready-body{align-items:flex-start;text-align:left}
   .o-content{justify-content:center}
   .o-sheetwrap{align-items:center}
   .o-sheet{border-radius:22px;max-width:420px;padding:14px 14px 16px;animation:o-sheet-pop .18s cubic-bezier(.2,.8,.2,1)}
@@ -828,18 +847,40 @@ ${CSS}</style>
     const rep = ob.report || {};
     const profs = (rep.config && rep.config.profiles) || [];
     const cals = profs.filter((p) => p.calendar).length;
-    left = this._oCheckAvatars();
-    body = `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:18px">
+    const famName = (rep.config && rep.config.family_name) || ob.family || 'Ma famille';
+    left = this._oReadyIllu(profs, famName);
+    body = `<div class="o-ready-body">
       <div class="o-phone-only" style="gap:18px">${this._oCheckAvatars()}</div>
-      <h2 class="o-h1" style="margin-top:30px">Votre famille<br>est prête.</h2>
-      <p class="o-sub" style="max-width:318px">Les tâches, les étoiles et les repas vous attendent.</p>
-      <div class="o-pillsum" style="margin-top:22px"><b>${esc((rep.config && rep.config.family_name) || ob.family || 'Ma famille')}</b><span class="o-dotsep"></span>${profs.length} personne${profs.length > 1 ? 's' : ''}<span class="o-dotsep"></span>${cals} calendrier${cals > 1 ? 's' : ''}</div>
+      <h2 class="o-h1" style="margin-top:30px">Votre famille <br class="o-br">est prête.</h2>
+      <p class="o-sub" style="max-width:420px">Les tâches, les étoiles et les repas vous attendent.</p>
+      <div class="o-pillsum" style="margin-top:22px"><b>${esc(famName)}</b><span class="o-dotsep"></span>${profs.length} personne${profs.length > 1 ? 's' : ''}<span class="o-dotsep"></span>${cals} calendrier${cals > 1 ? 's' : ''}</div>
     </div>`;
     foot = this._oboFoot(`<button class="o-btn" id="o-enter" type="button">Entrer dans Skylight Hub Family</button>`);
     root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
     root.querySelector('#o-enter').addEventListener('click', () => this._obEnter());
   }
 
+  _oReadyIllu(profs, family) {
+    const list = (profs && profs.length ? profs : (this._ob.people || [])).slice(0, 3);
+    if (!list.length) return this._oCheckAvatars();
+    const cols = list.map((p) => {
+      const tone = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : '#EAF1FC';
+      const name = p.name || '';
+      return `<div class="o-rcol">
+        <div class="o-rhead">${this._oAv((name[0] || '?').toUpperCase(), p.color || '#7FA9E8', 18)}<b>${esc(name)}</b><span class="o-rstar">${this._oIcon('star', '#B08A20', 10)}</span></div>
+        <div class="o-rtile"><i style="background:${tone}"></i><i class="g"></i></div>
+        <div class="o-rtile"><i class="g short"></i><i style="background:${tone}"></i></div>
+      </div>`;
+    }).join('');
+    return `<div class="o-ready">
+      <div class="o-ready-back"></div>
+      <div class="o-ready-card">
+        <div class="o-ready-top"><b>${esc(family || 'Ma famille')}</b><span>9:41</span></div>
+        <div class="o-ready-cols" style="grid-template-columns:repeat(${list.length},1fr)">${cols}</div>
+      </div>
+      <div class="o-check o-ready-check"><svg viewBox="0 0 24 24" width="30" height="30" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.6l4.6 4.6L19 6.8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>`;
+  }
   _obStartEdit(i) {
     const ob = this._ob;
     const p = ob.people[i];
