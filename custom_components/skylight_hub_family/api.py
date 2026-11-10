@@ -189,7 +189,7 @@ def payload(hass: HomeAssistant) -> dict[str, Any]:
 
 @callback
 def async_register(hass: HomeAssistant) -> None:
-    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate):
+    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate, ws_reset):
         websocket_api.async_register_command(hass, cmd)
     async_start_schedule(hass)
 
@@ -472,9 +472,21 @@ async def ws_stars(hass, connection, msg):
 )
 @websocket_api.async_response
 async def ws_text(hass, connection, msg):
+    entity = msg["entity"]
+    if entity not in MEAL_KEYS:
+        connection.send_error(msg["id"], "invalid_entity", f"Clé de repas inconnue : {entity}")
+        return
     data = _data(hass)
     meals = data.setdefault("meals", {})
     if "value" in msg:
-        meals[msg["entity"]] = msg["value"]
+        meals[entity] = msg["value"]
         await _save(hass)
-    connection.send_result(msg["id"], {"entity": msg["entity"], "value": meals.get(msg["entity"], "")})
+    connection.send_result(msg["id"], {"entity": entity, "value": meals.get(entity, "")})
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/reset"})
+@websocket_api.async_response
+async def ws_reset(hass, connection, msg):
+    """Remise à zéro à la demande (bouton de maintenance, ou test)."""
+    await _daily_reset(hass)
+    connection.send_result(msg["id"], {"ok": True, "config": payload(hass)})
