@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.5';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.6';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -75,7 +75,7 @@ const CSS = `
    Inter remplace SF Pro hors Apple, et le tracking SF est multiplié par 0,72
    (l'annexe le prévoit : les valeurs SF étouffent Inter). */
 @font-face{font-family:"InterVar";src:url("/skylight-static/fonts/InterVariable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
-.onb{position:fixed;inset:0;z-index:5;overflow:auto;background:#F2F2F7;color:#000;
+.onb{height:100vh;overflow:auto;background:#F2F2F7;color:#000;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","InterVar","Segoe UI",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   --ob-blue:#007AFF;--ob-blue-ring:rgba(0,122,255,.35);
