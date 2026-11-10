@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.10';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.11';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -121,15 +121,26 @@ const CSS = `
 .o-preview .nm{font-size:16px;font-weight:650;letter-spacing:-.015em}
 .o-av{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:650;letter-spacing:-.01em;flex:0 0 auto}
 .o-people{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.o-prow{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--o-line);border-radius:15px;padding:8px 12px 8px 10px;box-shadow:0 1px 2px rgba(28,28,30,.025)}
+.o-prow{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--o-line);border-radius:15px;padding:8px 12px 8px 10px;box-shadow:0 1px 2px rgba(28,28,30,.025);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.o-prow.editing{border-color:var(--o-blue);box-shadow:0 0 0 3px rgba(10,124,255,.12)}
+.o-prow .edit{width:26px;height:26px;border-radius:50%;background:#F2F0EC;display:grid;place-items:center;flex:0 0 26px;border:0;cursor:pointer;padding:0}
+.o-prow .edit:hover{background:#E8E6E2}
+.o-edithead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;color:#5B6472;letter-spacing:-.005em}
+.o-edithead button{background:none;border:0;color:var(--o-blue);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:4px}
+.plus.save{background:var(--o-blue)}
+.plus:disabled{opacity:.45;cursor:default}
 .o-prow .nm{font-size:15.5px;font-weight:650;letter-spacing:-.012em;line-height:1.15}
 .o-prow .sub{font-size:12.5px;color:var(--o-muted);letter-spacing:-.004em;margin-top:2px}
 .o-prow .x{width:26px;height:26px;border-radius:50%;background:#F2F0EC;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:0;cursor:pointer}
 .o-addzone{margin-top:14px;background:#fff;border:1px solid var(--o-line);border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(28,32,45,.05)}
 .o-addzone .row1{display:flex;gap:10px;align-items:center}
-.o-addzone .mini{height:44px;border-radius:12px;border:1.5px solid var(--o-line2);display:flex;align-items:center;padding:0 13px;font-size:15.5px;color:#B4B2AE;flex:1 1 auto;letter-spacing:-.01em;background:none;font-family:inherit;outline:none;min-width:0}
+.o-addzone .mini{height:44px;border-radius:12px;border:1.5px solid var(--o-line2);display:flex;align-items:center;padding:0 13px;font-size:15.5px;color:var(--o-ink);flex:1 1 auto;letter-spacing:-.01em;background:none;font-family:inherit;outline:none;min-width:0}
+.o-addzone .mini::placeholder{color:#B4B2AE}
 .o-addzone .mini:focus{border-color:var(--o-blue)}
 .o-addzone .plus{width:32px;height:32px;border-radius:50%;background:var(--o-blue100);display:grid;place-items:center;border:0;cursor:pointer;flex:0 0 32px}
+.o-addzone .plus.save{background:var(--o-blue)}
+.o-addzone .plus.save svg path{stroke:#fff}
+.o-addzone .plus:disabled{opacity:.45;cursor:default}
 .o-swatches{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;align-items:center}
 
 .o-sw{width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;position:relative;border:0;cursor:pointer;padding:0}
@@ -516,6 +527,7 @@ ${CSS}</style>
       family: '',
       people: [],
       draft: { name: '', color: OB_COLORS[0], cal: true },
+      edit: -1,
       err: null,
       busy: false,
       report: null,
@@ -597,31 +609,49 @@ ${CSS}</style>
 
     if (step === 2) {
       left = this._oColumns();
-      const rows = ob.people.map((p, i) => `<div class="o-prow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 34)}
-        <div style="flex:1 1 auto"><div class="nm">${esc(p.name)}</div><div class="sub">${p.cal ? 'Calendrier créé' : 'Sans calendrier'}</div></div>
+      const editing = (ob.edit != null && ob.edit >= 0 && ob.edit < ob.people.length) ? ob.edit : -1;
+      const rows = ob.people.map((p, i) => `<div class="o-prow${i === editing ? ' editing' : ''}" data-row="${i}">
+        ${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 34)}
+        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${i === editing ? 'Modification en cours' : (p.mode === 'link' ? 'Calendrier relié' : (p.cal ? 'Calendrier créé' : 'Sans calendrier'))}</div></div>
+        <button class="edit" data-edit="${i}" type="button" aria-label="Modifier ${esc(p.name)}"><svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M4 20l4.3-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" stroke="#8B8B90" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
         <button class="x" data-rm="${i}" type="button" aria-label="Retirer ${esc(p.name)}"><svg viewBox="0 0 24 24" width="12" height="12" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#8B8B90" stroke-width="2.4" stroke-linecap="round"/></svg></button>
       </div>`).join('');
+      const canNext = ob.people.length > 0 && editing < 0;
       body = `${this._oProgress(2)}<div style="padding-top:22px"><h2 class="o-h1 sm">Qui vit ici ?</h2>
         <p class="o-sub tight">Ajoutez les personnes du foyer. Vous pourrez en ajouter d'autres plus tard.</p></div>
         <div class="o-people">${rows || ''}</div>
         <div class="o-addzone">
-          <div class="row1"><input class="mini" id="o-pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}"><button class="plus" id="o-add" type="button" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M12 5v14M5 12h14" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/></svg></button></div>
+          ${editing >= 0 ? `<div class="o-edithead"><span>Modifier ${esc(ob.people[editing].name)}</span><button id="o-cancel" type="button">Annuler</button></div>` : ''}
+          <div class="row1"><input class="mini" id="o-pname" maxlength="20" placeholder="Prénom" autocomplete="off" value="${esc(ob.draft.name)}"><button class="plus${editing >= 0 ? ' save' : ''}" id="o-add" type="button" aria-label="${editing >= 0 ? 'Enregistrer' : 'Ajouter'}">${editing >= 0 ? '<svg viewBox="0 0 24 24" width="15" height="15" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M12 5v14M5 12h14" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/></svg>'}</button></div>
           <div class="o-swatches">${OB_COLORS.map((c) => `<button class="o-sw${c === ob.draft.color ? ' on' : ''}" type="button" data-color="${c}" style="background:${c}" aria-label="Couleur ${c}">${c === ob.draft.color ? '<svg viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</button>`).join('')}</div>
           <div class="o-togglerow"><div class="lab">Créer un calendrier pour cette personne</div><button class="o-tg${ob.draft.cal ? ' on' : ''}" id="o-cal" type="button" role="switch" aria-checked="${ob.draft.cal ? 'true' : 'false'}" aria-label="Créer un calendrier"></button></div>
         </div>
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
-      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn${ob.people.length ? '' : ' dim'}" id="o-next" type="button" ${ob.people.length ? '' : 'disabled'}>Continuer</button></div>`);
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn${canNext ? '' : ' dim'}" id="o-next" type="button" ${canNext ? '' : 'disabled'}>Continuer</button></div>`);
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
       const name = root.querySelector('#o-pname');
-      const add = () => {
+      const addBtn = root.querySelector('#o-add');
+      const commit = () => {
         const v = name.value.trim();
         if (!v) return;
-        ob.people.push({ name: v, color: ob.draft.color, cal: ob.draft.cal, mode: ob.draft.cal ? 'create' : 'later', calendar: '' });
-        ob.draft.name = '';
+        if (editing >= 0) {
+          const p = ob.people[editing];
+          p.name = v;
+          p.color = ob.draft.color;
+          p.cal = ob.draft.cal;
+          if (p.cal && p.mode === 'later') p.mode = 'create';
+          if (!p.cal && p.mode === 'create') p.mode = 'later';
+        } else {
+          ob.people.push({ name: v, color: ob.draft.color, cal: ob.draft.cal, mode: ob.draft.cal ? 'create' : 'later', calendar: '' });
+        }
+        ob.edit = -1;
+        ob.draft = { name: '', color: OB_COLORS[0], cal: true };
         this._obPaint();
       };
-      name.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-      root.querySelector('#o-add').addEventListener('click', add);
+      addBtn.disabled = !name.value.trim();
+      name.addEventListener('input', () => { ob.draft.name = name.value; addBtn.disabled = !name.value.trim(); });
+      name.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); });
+      addBtn.addEventListener('click', commit);
       root.querySelectorAll('.o-sw').forEach((b) => b.addEventListener('click', () => {
         ob.draft.color = b.dataset.color;
         root.querySelectorAll('.o-sw').forEach((x) => x.classList.toggle('on', x === b));
@@ -631,10 +661,18 @@ ${CSS}</style>
         e.currentTarget.classList.toggle('on', ob.draft.cal);
         e.currentTarget.setAttribute('aria-checked', ob.draft.cal ? 'true' : 'false');
       });
-      root.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { ob.people.splice(Number(b.dataset.rm), 1); this._obPaint(); }));
-      root.querySelector('#o-back').addEventListener('click', () => { ob.step = 1; this._obPaint(); });
-      root.querySelector('#o-next').addEventListener('click', () => { if (!ob.people.length) return; ob.step = 3; this._obPaint(); });
-      setTimeout(() => name.focus(), 40);
+      root.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this._obStartEdit(Number(b.dataset.edit)); }));
+      root.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); ob.people.splice(Number(b.dataset.rm), 1); ob.edit = -1; this._obPaint(); }));
+      root.querySelectorAll('[data-row]').forEach((r) => r.addEventListener('click', (e) => { if (e.target.closest('button')) return; this._obStartEdit(Number(r.dataset.row)); }));
+      const cancel = root.querySelector('#o-cancel');
+      if (cancel) cancel.addEventListener('click', () => { ob.edit = -1; ob.draft = { name: '', color: OB_COLORS[0], cal: true }; this._obPaint(); });
+      root.querySelector('#o-back').addEventListener('click', () => {
+        if (editing >= 0) { ob.edit = -1; ob.draft = { name: '', color: OB_COLORS[0], cal: true }; this._obPaint(); return; }
+        ob.step = 1;
+        this._obPaint();
+      });
+      root.querySelector('#o-next').addEventListener('click', () => { if (!canNext) return; ob.step = 3; this._obPaint(); });
+      setTimeout(() => { name.focus(); name.select(); }, 40);
       return;
     }
 
@@ -716,6 +754,19 @@ ${CSS}</style>
     foot = this._oboFoot(`<button class="o-btn" id="o-enter" type="button">Entrer dans Skylight Hub Family</button>`);
     root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
     root.querySelector('#o-enter').addEventListener('click', () => this._obEnter());
+  }
+
+  _obStartEdit(i) {
+    const ob = this._ob;
+    const p = ob.people[i];
+    if (!p) return;
+    ob.edit = i;
+    ob.draft = { name: p.name, color: p.color, cal: p.cal };
+    this._obPaint();
+    setTimeout(() => {
+      const el = this.shadowRoot.getElementById('o-pname');
+      if (el) { el.focus(); el.select(); }
+    }, 40);
   }
 
   async _obInstall(keep) {
