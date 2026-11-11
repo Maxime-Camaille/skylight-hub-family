@@ -12,7 +12,7 @@
  * ------
  * Une récompense est un item de `todo.recompenses` :
  *   summary     = le libellé (« Glace au choix »)
- *   description = {"e":"🍦","c":60,"o":"elena"}
+ *   description = {"e":"🍦","c":60,"o":"lea"}
  *     e = emoji   c = coût en étoiles   o = propriétaire (id du profil)
  *     une fois échangée, on ajoute by (id) et d (AAAA-MM-JJ), et le statut
  *     passe à « completed ». L'historique EST la liste : aucune structure en
@@ -94,7 +94,7 @@ function slug(s) {
  * Jetons, en-tête et calculs viennent de famille-core.js : cette carte n'en
  * garde plus de copie. `CORE_URL` porte la version — l'incrémenter en même
  * temps que la ressource `famille-core` (ETAT-CHANTIER.md §9.2). */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
 let CORE = null;
 let localDay;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)

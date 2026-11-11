@@ -6,7 +6,7 @@
  *
  * Un profil vit dans un item de la liste `todo.profils` :
  *   summary     = prénom
- *   description = {"c":"#B7E4C7","a":"#2E9E63","p":"…","s":true,"i":"mateo","r":"todo.routines_mateo"}
+ *   description = {"c":"#B7E4C7","a":"#2E9E63","p":"…","s":true,"i":"lea","r":"todo.routines_lea"}
  *     c = pastel (fond de colonne)   a = teinte d'identité (avatar, coches)
  *     p = photo (« /local/… »), emoji (« :🦊 ») ou image chargée (data URI webp)
  *     s = étoiles activées           i = identifiant technique
@@ -33,21 +33,20 @@ const BLUE = "var(--f-blue, #007AFF)";
  * (voir `pastelOf`, mêmes teinte et saturation, luminosité 82 %).
  *
  * Les 14 ont été écartées d'au moins 50 unités RVB entre elles : à taille de
- * pastille, aucune ne se confond avec sa voisine. Les quatre premières de la
- * famille y figurent, donc chacun apparaît sélectionné chez lui. */
+ * pastille, aucune ne se confond avec sa voisine. */
 const COLORS = [
-  "#2E9E63", /* vert     — Matéo  */
+  "#2E9E63", /* vert     */
   "#A8D46A", /* lime              */
   "#4FC3D0", /* cyan              */
   "#0F5F6E", /* sarcelle         */
-  "#4677A8", /* bleu     — Papa   */
+  "#4677A8", /* bleu     */
   "#8E5BD9", /* violet           */
-  "#D9548C", /* rose     — Elena  */
+  "#D9548C", /* rose     */
   "#C2185B", /* cramoisi         */
   "#C22F2F", /* rouge            */
   "#E0622A", /* orange           */
   "#7A4B2A", /* café             */
-  "#A9762F", /* ocre     — Noémie */
+  "#A9762F", /* ocre     */
   "#F5A623", /* ambre            */
   "#2B3038", /* charbon (neutre) */
 ];
@@ -236,7 +235,7 @@ function mix(a, b, p) {
  * La règle (même teinte, même saturation, luminosité 82 %) vit dans le tronc
  * commun : une seule implémentation pour l'écran Profils et la vue Tâches.
  * `CORE_URL` porte la version — l'incrémenter avec la ressource famille-core. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
 let CORE = null;
 let pastelOf;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
@@ -822,7 +821,7 @@ class SkylightProfilesCard extends HTMLElement {
     fr.readAsDataURL(file);
   }
 
-  /* nom lisible d'une liste de routines (« Routines Mateo » plutôt que l'entité) */
+  /* nom lisible d'une liste de routines (« Routines Léa » plutôt que l'entité) */
   _routineName(id) {
     const st = this._hass && this._hass.states[id];
     const fn = st && st.attributes && st.attributes.friendly_name;

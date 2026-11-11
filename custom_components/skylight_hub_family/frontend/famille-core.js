@@ -22,7 +22,7 @@
 export const CORE_VERSION = 'v69';
 
 /* Les icônes vivent dans leur propre module, GÉNÉRÉ depuis les .svg SF Symbols. */
-import { SF_ICON } from './skylight-icons.js?v=0.5.34';
+import { SF_ICON } from './skylight-icons.js?v=0.5.37';
 
 /* =========================================================================
  * 1. JETONS
@@ -100,14 +100,17 @@ export function tokensCss() {
   const c = TOKENS.color;
   const r = TOKENS.radius;
   const l = TOKENS.layout;
+  /* `var(--theme-x, valeur)` : le thème actif peut redéfinir chaque jeton sur le
+   * panneau ; sans `--theme-*` (thème Skylight), le repli est la valeur d'origine,
+   * donc le rendu Skylight reste identique au pixel près. */
   return `:host{
---skylight-sans:${TOKENS.font.sans};--skylight-serif:${TOKENS.font.serif};
---f-ink:${c.ink};--f-ink-soft:${c.inkSoft};--f-muted:${c.muted};--f-line:${c.line};
---f-surface:${c.surface};--f-rail:${c.rail};--f-rail-ink:${c.railInk};--f-logo-ink:${c.logoInk};--f-chip:${c.chip};
---f-brand:${c.brand};--f-brand-soft:${c.brandSoft};--f-star:${c.star};--f-today:${c.today};
+--skylight-sans:var(--theme-sans,${TOKENS.font.sans});--skylight-serif:var(--theme-serif,${TOKENS.font.serif});
+--f-ink:var(--theme-ink,${c.ink});--f-ink-soft:var(--theme-ink-soft,${c.inkSoft});--f-muted:var(--theme-muted,${c.muted});--f-line:var(--theme-line,${c.line});
+--f-surface:var(--theme-surface,${c.surface});--f-rail:var(--theme-rail,${c.rail});--f-rail-ink:var(--theme-rail-ink,${c.railInk});--f-logo-ink:var(--theme-logo-ink,${c.logoInk});--f-chip:var(--theme-chip,${c.chip});
+--f-brand:var(--theme-brand,${c.brand});--f-brand-soft:var(--theme-brand-soft,${c.brandSoft});--f-star:var(--theme-star,${c.star});--f-today:var(--theme-today,${c.today});
 --f-warn-bg:${c.warnBg};--f-warn-line:${c.warnLine};--f-warn-ink:${c.warnInk};--f-danger:${c.danger};
---f-r-col:${r.column}px;--f-r-tile:${r.tile}px;--f-r-card:${r.card}px;--f-r-sheet:${r.sheet}px;
---f-r-nav:${r.nav}px;--f-r-logo:${r.logo}px;--f-r-pill:${r.pill}px;
+--f-r-col:var(--theme-r-col,${r.column}px);--f-r-tile:var(--theme-r-tile,${r.tile}px);--f-r-card:var(--theme-r-card,${r.card}px);--f-r-sheet:var(--theme-r-sheet,${r.sheet}px);
+--f-r-nav:var(--theme-r-nav,${r.nav}px);--f-r-logo:var(--theme-r-logo,${r.logo}px);--f-r-pill:${r.pill}px;
 --f-hdr-h:${l.header}px;--f-rail-w:${l.rail}px;--f-nav-icon:${l.railIcon}px;--f-tap:${l.tap}px;--f-tabbar-h:${l.tabbar}px;--f-dur:${TOKENS.duration.slow}ms;--f-ease:${TOKENS.ease.out};
 box-sizing:border-box;
 }*,*::before,*::after{box-sizing:border-box}`;

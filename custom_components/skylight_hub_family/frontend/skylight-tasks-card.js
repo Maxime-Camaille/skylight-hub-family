@@ -11,19 +11,19 @@
  * stars_per_task: 10
  * evening_from: 16                         # heure de bascule auto vers le soir
  * profiles:
- *   - id: mateo                            # clé utilisée dans r.o (chores) et les routines
- *     name: Matéo
+ *   - id: lea                              # clé utilisée dans r.o (chores) et les routines
+ *     name: Léa
  *     color: "#B7E4C7"                     # pastel de la personne (calendrier)
  *     accent: "#2E9E63"                    # teinte d'identité (avatar, coche, anneau, jauge)
- *     routine_entity: todo.routines_mateo
+ *     routine_entity: todo.routines_lea
  *     stars: true                          # barre d'étoiles (défaut : oui si routine_entity)
- *     photo: /local/avatars/mateo.webp     # optionnel, sinon initiale
+ *     photo: /local/avatars/lea.webp       # optionnel, sinon initiale
  * nav:
  *   - {icon: cal, label: Calendrier, path: /famille-home/calendrier}
  *
  * Modèle : un item todo par tâche. La description porte les métadonnées JSON :
  *   routine : {"t":"routine","p":"morning|afternoon|evening","d":[1..7],"n":1,"e":"🪥","s":10}
- *   tâche   : {"t":"chore","o":"mateo","e":"🛋️","s":10}
+ *   tâche   : {"t":"chore","o":"lea","e":"🛋️","s":10}
  * done = statut "completed" ; la remise à zéro quotidienne est faite par
  * script.taches_remise_a_zero (automatisation de 4 h).
  *
@@ -386,7 +386,7 @@ const CARD_VERSION = 'v127';
  * ressource `famille-core` (voir ETAT-CHANTIER.md). En production la ressource
  * est déjà chargée : cet import retrouve le MÊME module, évalué une seule fois.
  * Hors Home Assistant, le banc d'essai pose `window.FAMILLE_CORE_URL`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
 
 let CORE = null;
 let esc; let mix; let alpha; let localDay; let pastelOf; let tokens;
@@ -1871,11 +1871,9 @@ ${CORE.sheetHtml({ closeIcon: SVG.close })}`;
     const tk = tokens({ color: pd.color, accent: pd.accent });
     const halo = alpha(pd.accent, 0.3);
     const th = `--tile:${tk.tile};--accent:${pd.accent};--halo:${halo}`;
-    /* biblioth?que de l'application : ces images existent ind?pendamment des
-       profils, donc elles restent propos?es m?me si personne ne les porte */
-    const SKY_AVATARS = ['mateo', 'elena', 'papa', 'noemie'];
+    /* Photos proposées : uniquement celles des profils de CETTE installation.
+       Aucune liste d'avatars nominatifs n'est embarquée dans le paquet. */
     let photos = [];
-    SKY_AVATARS.forEach((n) => { photos.push('/local/avatars/' + n + '.webp'); });
     this._cfg.profiles.forEach((x) => {
       if (x.photo && photos.indexOf(x.photo) === -1) photos.push(x.photo);
       /* fichier d'avatar d'origine, connu par convention */

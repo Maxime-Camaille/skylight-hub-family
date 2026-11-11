@@ -5,7 +5,7 @@ L'application a **deux thèmes prévus**, isolés :
 | id | nom | état | fichier |
 |---|---|---|---|
 | `skylight` | Skylight Calendar | **actif / validé** | `custom_components/skylight_hub_family/frontend/themes/skylight.js` |
-| `apple` | Apple | **à développer** (`status: 'coming'`) | `custom_components/skylight_hub_family/frontend/themes/apple.js` |
+| `apple` | Apple | **v1 prête** (`status: 'ready'`) | `custom_components/skylight_hub_family/frontend/themes/apple.js` |
 
 Le sélecteur est dans **Réglages → Thème**. Le thème actif est stocké dans le
 store de l'app (`theme`), donc il survit aux mises à jour et aux redémarrages.
@@ -43,6 +43,20 @@ frontend/themes/apple.js     scaffold du thème Apple (status: 'coming')
   panneau (`--f-*`, `--skylight-*`, `--theme-*`). C'est le contrat.
 - Un thème `coming` n'est pas sélectionnable : le sélecteur l'affiche
   « Bientôt » et le panneau retombe sur Skylight (`resolveTheme`).
+
+## Le pont de variables (`--theme-*`)
+
+Livré en 0.5.35. `famille-core.js` (`tokensCss()`) écrit chaque jeton ainsi :
+
+```
+--f-ink:var(--theme-ink,#1F2328)
+```
+
+Sans `--theme-ink`, le repli est la valeur Skylight d'origine : le thème
+Skylight reste identique au pixel près. Un thème pose ses `--theme-*` sur
+l'hôte du panneau ; les cartes, dans leurs shadow roots, les héritent et
+résolvent le `var()`. C'est le seul mécanisme autorisé pour qu'un thème
+atteigne les cartes sans les modifier.
 
 ## Activer le thème Apple
 

@@ -88,7 +88,7 @@ const EMOJI_PICKER = [
 /* ---------- tronc commun ----------
  * En-tête, jetons et calculs dans famille-core.js. `CORE_URL` porte la version :
  * l'incrémenter en même temps que la ressource `famille-core`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; });
@@ -107,6 +107,9 @@ const STYLE = `
 .clear svg{width:17px;height:17px;display:block;fill:currentColor}
 .clear.arm{background:var(--f-danger,#FF3B30);color:#fff}
 .clear[hidden]{display:none}
+.wk{display:inline-flex;background:var(--f-chip,#F4F5F7);border-radius:999px;padding:2px;gap:2px;flex:0 0 auto}
+.wkb{border:0;background:none;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;line-height:1;color:var(--f-muted,#6B7280);cursor:pointer;letter-spacing:-.01em}
+.wkb.on{background:var(--f-surface,#fff);color:var(--f-ink,#1F2328);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .gear{border:0;border-radius:50%;background:#F4F5F7;color:#3A4050;width:34px;height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
 .gear:hover{background:#E9EBEF}
 .gear svg{width:17px;height:17px;display:block;fill:currentColor}
@@ -307,6 +310,15 @@ class SkylightMealsV2Card extends HTMLElement {
     if (!config || !Array.isArray(config.days) || config.days.length === 0) {
       throw new Error("skylight-meals-v2 : 'days' (liste non vide) est requis");
     }
+    /* Deuxième semaine (option B : sélecteur). `days2` est optionnelle ; on garde
+       les deux tableaux et `config.days` pointe TOUJOURS sur la semaine
+       affichée, pour que le reste de la carte continue de lire `_config.days`. */
+    const w1 = config.days;
+    const w2 = Array.isArray(config.days2) && config.days2.length ? config.days2 : w1;
+    config.days = w1;
+    this._weeks = [w1, w2];
+    this._week = 0;
+    this._hasWeek2 = w2 !== w1;
     this._config = config;
     this._built = false;
     if (this.shadowRoot) this.shadowRoot.innerHTML = "";
@@ -542,16 +554,35 @@ class SkylightMealsV2Card extends HTMLElement {
     this._lib = this._lib.concat([line]);
   }
 
+  /* Sélecteur de semaine : S1 / S2, avec l'état porté par `_week`. */
+  _weekBar() {
+    const b = (n) => '<button class="wkb' + (this._week === n ? ' on' : '') + '" type="button" data-week="' + n +
+      '" aria-pressed="' + (this._week === n) + '" aria-label="Semaine ' + (n + 1) + '">S' + (n + 1) + '</button>';
+    return '<div class="wk" role="group" aria-label="Choix de la semaine">' + b(0) + b(1) + '</div>';
+  }
+
+  _setWeek(n) {
+    if (!n || n === this._week) return;
+    this._week = n;
+    this._config.days = this._weeks[n];
+    this._editing = null;
+    this._built = false;
+    this._build();
+    this._sync();
+  }
+
   /* ---------- construction ---------- */
   _build() {
     const root = this.shadowRoot;
     const days = this._config.days;
     const rows = this._visibleRows();
     const monday = this._monday();
-    const todayIdx = (new Date().getDay() + 6) % 7;
+    const today = new Date();
+    const dateFor = (i) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + this._week * 7 + i);
+    const todayIdx = days.findIndex((_d, i) => dateFor(i).toDateString() === today.toDateString());
 
     const heads = days.map((d, i) => {
-      const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const date = dateFor(i);
       return '<div class="dh' + (i === todayIdx ? " today" : "") + '">' +
         '<span class="dow">' + this._fmtShort(date) + '</span>' +
         '<span class="num"><span class="nn">' + date.getDate() + '</span></span></div>';
@@ -566,7 +597,7 @@ class SkylightMealsV2Card extends HTMLElement {
     });
 
     const mHtml = days.map((d, i) => {
-      const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const date = dateFor(i);
       const head = '<div class="mhead' + (i === todayIdx ? " today" : "") + '">' +
         '<span class="dow">' + this._fmtShort(date) + '</span>' +
         '<span class="num"><span class="nn">' + date.getDate() + '</span></span></div>';
@@ -586,6 +617,7 @@ class SkylightMealsV2Card extends HTMLElement {
           actions: [
             '<div class="rep" hidden>\u23F3</div>',
             '<button class="clear" type="button" aria-label="Vider la semaine de repas" hidden></button>',
+            this._hasWeek2 ? this._weekBar() : '',
             '<button class="gear" type="button" aria-label="Réglages" title="Réglages">' + this._sf("gear") + "</button>",
           ],
         }) +
@@ -706,6 +738,7 @@ class SkylightMealsV2Card extends HTMLElement {
     });
 
     /* réglages */
+    root.querySelectorAll(".wkb").forEach((b) => b.addEventListener("click", () => this._setWeek(Number(b.dataset.week))));
     root.querySelector(".gear").addEventListener("click", () => this._openSettings("root"));
     root.querySelector(".pclose").addEventListener("click", () => this._closeSettings());
     root.querySelector(".back").addEventListener("click", () => this._back());

@@ -90,6 +90,14 @@ def _slug(text: str) -> str:
 
 
 MEAL_KEYS = {
+    # Semaine 2 (sélecteur S1/S2 de la carte repas) : mêmes jours, suffixe 2.
+    "input_text.repas_lundi2",
+    "input_text.repas_mardi2",
+    "input_text.repas_mercredi2",
+    "input_text.repas_jeudi2",
+    "input_text.repas_vendredi2",
+    "input_text.repas_samedi2",
+    "input_text.repas_dimanche2",
     "input_text.repas_lundi",
     "input_text.repas_mardi",
     "input_text.repas_mercredi",
@@ -345,12 +353,11 @@ async def ws_cal_event(hass, connection, msg):
 @websocket_api.async_response
 async def ws_cal_test(hass, connection, msg):
     """Création/nettoyage du calendrier CalDAV temporaire (test uniquement)."""
-    entry = next(
-        (e for e in hass.config_entries.async_entries("caldav") if "maxime" in (e.data.get("username") or "")),
-        None,
-    )
+    # Aucun compte nominatif en dur : on prend le premier compte CalDAV
+    # configuré. L'appel est réservé aux administrateurs et ne sert qu'aux tests.
+    entry = next(iter(hass.config_entries.async_entries("caldav")), None)
     if entry is None:
-        raise ValueError("Compte CalDAV de test introuvable.")
+        raise ValueError("Aucun compte CalDAV configuré.")
     data = entry.data
     name = msg["name"]
 

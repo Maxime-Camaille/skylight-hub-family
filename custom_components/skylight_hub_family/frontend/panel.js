@@ -10,14 +10,10 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.34';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.37';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
-
-const FALLBACK = {
-  'skylight-tasks-card': '/local/v68/skylight-tasks-card.js?v=33',
-};
 
 let CORE = null;
 let THEMES = null;
@@ -1108,9 +1104,11 @@ ${CSS}</style>
     };
 
     const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-    /* Les jours sont TOUJOURS les sept mêmes clés : le magasin de l'app stocke
-       `entité -> valeur`, jamais l'inverse. */
-    const days = DAYS.map((d) => ({ label: d.charAt(0).toUpperCase() + d.slice(1), entity: 'input_text.repas_' + d }));
+    /* Le magasin de l'app stocke `entité -> valeur`, jamais l'inverse. Semaine 1
+       = `repas_<jour>`, semaine 2 = `repas_<jour>2` (sélecteur S1/S2 de la carte). */
+    const dayList = (suffix) => DAYS.map((d) => ({ label: d.charAt(0).toUpperCase() + d.slice(1), entity: 'input_text.repas_' + d + suffix }));
+    const days = dayList('');
+    const days2 = dayList('2');
 
     return {
       calendrier: cal,
@@ -1137,6 +1135,7 @@ ${CSS}</style>
       'repas-test': {
         type: 'custom:skylight-meals-v2',
         days,
+        days2,
         rows: [{ label: 'Midi', band: '#EEF6F6', pill: '#D3E9E9' }, { label: 'Soir', band: '#FFF3E2', pill: '#FEE1B6' }],
         library: lists.recipes || 'todo.plats',
         rows_entity: 'input_text.repas_lignes',
@@ -1286,6 +1285,10 @@ ${CSS}</style>
       const key = 'input_text.repas_' + day;
       st[key] = { entity_id: key, state: String((app.meals || {})[key] || ''), attributes: {} };
     }
+    for (const day of DAYS) {
+      const key = 'input_text.repas_' + day + '2';
+      st[key] = { entity_id: key, state: String((app.meals || {})[key] || ''), attributes: {} };
+    }
     for (const extra of ['lignes', 'couleurs', 'report']) {
       const key = 'input_text.repas_' + extra;
       st[key] = { entity_id: key, state: String((app.meals || {})[key] || ''), attributes: {} };
@@ -1417,7 +1420,8 @@ ${CSS}</style>
       if (domain === 'input_text' && service === 'set_value') {
         /* Garde-fou : seules les clés de repas connues sont acceptées. Une carte
            qui se tromperait d'`entity_id` ne doit pas créer de clé parasite. */
-        if (!/^input_text\.repas_(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lignes|couleurs|report)$/.test(ent)) {
+        if (!/^input_text\.repas_(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)(2)?$/.test(ent)
+          && !/^input_text\.repas_(lignes|couleurs|report)$/.test(ent)) {
           this._trace('input_text ignore ' + ent);
           return;
         }
