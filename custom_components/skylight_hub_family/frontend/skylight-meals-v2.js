@@ -88,7 +88,7 @@ const EMOJI_PICKER = [
 /* ---------- tronc commun ----------
  * En-tête, jetons et calculs dans famille-core.js. `CORE_URL` porte la version :
  * l'incrémenter en même temps que la ressource `famille-core`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.37';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.38';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; });
@@ -562,7 +562,10 @@ class SkylightMealsV2Card extends HTMLElement {
   }
 
   _setWeek(n) {
-    if (!n || n === this._week) return;
+    /* Attention : la semaine 1 vaut 0. `if (!n)` la bloquait — on ne pouvait
+       plus revenir de S2 vers S1. */
+    if (n !== 0 && n !== 1) return;
+    if (n === this._week) return;
     this._week = n;
     this._config.days = this._weeks[n];
     this._editing = null;
