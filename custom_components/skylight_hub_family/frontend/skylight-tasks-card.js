@@ -43,14 +43,14 @@ const CSS = `
 .pvband .pvdot{width:17px;height:17px;flex:0 0 17px;color:#5F6675;display:inline-flex}
 .pvband .pvdot svg{width:17px;height:17px;fill:currentColor}
 .pvband button{margin-left:auto;border:1px solid #D8DEE8;background:#fff;border-radius:10px;padding:7px 13px;font:inherit;font-size:12.5px;font-weight:700;color:#2B2F38;cursor:pointer;box-shadow:0 1px 2px rgba(31,35,40,.06)}
-.board{flex:1 1 auto;min-height:0;display:flex;gap:12px;padding:6px 14px 14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.board{flex:1 1 auto;min-height:0;display:flex;gap:12px;padding:6px 14px 14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
 .board::-webkit-scrollbar{display:none}
 /* voile de fin de plateau : signale qu'il reste des colonnes à droite */
 .bfade{position:absolute;right:0;top:0;bottom:14px;width:52px;pointer-events:none;opacity:0;transition:opacity .18s ease;background:linear-gradient(to left,rgba(255,255,255,.92),rgba(255,255,255,0))}
 .bfade.on{opacity:1}
 /* quatre colonnes visibles, à largeur FIXE : les profils suivants débordent à
    droite (défilement) au lieu de rétrécir les colonnes affichées */
-.col{flex:1 1 0;min-width:250px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0;scroll-snap-align:start}
+.col{flex:1 1 300px;min-width:300px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0;scroll-snap-align:start}
 /* feuille « Affichage » : deux blocs dans un seul panneau */
 .sect2{font-family:var(--skylight-serif,Literata,Georgia,serif);font-size:17px;margin:14px 2px 5px}
 .sect2:first-child{margin-top:2px}
@@ -386,7 +386,7 @@ const CARD_VERSION = 'v127';
  * ressource `famille-core` (voir ETAT-CHANTIER.md). En production la ressource
  * est déjà chargée : cet import retrouve le MÊME module, évalué une seule fois.
  * Hors Home Assistant, le banc d'essai pose `window.FAMILLE_CORE_URL`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.29';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.30';
 
 let CORE = null;
 let esc; let mix; let alpha; let localDay; let pastelOf; let tokens;
