@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.22';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.23';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -1070,7 +1070,8 @@ ${CSS}</style>
       time_zone: '',
       calendar_person_entities: {},
     }, inner || {});
-    cal.title = (app && app.family_name) || 'Calendrier familial';
+    const familyTitle = (app && app.family_name) || 'Ma famille';
+    cal.title = /^famille\b/i.test(familyTitle) ? familyTitle : 'Famille ' + familyTitle;
     cal.header_time_sensor = time;
     cal.header_weather_sensor = weather;
     cal.use_24hr_schedule = true;
@@ -1245,9 +1246,12 @@ ${CSS}</style>
     }
     const html = profs.map((p) => {
       const pastel = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : p.color;
-      const face = p.photo
-        ? `<img src="${esc(p.photo)}" alt="">`
-        : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#fff;font-size:12px;font-weight:700">${esc((p.name || '?')[0].toUpperCase())}</span>`;
+      const raw = p.photo || '';
+      const face = raw.charAt(0) === ':'
+        ? `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:15px;line-height:1">${esc(raw.slice(1))}</span>`
+        : (raw && /^(data:|https?:|\/)/.test(raw)
+          ? `<img src="${esc(raw)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`
+          : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#fff;font-size:12px;font-weight:700">${esc((p.name || '?')[0].toUpperCase())}</span>`);
       return `<div class="calendar-badge" data-skylight-profile="1" style="background:${pastel};border-color:${pastel}"><span class="calendar-badge-photo" style="background:${p.color};border-radius:50%;overflow:hidden">${face}</span><span class="calendar-badge-name">${esc(p.name)}</span></div>`;
     }).join('');
     if (!box) {

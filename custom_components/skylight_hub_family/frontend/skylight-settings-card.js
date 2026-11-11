@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.22';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.23';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })

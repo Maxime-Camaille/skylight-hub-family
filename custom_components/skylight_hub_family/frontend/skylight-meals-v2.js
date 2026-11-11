@@ -88,7 +88,7 @@ const EMOJI_PICKER = [
 /* ---------- tronc commun ----------
  * En-tête, jetons et calculs dans famille-core.js. `CORE_URL` porte la version :
  * l'incrémenter en même temps que la ressource `famille-core`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.22';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.23';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; });
