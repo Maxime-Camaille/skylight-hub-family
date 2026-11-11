@@ -12,7 +12,7 @@ import json
 import logging
 import unicodedata
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timezone, timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -246,28 +246,100 @@ def _caldav_work(hass, reg, msg):
                 break
         if calendar is None:
             raise ValueError(f"Calendrier CalDAV « {label} » introuvable.")
-        event = None
-        try:
-            event = calendar.event_by_uid(msg["uid"])
-        except Exception as first:
-            # iCloud renvoie 412 sur la recherche par UID ; on liste et on matche.
+        uid = (msg.get("uid") or "").strip()
+        if uid:
+            event = None
+            try:
+                event = calendar.event_by_uid(uid)
+            except Exception as first:
+                # iCloud renvoie 412 sur la recherche par UID ; on liste et on matche.
+                try:
+                    events = calendar.events()
+                except Exception:
+                    events = []
+                for candidate in events:
+                    try:
+                        if str(candidate.vobject_instance.vevent.uid.value) == uid:
+                            event = candidate
+                            break
+                    except Exception:
+                        continue
+                if event is None:
+                    raise ValueError("Événement introuvable dans le calendrier CalDAV.") from first
+            vevent = event.vobject_instance.vevent
+        else:
+            # Home Assistant n'expose pas l'uid des événements CalDAV : on
+            # retrouve l'événement par son titre, puis par son début si
+            # plusieurs portent le même nom.
+            wanted = (msg.get("match_summary") or "").strip().casefold()
+            wanted_start = _parse_when(msg.get("match_start"))
+            if not wanted and wanted_start is None:
+                raise ValueError("Événement non identifiable (ni uid, ni titre).")
             try:
                 events = calendar.events()
             except Exception:
                 events = []
+            found = []
             for candidate in events:
                 try:
-                    if str(candidate.vobject_instance.vevent.uid.value) == msg["uid"]:
-                        event = candidate
-                        break
+                    cand_ev = candidate.vobject_instance.vevent
+                    cand_summary = str(getattr(getattr(cand_ev, "summary", None), "value", "") or "").strip().casefold()
                 except Exception:
                     continue
-            if event is None:
-                raise ValueError("Événement introuvable dans le calendrier CalDAV.") from first
+                if wanted and cand_summary != wanted:
+                    continue
+                found.append((candidate, cand_ev))
+            if not found:
+                raise ValueError("Événement introuvable : il a peut-être été renommé ou supprimé.")
+            if len(found) > 1 and wanted_start is not None:
+                exact = []
+                for candidate, cand_ev in found:
+                    dtstart = cand_ev.dtstart.value
+                    when = wanted_start
+                    if isinstance(dtstart, datetime):
+                        if not isinstance(when, datetime):
+                            when = datetime.combine(when, dtstart.timetz())
+                        elif when.tzinfo is None:
+                            when = when.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+                        if dtstart.tzinfo is not None:
+                            when = when.astimezone(dtstart.tzinfo)
+                        same = when == dtstart
+                    else:
+                        same = getattr(when, "date", lambda: when)() == dtstart
+                    if same:
+                        exact.append((candidate, cand_ev))
+                if exact:
+                    found = exact
+            if len(found) > 1:
+                raise ValueError("Plusieurs événements portent ce titre : précise l'heure ou agis depuis iCloud.")
+            event, vevent = found[0]
         if msg["op"] == "delete":
+            recurrence_id = msg.get("recurrence_id")
+            if recurrence_id and getattr(vevent, "rrule", None) is not None:
+                # Une seule occurrence : on exclut la date (EXDATE) au lieu de
+                # supprimer la série entière. La date envoyée par la carte est
+                # locale et sans fuseau : on la replace dans le fuseau de HA,
+                # puis dans celui du DTSTART (iCloud stocke souvent en UTC).
+                when = _parse_when(recurrence_id)
+                if when is None:
+                    raise ValueError("Occurrence invalide.")
+                dtstart = vevent.dtstart.value
+                if isinstance(dtstart, datetime):
+                    if not isinstance(when, datetime):
+                        when = datetime.combine(when, dtstart.timetz())
+                    elif when.tzinfo is None:
+                        when = when.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+                    if dtstart.tzinfo is not None:
+                        when = when.astimezone(dtstart.tzinfo)
+                existing = vevent.contents.get("exdate") or []
+                if existing:
+                    existing[0].value = list(existing[0].value) + [when]
+                else:
+                    vevent.add("exdate").value = [when]
+                event.save()
+                return True
             event.delete()
             return True
-        vevent = event.vobject_instance.vevent
         if msg.get("summary") is not None:
             vevent.summary.value = msg["summary"]
         start = _parse_when(msg.get("start"))
@@ -300,7 +372,9 @@ def _caldav_work(hass, reg, msg):
         vol.Required("type"): f"{DOMAIN}/cal_event",
         vol.Required("op"): vol.In(("delete", "update")),
         vol.Required("entity_id"): cv.string,
-        vol.Required("uid"): cv.string,
+        vol.Optional("uid", default=""): cv.string,
+        vol.Optional("match_summary", default=""): cv.string,
+        vol.Optional("match_start", default=""): cv.string,
         vol.Optional("summary"): cv.string,
         vol.Optional("start"): cv.string,
         vol.Optional("end"): cv.string,
@@ -329,6 +403,11 @@ async def ws_cal_event(hass, connection, msg):
         entity = component.get_entity(msg["entity_id"]) if component is not None and hasattr(component, "get_entity") else None
         if entity is None:
             raise ValueError("Calendrier introuvable.")
+        if not (msg.get("uid") or "").strip():
+            # Ces calendriers passent par l'entité HA : sans uid, on ne peut
+            # pas désigner l'événement (contrairement à CalDAV, où on le
+            # retrouve par titre + début).
+            raise ValueError("Ce calendrier a besoin de l'identifiant de l'événement, absent de Home Assistant.")
         if msg["op"] == "delete":
             await entity.async_delete_event(msg["uid"])
         else:
@@ -347,6 +426,8 @@ async def ws_cal_event(hass, connection, msg):
         vol.Required("type"): f"{DOMAIN}/cal_test",
         vol.Required("action"): vol.In(("create", "cleanup")),
         vol.Optional("name", default="Test SKY direct"): cv.string,
+        vol.Optional("rrule", default=""): cv.string,
+        vol.Optional("count", default=5): vol.Coerce(int),
     }
 )
 @websocket_api.require_admin
@@ -376,8 +457,31 @@ async def ws_cal_test(hass, connection, msg):
             calendar = principal.make_calendar(name=name)
         start = datetime.now().astimezone().replace(hour=15, minute=0, second=0, microsecond=0) + timedelta(days=1)
         end = start + timedelta(hours=1)
-        event = calendar.save_event(dtstart=start, dtend=end, summary="Test SKY event")
-        uid = event.vobject_instance.vevent.uid.value
+        if msg.get("rrule"):
+            # Événement récurrent en UTC : sert à tester la suppression d'une
+            # seule occurrence (EXDATE) sans toucher à un vrai calendrier.
+            fmt = "%Y%m%dT%H%M%SZ"
+            uid = uuid.uuid4().hex
+            ics = (
+                "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Skylight//Test//FR\r\n"
+                "BEGIN:VEVENT\r\n"
+                f"UID:{uid}\r\n"
+                f"DTSTAMP:{datetime.now().astimezone().astimezone(timezone.utc).strftime(fmt)}\r\n"
+                f"DTSTART:{start.astimezone(timezone.utc).strftime(fmt)}\r\n"
+                f"DTEND:{end.astimezone(timezone.utc).strftime(fmt)}\r\n"
+                "SUMMARY:Test SKY récurrent\r\n"
+                f"RRULE:{msg['rrule']}\r\n"
+                "END:VEVENT\r\nEND:VCALENDAR\r\n"
+            )
+            # La signature de `save_event` varie selon la version de caldav :
+            # premier argument positionnel, sinon `ical=`.
+            try:
+                calendar.save_event(ics)
+            except TypeError:
+                calendar.save_event(ical=ics)
+        else:
+            event = calendar.save_event(dtstart=start, dtend=end, summary="Test SKY event")
+            uid = event.vobject_instance.vevent.uid.value
         return {"name": name, "url": str(calendar.url), "uid": uid, "start": start.isoformat(), "end": end.isoformat()}
 
     result = await hass.async_add_executor_job(_do)

@@ -414,16 +414,23 @@ class SkylightCalendarCard extends HTMLElement {
       eIso = e.toISOString();
     }
     try {
-      await this._hass.callWS({
+      const payload = {
         type: 'skylight_hub_family/cal_event',
         op: 'update',
         entity_id: item.prof.calendar,
-        uid: ev.uid,
+        uid: ev.uid || '',
         summary: title.trim(),
         start: sIso,
         end: eIso,
         allday,
-      });
+      };
+      if (!ev.uid) {
+        payload.match_summary = ev.summary || '';
+        payload.match_start = item.allday
+          ? dateKey(item.s)
+          : dateKey(item.s) + 'T' + timeShort(item.s) + ':00';
+      }
+      await this._hass.callWS(payload);
       this._dialog = false;
       this._draft = null;
       this._edit = null;
@@ -578,23 +585,37 @@ class SkylightCalendarCard extends HTMLElement {
         <h2 class="stitle">${esc(ev.summary || 'Sans titre')}</h2>
         <div class="dmeta">${esc(when)}<br>${esc(prof.name || '')}${loc}</div>
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
-        ${ev.rrule ? '<p class="sfine">Événement récurrent : la modification et la suppression portent sur toute la série.</p>' : ''}
-        ${d.confirm ? '<p class="sfine">Supprimer cet événement ?</p>' : ''}
-        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button><button class="cancel" data-edit-event type="button">Modifier</button><button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button></div>
+        ${ev.rrule ? '<p class="sfine">Événement récurrent : la modification porte sur toute la série ; la suppression peut ne viser qu’une occurrence.</p>' : ''}
+        ${d.confirm ? `<p class="sfine">${ev.rrule ? 'Supprimer seulement cette occurrence, ou toute la série ?' : 'Supprimer cet événement ?'}</p>` : ''}
+        <div class="sbtns">${d.confirm
+          ? (ev.rrule
+            ? '<button class="cancel" data-close type="button">Annuler</button><button class="del" data-del-one type="button">Cette occurrence</button><button class="del" data-del-all type="button">Toute la série</button>'
+            : '<button class="cancel" data-close type="button">Annuler</button><button class="del" data-del-all type="button">Confirmer</button>')
+          : '<button class="cancel" data-close type="button">Fermer</button><button class="cancel" data-edit-event type="button">Modifier</button><button class="del" data-del type="button">Supprimer</button>'}</div>
       </div>`;
   }
 
-  async _deleteDetail() {
+  async _deleteDetail(scope) {
     const d = this._detail;
     if (!d || !d.item) return;
     const ev = d.item.ev;
+    /* HA n'expose pas l'uid des événements CalDAV : dans ce cas l'API retrouve
+       l'événement côté serveur par son titre + son début. */
+    const payload = { type: 'skylight_hub_family/cal_event', op: 'delete', entity_id: d.item.prof.calendar, uid: ev.uid || '' };
     if (!ev.uid) {
-      d.err = 'Home Assistant ne fournit pas l’identifiant de cet événement.';
-      this._render();
-      return;
+      payload.match_summary = ev.summary || '';
+      payload.match_start = d.item.allday
+        ? dateKey(d.item.s)
+        : dateKey(d.item.s) + 'T' + timeShort(d.item.s) + ':00';
     }
-    const payload = { type: 'skylight_hub_family/cal_event', op: 'delete', entity_id: d.item.prof.calendar, uid: ev.uid };
-    if (ev.recurrence_id) payload.recurrence_id = ev.recurrence_id;
+    /* `scope === 'one'` : on envoie le début de l'occurrence affichée ; l'API
+       l'exclut de la série (EXDATE) au lieu de supprimer l'événement entier. */
+    if (scope === 'one' && ev.rrule) {
+      const day = dateKey(d.item.s);
+      payload.recurrence_id = d.item.allday ? day : day + 'T' + timeShort(d.item.s) + ':00';
+    } else if (ev.recurrence_id) {
+      payload.recurrence_id = ev.recurrence_id;
+    }
     try {
       await this._hass.callWS(payload);
       this._detail = null;
@@ -621,8 +642,10 @@ class SkylightCalendarCard extends HTMLElement {
     on('[data-del]', 'click', () => {
       if (!this._detail) return;
       if (!this._detail.confirm) { this._detail.confirm = true; this._render(); return; }
-      this._deleteDetail();
+      this._deleteDetail('all');
     });
+    on('[data-del-one]', 'click', () => this._deleteDetail('one'));
+    on('[data-del-all]', 'click', () => this._deleteDetail('all'));
     const allday = root.getElementById('evt-allday');
     if (allday) {
       const sync = () => root.querySelectorAll('#evt-start,#evt-end').forEach((el) => {
