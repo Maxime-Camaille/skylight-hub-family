@@ -10,12 +10,11 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.25';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.26';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
 const FALLBACK = {
-  'daylight-calendar-card': '/hacsfiles/daylight-calendar-card/skylight-calendar-card.js',
   'skylight-tasks-card': '/local/v68/skylight-tasks-card.js?v=33',
 };
 
@@ -25,33 +24,6 @@ const ready = import(CORE_URL).then((m) => { CORE = m; return m; }).catch(() => 
 /* Le nuancier de l'application (14 teintes vives, mêmes valeurs que
  * `COLORS` dans skylight-profiles-card.js). L'ordre est celui de la fiche
  * profil, pour qu'une couleur choisie ici se retrouve au même endroit. */
-const CAL_CSS = `:host{--skylight-sans:Figtree,system-ui,sans-serif;--skylight-serif:Literata,Georgia,serif;font-family:var(--skylight-sans)}*,*::before,*::after{font-family:var(--skylight-sans)}.header-title-wrap{display:inline-flex!important;align-items:baseline!important;gap:18px!important}.header-title{font-size:26px!important;font-weight:700!important;color:#000000e0!important;margin:0!important;font-family:var(--skylight-serif)!important}.header-time{font-size:26px!important;font-weight:400!important;color:#000000e0!important;font-family:var(--skylight-sans)!important;opacity:1!important;line-height:1!important;letter-spacing:0!important}.header-weather{font-size:26px!important;font-weight:400!important;color:#000000e0!important;opacity:1!important;gap:8px!important}.header-weather ha-icon{margin-right:8px!important}.week-day-header-main{flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:8px!important;flex-wrap:nowrap!important}.week-day-name{text-transform:capitalize!important;letter-spacing:0!important;font-weight:600!important;font-size:24px!important;font-family:var(--skylight-serif)!important;margin:0!important;line-height:1!important}.week-day-date{font-family:var(--skylight-serif)!important;font-weight:600!important;font-size:24px!important;margin:0!important;line-height:1!important;font-variant-numeric:lining-nums!important}.week-day-column.today{background:#ffffff!important}.week-day-column.today .week-day-header{border-bottom-color:var(--calendar-grid-color,#E9EAF1)!important}.week-day-column.today .week-day-date{background:#F66951!important;color:#fff!important;border-radius:50%!important;width:1.6em!important;height:1.6em!important;display:grid!important;place-items:center!important;padding:0 0 0.14em 0!important;box-sizing:border-box!important;flex:0 0 auto!important;line-height:1!important;text-align:center!important;font-variant-numeric:lining-nums!important}.calendar-badges{justify-content:space-between!important;padding:8px 16px 24px!important;gap:10px!important;overflow-x:visible!important}.calendar-badges .calendar-badge{flex:1 1 0!important;min-width:0!important;justify-content:center!important;padding:4px 12px!important;border-radius:999px!important;font-size:12px!important;gap:8px!important;border-width:1.5px!important;height:34px!important;min-height:34px!important;max-height:34px!important;box-sizing:border-box!important}.calendar-badges .calendar-badge-name{font-size:12px!important;color:#1F2328!important}.calendar-badges .calendar-badge-person-state{display:none!important}.calendar-badges .calendar-badge-icon,.calendar-badges .calendar-badge-photo,.calendar-badges .calendar-badge-person-icon{width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;max-width:22px!important;max-height:22px!important;flex:0 0 22px!important;border-radius:50%!important;overflow:hidden!important;box-sizing:border-box!important}.calendar-badges .calendar-badge-icon img,.calendar-badges .calendar-badge-photo img,.calendar-badges .calendar-badge-person-icon img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;border-radius:50%!important}.week-compact-event{display:flex!important;flex-direction:column!important;position:relative!important;padding-right:38px!important}.week-compact-event-title{order:1!important;font-weight:600!important;line-height:1.2!important;margin:0 0 3px 0!important}.week-compact-event-time{order:2!important;font-weight:500!important;opacity:.85!important;margin:0!important;letter-spacing:.01em!important}.week-compact-event .event-title-prefix-badges{position:absolute!important;right:8px!important;bottom:7px!important;margin:0!important;z-index:3!important}:is(.header-weather,.forecast-condition) ha-icon{visibility:hidden!important;position:relative!important;width:1em!important;height:1em!important;--mdc-icon-size:0px!important}:is(.header-weather,.forecast-condition) ha-icon::after{visibility:visible!important;position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:1em!important;line-height:1!important}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-sunny']::after{content:'☀️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-night']::after{content:'🌙'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-partly-cloudy']::after{content:'⛅'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-cloudy']::after{content:'☁️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-rainy']::after{content:'🌦️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-pouring']::after{content:'🌧️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-snowy']::after{content:'❄️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-snowy-rainy']::after{content:'🌨️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-hail']::after{content:'🌨️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-lightning']::after{content:'🌩️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-lightning-rainy']::after{content:'⛈️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-windy']::after{content:'🌬️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-windy-variant']::after{content:'🌬️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:weather-fog']::after{content:'🌫️'}:is(.header-weather,.forecast-condition) ha-icon[icon='mdi:alert-circle-outline']::after{content:'⚠️'}@media (max-width:720px){.week-day-name,.week-day-date{font-size:17px!important}.calendar-badges .calendar-badge{padding:3px 8px!important}.calendar-badges .calendar-badge-name{font-size:11px!important}.header-title,.header-time,.header-weather{font-size:19px!important}.header-title-wrap{gap:10px!important}}.week-compact-event .event-title-prefix-badge{box-shadow:0 0 0 1.5px rgba(38,42,56,.55),0 1px 2px rgba(0,0,0,.25)!important}.week-compact-event .event-title-prefix-badge{box-shadow:none!important}.week-compact-event .event-title-prefix-badge{box-shadow:0 0 0 1px rgba(38,42,56,.30)!important}.add-event-button{border-radius:999px!important;background:#2196F3!important;color:#ffffff!important;border:0!important;padding:8px 16px!important;font-size:13px!important;font-weight:600!important;display:inline-flex!important;align-items:center!important;gap:6px!important;box-shadow:0 1px 2px rgba(0,0,0,.12)!important;position:static!important;transform:none!important;width:auto!important;height:auto!important}.add-event-button .icon{font-size:16px!important;line-height:1!important;font-weight:400!important}.header-time{font-family:var(--skylight-serif)!important}.header-weather{font-family:var(--skylight-serif)!important}.header-weather{gap:2px!important}.header-weather ha-icon{margin-right:0!important}.header-weather{gap:6px!important}
-/* --- avatars agrandis (23/10) --- */
-.calendar-badges .calendar-badge{height:40px!important;min-height:40px!important;max-height:40px!important;padding:4px 14px!important}
-.calendar-badges .calendar-badge-icon,.calendar-badges .calendar-badge-photo,.calendar-badges .calendar-badge-person-icon{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;max-width:28px!important;max-height:28px!important;flex:0 0 28px!important}
-.week-compact-event{padding-right:48px!important}
-.week-compact-event .event-title-prefix-badges{right:8px!important;bottom:8px!important}
-.week-compact-event .event-title-prefix-badge{width:24px!important;height:24px!important;min-width:24px!important;min-height:24px!important;max-width:24px!important;max-height:24px!important;border-radius:50%!important;overflow:hidden!important;display:block!important;box-sizing:border-box!important;background-size:cover!important;background-position:center!important}
-.week-compact-event .event-title-prefix-badge img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;border-radius:50%!important}
-.week-compact-event .event-title-prefix-badge ha-icon{--mdc-icon-size:20px!important;width:24px!important;height:24px!important;display:flex!important;align-items:center!important;justify-content:center!important}
-
-/* --- uniformisation en-tete de jour (23/10) --- */
-.week-day-name{color:#1F2328!important;font-weight:600!important}
-.week-day-date{color:#1F2328!important}
-
-
-
-
-.header-title{font-weight:600!important}.header-title{font-weight:500!important}.header{padding:0 22px!important;height:70px!important;box-sizing:border-box!important;align-items:center!important}.header-title{font-size:26px!important;font-weight:700!important}.header-time{font-size:26px!important;font-weight:500!important;opacity:1!important}.header-weather{font-size:26px!important;font-weight:500!important}.header-title-wrap{gap:14px!important}.header-weather ha-icon{position:relative!important;top:2px!important}
-/* halo doux des avatars de profil (28/10) */
-.calendar-badges .calendar-badge[data-entity="calendar.mateo_2"] .calendar-badge-photo{box-shadow:0 0 0 3px rgba(46,158,99,.34),0 2px 9px rgba(46,158,99,.30)!important}
-.calendar-badges .calendar-badge[data-entity="calendar.elena"] .calendar-badge-photo{box-shadow:0 0 0 3px rgba(217,84,140,.34),0 2px 9px rgba(217,84,140,.30)!important}
-.calendar-badges .calendar-badge[data-entity="calendar.maxime_2"] .calendar-badge-photo{box-shadow:0 0 0 3px rgba(70,119,168,.34),0 2px 9px rgba(70,119,168,.30)!important}
-.calendar-badges .calendar-badge[data-entity="calendar.noemie"] .calendar-badge-photo{box-shadow:0 0 0 3px rgba(169,118,47,.34),0 2px 9px rgba(169,118,47,.30)!important}
-@media (max-width:768px){.header{height:60px!important;min-height:60px!important;flex-direction:row!important;align-items:center!important;padding:0 12px!important;gap:8px!important;flex-wrap:nowrap!important}.header-title{display:block!important;font-family:var(--skylight-serif)!important;font-size:16px!important;font-weight:700!important;line-height:1.1!important;white-space:nowrap!important;flex:0 1 auto!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}.header-left{gap:8px!important;align-items:baseline!important;flex:1 1 auto!important;min-width:0!important;overflow:hidden!important}.header-title-wrap{gap:8px!important;flex-wrap:nowrap!important;min-width:0!important;overflow:hidden!important}.header-time,.header-weather{font-size:16px!important;font-weight:500!important;flex:0 0 auto!important;white-space:nowrap!important}.header-controls{flex:0 0 auto!important;width:auto!important;gap:0!important;flex-wrap:nowrap!important;justify-content:flex-end!important}.add-event-button{display:none!important}.view-mode-buttons{display:none!important}.period-controls{gap:0!important;margin-left:0!important;min-width:0!important;flex:0 0 auto!important}.month-year{font-size:13px!important;white-space:nowrap!important;color:#5A6074!important}.calendar-badges{padding:6px 12px 10px!important;gap:6px!important;justify-content:space-between!important;overflow:hidden!important}.calendar-badges .calendar-badge{flex:1 1 0!important;min-width:0!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:2px 6px!important;gap:4px!important;font-size:11px!important;border-radius:999px!important;justify-content:center!important}.calendar-badges .calendar-badge-name{font-size:11px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;text-align:center!important}.calendar-badges .calendar-badge-icon,.calendar-badges .calendar-badge-photo,.calendar-badges .calendar-badge-person-icon{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;flex:0 0 20px!important}.calendar-badges-container.has-overflow::before,.calendar-badges-container.has-overflow::after{display:none!important}}@media (max-width:520px){.week-compact-container{grid-template-columns:repeat(2,minmax(0,1fr))!important}}.header-weather ha-icon{width:1.25em!important;height:1.25em!important;line-height:1.25!important;vertical-align:-.2em!important}.header-weather ha-icon::after{font-size:1.05em!important;line-height:1.25!important}@media (max-width:380px){.period-controls{display:none!important}}
-.header{background:#fff!important;color:#1F2328!important;border-bottom:1px solid #E9EAF1!important;box-shadow:none!important}
-.header ha-icon{color:#1F2328!important}.calendar-container{--header-background-base:#ffffff!important;--header-wrapped-background:#ffffff!important;--header-text-color:#1F2328!important}.header::before{background:#ffffff!important;background-image:none!important}
-`;
 const OB_KEY = 'skylight.onboarding.v1';
 const OB_COLORS = [
   '#2E9E63', '#A8D46A', '#4FC3D0', '#0F5F6E', '#4677A8', '#8E5BD9', '#D9548C',
@@ -1046,7 +1018,6 @@ ${CSS}</style>
 
     this._cfgs = this._buildConfigs(this._app, this._profiles, inner);
     this._trace('cfgs:' + Object.keys(this._cfgs).join(','));
-    this._applyProfiles();
   }
 
   /* Fabrique la configuration de chaque vue à partir des réglages de l'app. */
@@ -1065,50 +1036,23 @@ ${CSS}</style>
       stars_entity: p.stars_entity || '',
     }));
 
-    const cal = Object.assign({
-      type: 'custom:daylight-calendar-card',
-      default_view: 'week-compact',
-      first_day_of_week: 1,
-      rolling_days_week_compact: 3,
-      rolling_days_agenda: 5,
-      rolling_days_schedule: 4,
-      hide_year: true,
-      show_current_time_bar: true,
-      show_daily_weather_forecast: false,
-      enable_event_management: true,
-      disable_event_creation: false,
-      combine_calendars: true,
-      combine_style: 'stripes',
-      event_color_mode: 'classic',
-      language: 'fr',
-      locale: 'fr-FR',
-      color_scheme: 'light',
-      time_zone: '',
-      calendar_person_entities: {},
-    }, inner || {});
     const familyTitle = (app && app.family_name) || 'Ma famille';
-    cal.title = /^famille\b/i.test(familyTitle) ? familyTitle : 'Famille ' + familyTitle;
-    cal.header_time_sensor = time;
-    cal.header_weather_sensor = weather;
-    cal.use_24hr_schedule = true;
-    cal.event_font_size = 13;
-    cal.event_time_font_size = 10;
-    cal.week_compact_weekday_font_size = 24;
-    cal.week_compact_weekday_color = '#000000e0';
-    cal.combine_calendars_width = 125;
-    cal.entities = (profiles || []).map((p) => p.calendar).filter(Boolean);
-    cal.colors = cal.colors || {};
-    cal.calendar_names = cal.calendar_names || {};
-    cal.calendar_badge_icons = cal.calendar_badge_icons || {};
-    for (const p of profiles || []) {
-      if (!p.calendar) continue;
-      if (p.color) cal.colors[p.calendar] = p.color;
-      if (p.name) cal.calendar_names[p.calendar] = p.name;
-      const rawFace = p.photo || (p.glyph ? ':' + p.glyph : '');
-      const face = rawFace ? (rawFace.charAt(0) === ':' ? ':glyph:' + rawFace.slice(1) : rawFace) : '';
-      if (face) cal.calendar_badge_icons[p.calendar] = face;
-    }
-    if (inner && inner.uix) cal.uix = inner.uix;
+    const cal = {
+      type: 'custom:skylight-calendar-card',
+      title: /^famille\b/i.test(familyTitle) ? familyTitle : 'Famille ' + familyTitle,
+      profiles: (profiles || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        accent: p.accent || p.color,
+        pastel: (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : (p.color || '#EAF1FC'),
+        photo: p.photo || '',
+        calendar: p.calendar || '',
+      })),
+      time_entity: time,
+      weather_entity: weather,
+      days: 4,
+    };
 
     const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
     /* Les jours sont TOUJOURS les sept mêmes clés : le magasin de l'app stocke
@@ -1166,31 +1110,6 @@ ${CSS}</style>
     };
   }
 
-  /* les profils pilotent les calendriers, comme dans la coque actuelle */
-  _applyProfiles() {
-    const c = this._cfgs && this._cfgs.calendrier;
-    if (!c) return;
-    const cals = this._profiles.map((p) => p.calendar).filter((k) => k && String(k).indexOf('calendar.') === 0);
-    if (cals.length) c.entities = cals;
-    c.colors = c.colors || {};
-    c.calendar_names = c.calendar_names || {};
-    c.calendar_badge_icons = c.calendar_badge_icons || {};
-
-    for (const p of this._profiles) {
-      if (!p.calendar) continue;
-      if (p.color) c.colors[p.calendar] = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : p.color;
-      if (p.name) c.calendar_names[p.calendar] = p.name;
-      if (p.photo) c.calendar_badge_icons[p.calendar] = p.photo.charAt(0) === ':' ? ':glyph:' + p.photo.slice(1) : p.photo;
-    }
-
-    const jobs = Object.keys(c.calendar_badge_icons).map((k) => {
-      const v = c.calendar_badge_icons[k];
-      if (!v || String(v).indexOf(':glyph:') === 0 || String(v).indexOf('data:') === 0) return null;
-      return toDataUri(v).then((d) => { if (d) c.calendar_badge_icons[k] = d; });
-    });
-    this._badges = Promise.all(jobs);
-  }
-
   /* ---------- modules ---------- */
 
   async _resources() {
@@ -1207,13 +1126,6 @@ ${CSS}</style>
   }
 
   async _urlFor(tag) {
-    if (tag === 'daylight-calendar-card') {
-      const list = await this._resources();
-      const hit = list.find((u) => u.indexOf('skylight-calendar-card.js') >= 0);
-      return hit || FALLBACK[tag] || '';
-    }
-    /* Nos cartes sont servies par l'intégration : l'utilisateur n'a aucune
-       ressource Lovelace à installer. Seule Daylight reste externe. */
     const v = (this._app && this._app.version) || '';
     return `/skylight-static/${tag}.js${v ? '?v=' + v : ''}`;
   }
@@ -1251,62 +1163,6 @@ ${CSS}</style>
     } catch (e) { this._trace('strip-err ' + (e && e.message)); }
   }
 
-  _calBadges(el) {
-    const root = el.shadowRoot || el;
-    if (!root) return;
-    const profs = this._profiles || [];
-    if (!profs.length) return;
-    let box = root.querySelector('.calendar-badges');
-    if (box) {
-      const mine = box.querySelectorAll('[data-skylight-profile]').length;
-      if (box.getAttribute('data-skylight-profiles') === '1' && mine === profs.length) return;
-    }
-    const html = profs.map((p) => {
-      const pastel = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : p.color;
-      const raw = p.photo || '';
-      const face = raw.charAt(0) === ':'
-        ? `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:15px;line-height:1">${esc(raw.slice(1))}</span>`
-        : (raw && /^(data:|https?:|\/)/.test(raw)
-          ? `<img src="${esc(raw)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`
-          : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#fff;font-size:12px;font-weight:700">${esc((p.name || '?')[0].toUpperCase())}</span>`);
-      return `<div class="calendar-badge" data-skylight-profile="1" style="background:${pastel};border-color:${pastel}"><span class="calendar-badge-photo" style="background:${p.color};border-radius:50%;overflow:hidden">${face}</span><span class="calendar-badge-name">${esc(p.name)}</span></div>`;
-    }).join('');
-    if (!box) {
-      const header = root.querySelector('.header');
-      if (!header) return;
-      box = document.createElement('div');
-      box.className = 'calendar-badges';
-      box.setAttribute('data-skylight-profiles', '1');
-      header.insertAdjacentElement('afterend', box);
-    }
-    box.setAttribute('data-skylight-profiles', '1');
-    box.innerHTML = html;
-  }
-
-  _calStyle(el) {
-    const apply = () => {
-      const root = el.shadowRoot || el;
-      if (!root) return;
-      if (!root.querySelector('style[data-skylight-cal]')) {
-        const st = document.createElement('style');
-        st.setAttribute('data-skylight-cal', '1');
-        st.textContent = CAL_CSS;
-        root.appendChild(st);
-      }
-      this._calBadges(el);
-    };
-    apply();
-    setTimeout(apply, 120);
-    setTimeout(apply, 900);
-    try {
-      const root = el.shadowRoot || el;
-      if (!root) return;
-      this._calObs = this._calObs || [];
-      const obs = new MutationObserver(apply);
-      obs.observe(root, { childList: true });
-      this._calObs.push(obs);
-    } catch (e) { /* ignore */ }
-  }
   async _card(wrap, tag, cfg, url) {
     const ok = await this._ensure(tag, url);
     if (!ok) {
@@ -1327,7 +1183,6 @@ ${CSS}</style>
     }
     wrap.appendChild(el);
     try { el.hass = this._appHass(); } catch (e) { this._trace('hass-err ' + (e && e.message)); }
-    if (tag === 'daylight-calendar-card') this._calStyle(el);
     this._trace('ok ' + tag);
     return el;
   }
@@ -1524,7 +1379,7 @@ ${CSS}</style>
     } catch (e) {
       this._trace('route-err ' + (e && e.message));
     }
-    return this._hass.callService(domain, service, data, target);
+    return this._hass.callService(domain, service, data, target, notifyOnError, returnResponse);
   }
 
   async _refreshData() {
@@ -1559,7 +1414,6 @@ ${CSS}</style>
       return { wrap };
     }
     const tag = type.slice(7);
-    if (view === 'calendrier' && this._badges) await this._badges;
     const url = await this._urlFor(tag);
     const el = await this._card(wrap, tag, cfg, url);
     if (el) this._stripCardNav(el);

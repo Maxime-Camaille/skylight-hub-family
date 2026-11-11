@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.25';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.26';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })
@@ -79,7 +79,7 @@ class SkylightSettingsCard extends HTMLElement {
     this._profiles = [];
     this._loaded = false;
     this._kioskMod = null;   /* Kiosk Mode présent ? (null = pas encore vérifié) */
-    this._daylightMod = null; /* carte Daylight (calendrier) présente ? */
+
   }
 
   setConfig(config) {
@@ -108,10 +108,9 @@ class SkylightSettingsCard extends HTMLElement {
     if (!h || !h.callWS) return;
     this._loaded = true;
 
-    /* Deux modules HACS sont nécessaires : Kiosk Mode (immersion) et la carte
+    /* Kiosk Mode (immersion) : détecté par le fichier qu'il sert.
        Daylight (calendrier). On les détecte par le fichier qu'ils servent. */
     if (this._kioskMod === null) this._probe('/hacsfiles/kiosk-mode/kiosk-mode.js', '_kioskMod');
-    if (this._daylightMod === null) this._probe('/hacsfiles/daylight-calendar-card/skylight-calendar-card.js', '_daylightMod');
 
     h.callWS({ type: 'todo/item/list', entity_id: this._profEnt() })
       .then((r) => {
@@ -142,10 +141,6 @@ class SkylightSettingsCard extends HTMLElement {
 
   /* présence d'un module HACS : on regarde s'il est défini, sinon s'il est servi */
   _probe(url, key) {
-    const tag = key === '_daylightMod' ? 'daylight-calendar-card' : null;
-    if (tag && typeof customElements !== 'undefined' && customElements.get(tag)) {
-      this[key] = true; this._paint(); return;
-    }
     fetch(url, { method: 'HEAD' })
       .then((r) => { this[key] = r.ok || r.status === 405 || r.status === 206; this._paint(); })
       .catch(() => { this[key] = false; this._paint(); });
@@ -168,7 +163,6 @@ class SkylightSettingsCard extends HTMLElement {
     return [
       { ok: n > 0, label: 'Registre des profils', hint: n ? n + ' personne' + (n > 1 ? 's' : '') : 'aucune personne enregistrée' },
       { ok: true, label: 'Données de l\u2019application', hint: 'stockées dans Home Assistant, sans aucune entité' },
-      { ok: this._daylightMod === true, label: 'Carte calendrier (Daylight)', hint: this._daylightMod === null ? 'vérification…' : (this._daylightMod ? 'carte Daylight installée' : 'à installer depuis HACS (Daylight Calendar Card)') },
       { ok: this._countStates('calendar.') > 0, label: 'Calendriers', hint: this._countStates('calendar.') + ' calendrier(s) dans Home Assistant' },
       { ok: true, label: 'Remise à zéro des routines', hint: 'gérée par l\u2019intégration, chaque nuit à 4 h' },
       { ok: true, label: 'Mode plein écran', hint: 'géré par l\u2019application, sans plugin' },
@@ -219,13 +213,7 @@ class SkylightSettingsCard extends HTMLElement {
       label: 'Remise à zéro automatique',
       hint: 'chaque nuit à 4 h',
     });
-    out.push({
-      ok: this._daylightMod === true,
-      label: 'Carte calendrier (Daylight)',
-      hint: this._daylightMod === null ? 'vérification…'
-        : (this._daylightMod ? 'carte Daylight installée' : 'obligatoire — à installer depuis HACS (Daylight Calendar Card)'),
-    });
-    out.push({
+out.push({
       ok: this._countStates('calendar.') > 0,
       label: 'Calendriers',
       hint: this._countStates('calendar.') + ' calendrier(s) dans Home Assistant',

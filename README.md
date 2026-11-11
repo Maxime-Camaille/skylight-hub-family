@@ -18,8 +18,7 @@ latérale, et **toutes ses données restent chez vous**.
 ## Prérequis
 
 - Home Assistant 2026.10 ou plus récent.
-- La carte **Daylight Calendar Card** (HACS / Marketplace) pour la vue
-  Calendrier.
+- Aucune carte externe : la vue Calendrier est intégrée à l'application.
 
 ## Installation
 
@@ -41,11 +40,11 @@ L'écran d'accueil demande le nom de la famille et les personnes du foyer. Pour
 chaque personne, vous pouvez **relier un calendrier existant** ou **en créer un**
 calendrier local. Les profils sont ensuite modifiables depuis l'écran Profils.
 
-## Mode kiosque
+## Plein écran
 
-L'interrupteur du mode kiosque (écran Réglages) masque la barre latérale de
-Home Assistant et affiche l'application en plein écran. Aucun plugin n'est
-nécessaire pour cela.
+L'interrupteur **Plein écran** (écran Réglages) masque la barre latérale de
+Home Assistant et affiche l'application comme une application. Aucun plugin
+n'est nécessaire pour cela.
 
 ## Remise à zéro
 

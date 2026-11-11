@@ -1,0 +1,450 @@
+/* skylight-calendar-card — vue Calendrier maison, sans Daylight.
+ *
+ * Config fournie par le panneau :
+ *   title, profiles[{id,name,color,accent,pastel,photo,calendar}],
+ *   time_entity, weather_entity, days (4)
+ *
+ * Lecture : calendar.get_events (services HA, return_response).
+ * Création : calendar.create_event sur un calendrier qui l'autorise
+ * (local en général ; Google/Apple peuvent refuser).
+ * Pas de suppression/édition : HA n'expose pas l'uid des événements.
+ */
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+}[c]));
+const pad2 = (n) => String(n).padStart(2, '0');
+const sameDay = (a, b) => !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const dateKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const FR_DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const FR_MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const WEATHER = {
+  sunny: '☀️', 'clear-night': '🌙', partlycloudy: '⛅', cloudy: '☁️', rainy: '🌦️',
+  pouring: '🌧️', snowy: '❄️', 'snowy-rainy': '🌨️', fog: '🌫️', windy: '🌬️',
+  'windy-variant': '🌬️', lightning: '🌩️', 'lightning-rainy': '⛈️', hail: '🌨️', exceptional: '⚠️',
+};
+const dayShort = (d) => {
+  const s = FR_DAYS[d.getDay()];
+  return s.charAt(0).toUpperCase() + s.slice(1, 3) + '.';
+};
+const timeShort = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const parseWhen = (v) => {
+  if (v == null) return null;
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+const isAllDay = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+const CSS = `
+:host{display:block;height:100%;font-family:var(--skylight-sans,Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);color:#1F2328;--line:#E9EAF1;--muted:#8A8F9C}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.app{height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.hdr{flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:16px 22px 6px;min-width:0}
+.hl{display:flex;align-items:baseline;gap:14px;min-width:0;overflow:hidden}
+.title{font-family:var(--skylight-serif,Literata,Georgia,serif);font-size:26px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
+.time{font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.weather{display:inline-flex;align-items:center;gap:6px;font-size:22px;font-weight:500;white-space:nowrap;color:#4A505E}
+.hc{display:flex;align-items:center;gap:8px;margin-left:auto;flex:0 0 auto}
+.nav{width:36px;height:36px;border:0;border-radius:50%;background:#F2F4F7;display:grid;place-items:center;cursor:pointer;color:#2B2F38}
+.nav:hover{background:#E8EBF1}
+.nav svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.range{font-size:15px;font-weight:600;color:#2B2F38;white-space:nowrap;padding:0 4px}
+.todaybtn{border:0;background:#F2F4F7;border-radius:999px;height:36px;padding:0 15px;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap}
+.todaybtn:hover{background:#E8EBF1}
+.add{border:0;background:#0A7CFF;color:#fff;border-radius:999px;height:36px;padding:0 15px;font-size:13px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.add:hover{background:#0668D8}
+.pills{flex:0 0 auto;display:flex;gap:10px;padding:8px 22px 12px;overflow-x:auto;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:1 1 0;min-width:150px;display:flex;align-items:center;justify-content:center;gap:8px;height:40px;border-radius:999px;border:1.5px solid var(--pc);background:var(--pb);font-size:12.5px;font-weight:650;letter-spacing:-.005em;white-space:nowrap;overflow:hidden}
+.pill.off{opacity:.5}
+.pa{width:26px;height:26px;flex:0 0 26px;border-radius:50%;overflow:hidden;background:var(--ac);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+.pa img{width:100%;height:100%;object-fit:cover;display:block}
+.pn{overflow:hidden;text-overflow:ellipsis}
+.note{margin:0 22px 10px;padding:10px 14px;border-radius:12px;background:#F4F7FB;color:#4A505E;font-size:13px;line-height:1.35;display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.note button{margin-left:auto;border:1px solid #D6E2F5;background:#fff;border-radius:9px;padding:6px 11px;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap}
+.note.err{background:#FDECEA;color:#8A1F1A}
+.grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line);overflow:hidden}
+.day{background:#fff;display:flex;flex-direction:column;min-height:0;min-width:0}
+.dh{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px 12px;border-bottom:1px solid var(--line);margin:0 14px;font-family:var(--skylight-serif,Literata,Georgia,serif);font-size:23px;font-weight:600;letter-spacing:-.01em}
+.dd{font-variant-numeric:lining-nums}
+.day.today .dd{background:#F66951;color:#fff;border-radius:50%;width:1.65em;height:1.65em;display:grid;place-items:center;padding-bottom:.08em}
+.de{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 12px 18px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin}
+.empty{padding:26px 6px;text-align:center;font-size:13px;color:#9AA0AC}
+.loading{padding:22px 6px;text-align:center;font-size:13px;color:#9AA0AC}
+.ev{position:relative;min-width:0;border-radius:14px;background:var(--ev);padding:10px 42px 10px 12px;min-height:54px;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 2px rgba(31,35,40,.04)}
+.evt{font-size:13.5px;font-weight:700;line-height:1.22;color:#1F2328;overflow-wrap:anywhere}
+.evm{font-size:11.5px;font-weight:500;color:#3F4653;opacity:.88;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evo{position:absolute;right:8px;bottom:8px;width:24px;height:24px;border-radius:50%;overflow:hidden;background:var(--ac);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;box-shadow:0 0 0 1.5px #fff}
+.evo img{width:100%;height:100%;object-fit:cover;display:block}
+.scrim{position:fixed;inset:0;background:rgba(18,22,32,.32);backdrop-filter:blur(2px);z-index:40}
+.sheet{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92vw);max-height:88vh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:20px 20px 16px;z-index:41}
+.stitle{font-family:var(--skylight-serif,Literata,Georgia,serif);font-size:22px;font-weight:600;margin:0 0 14px}
+.slab{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:650;color:#4A505E;margin-bottom:10px}
+.slab input{border:1.5px solid #DDE3EC;border-radius:11px;height:42px;padding:0 12px;font:inherit;font-size:14.5px;font-weight:500;color:#1F2328;background:#fff;outline:none}
+.slab input:focus{border-color:#0A7CFF;box-shadow:0 0 0 3px rgba(10,124,255,.12)}
+.srow{display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:8px}
+.srow .slab{margin-bottom:8px}
+.calpick{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
+.calpick button{border:1.5px solid #DDE3EC;background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
+.calpick button.on{border-color:#0A7CFF;background:#EAF3FF;color:#0A5FD0}
+.serr{font-size:12.5px;color:#8A1F1A;background:#FDECEA;border-radius:10px;padding:8px 10px;margin:4px 0 10px;line-height:1.35}
+.sfine{font-size:11.5px;color:#8A8F9C;line-height:1.35;margin:0 0 12px}
+.sbtns{display:flex;gap:8px;justify-content:flex-end}
+.sbtns button{height:42px;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:650;cursor:pointer}
+.sbtns .cancel{border:1px solid #DDE3EC;background:#fff}
+.sbtns .go{border:0;background:#0A7CFF;color:#fff}
+.sbtns .go:disabled{opacity:.45;cursor:default}
+@media (max-width:899px){
+  .hdr{padding:8px 12px 2px;gap:6px;flex-wrap:wrap}
+  .hl{flex:1 1 100%;gap:8px;min-width:0}
+  .title{flex:1 1 auto;min-width:0;font-size:19px}
+  .time{font-size:19px}
+  .weather{font-size:15px;gap:4px}
+  .hc{flex:1 1 100%;margin-left:0;justify-content:space-between;gap:5px;padding:2px 0 4px}
+  .range{font-size:11px;padding:0 2px}
+  .todaybtn{display:none}
+  .add{height:32px;padding:0 10px;font-size:12px}
+  .add .lbl{display:none}
+  .nav{width:32px;height:32px}
+  .pills{padding:4px 12px 8px;gap:6px}
+  .pill{min-width:112px;height:32px;font-size:10.5px;gap:5px}
+  .pa{width:22px;height:22px;flex:0 0 22px;font-size:9.5px}
+  .grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr}
+  .dh{font-size:17px;padding:8px 4px 7px;margin:0 8px;gap:5px}
+  .de{padding:8px 8px 12px;gap:6px}
+  .ev{padding:8px 36px 8px 10px;min-height:46px;border-radius:12px}
+  .evt{font-size:12px}
+  .evm{font-size:10.5px}
+  .evo{width:21px;height:21px;right:6px;bottom:6px;font-size:9px}
+  .note{margin:0 12px 8px;font-size:12px}
+  .srow{grid-template-columns:1fr 1fr}
+  .srow .slab:first-child{grid-column:1/-1}
+}
+`;
+
+class SkylightCalendarCard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._offset = 0;
+    this._events = {};
+    this._loading = false;
+    this._err = '';
+    this._key = '';
+    this._dialog = false;
+    this._draft = null;
+    this._tick = null;
+    this._dayKey = '';
+  }
+
+  connectedCallback() {
+    this._render();
+    if (!this._tick) this._tick = setInterval(() => this._clock(), 30000);
+  }
+
+  disconnectedCallback() {
+    if (this._tick) clearInterval(this._tick);
+    this._tick = null;
+  }
+
+  setConfig(cfg) {
+    this._cfg = cfg || {};
+    this._offset = 0;
+    this._key = '';
+    this._events = {};
+    this._dialog = false;
+    this._draft = null;
+    this._render();
+    this._refresh(true);
+  }
+
+  set hass(h) {
+    this._hass = h;
+    if (!this._cfg) return;
+    if (this._keyFor() !== this._key) this._refresh(true);
+    else this._clock();
+  }
+
+  _profiles() { return (this._cfg && this._cfg.profiles) || []; }
+  _withCal() { return this._profiles().filter((p) => p && p.calendar); }
+  _dayCount() { return Math.max(1, Math.min(7, Number(this._cfg && this._cfg.days) || 4)); }
+  _start() { return addDays(startOfDay(new Date()), Number(this._offset) || 0); }
+  _days() { const n = this._dayCount(); return Array.from({ length: n }, (_, i) => addDays(this._start(), i)); }
+  _keyFor() { return this._withCal().map((p) => p.calendar).join(',') + '|' + dateKey(this._start()) + '|' + this._dayCount(); }
+
+  _time() {
+    const st = this._hass && this._hass.states && this._hass.states[(this._cfg && this._cfg.time_entity) || 'sensor.heure_actuelle'];
+    const v = st && String(st.state || '');
+    if (/^\d{1,2}:\d{2}/.test(v)) return v.slice(0, 5);
+    const d = new Date();
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  _weather() {
+    const ent = (this._cfg && this._cfg.weather_entity) || 'weather.forecast_maison';
+    const st = this._hass && this._hass.states && this._hass.states[ent];
+    if (!st) return '';
+    const cond = String(st.state || '').replace(/^weather\./, '');
+    const temp = st.attributes && st.attributes.temperature;
+    const icon = WEATHER[cond] || '🌤️';
+    return icon + (temp != null ? ` ${Math.round(Number(temp))}°` : '');
+  }
+
+  _face(p, size = 24) {
+    const raw = String((p && p.photo) || '');
+    if (raw.charAt(0) === ':') return `<span style="font-size:${Math.round(size * 0.58)}px;line-height:1">${esc(raw.slice(1))}</span>`;
+    if (raw && /^(data:|https?:|\/)/.test(raw)) return `<img src="${esc(raw)}" alt="">`;
+    return esc(((p && p.name) || '?').charAt(0).toUpperCase());
+  }
+
+  async _refresh(force) {
+    if (!this._hass) return;
+    const key = this._keyFor();
+    if (!force && key === this._key) return;
+    this._key = key;
+    this._dayKey = dateKey(this._start());
+    const ents = this._withCal().map((p) => p.calendar);
+    if (!ents.length) {
+      this._events = {};
+      this._loading = false;
+      this._err = '';
+      this._render();
+      return;
+    }
+    this._loading = true;
+    this._err = '';
+    this._render();
+    try {
+      const start = this._start();
+      const end = addDays(start, this._dayCount());
+      const res = await this._hass.callService('calendar', 'get_events', {
+        start_date_time: start.toISOString(),
+        end_date_time: end.toISOString(),
+        entity_id: ents,
+      }, {}, false, true);
+      const data = (res && res.response) ? res.response : res;
+      const next = {};
+      for (const id of ents) {
+        const item = data && data[id];
+        next[id] = Array.isArray(item && item.events) ? item.events : [];
+      }
+      this._events = next;
+    } catch (e) {
+      this._err = (e && e.message) || 'Impossible de charger les calendriers.';
+      this._events = {};
+    }
+    this._loading = false;
+    this._render();
+  }
+
+  _shift(n) {
+    this._offset = (Number(this._offset) || 0) + n;
+    this._key = '';
+    this._refresh(true);
+  }
+
+  _clock() {
+    const clock = this.shadowRoot && this.shadowRoot.querySelector('[data-clock]');
+    if (clock) clock.textContent = this._time();
+    const w = this.shadowRoot && this.shadowRoot.querySelector('[data-weather]');
+    if (w) w.textContent = this._weather();
+    const today = dateKey(startOfDay(new Date()));
+    if (this._dayKey && today !== this._dayKey) this._refresh(true);
+  }
+
+  _openDialog() {
+    if (!this._withCal().length) return;
+    const day = this._start();
+    const now = new Date();
+    const same = sameDay(day, now);
+    const start = new Date(day);
+    if (same) {
+      const mins = now.getMinutes() < 30 ? 0 : 30;
+      start.setHours(now.getHours(), mins, 0, 0);
+    } else {
+      start.setHours(9, 0, 0, 0);
+    }
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+    this._dialog = true;
+    this._draft = {
+      title: '',
+      date: dateKey(day),
+      start: timeShort(start),
+      end: timeShort(end),
+      profile: this._withCal()[0].id,
+      err: '',
+    };
+    this._render();
+  }
+
+  _closeDialog() {
+    this._dialog = false;
+    this._draft = null;
+    this._render();
+  }
+
+  async _create() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const title = (root.getElementById('evt-title') || {}).value || '';
+    const date = (root.getElementById('evt-date') || {}).value || '';
+    const start = (root.getElementById('evt-start') || {}).value || '';
+    const end = (root.getElementById('evt-end') || {}).value || '';
+    const profs = this._withCal();
+    const prof = profs.find((p) => p.id === (this._draft && this._draft.profile)) || profs[0];
+    this._draft = { title, date, start, end, profile: prof ? prof.id : '', err: '' };
+    if (!title.trim()) { this._draft.err = 'Donnez un titre à l’événement.'; this._render(); return; }
+    if (!date || !start || !end) { this._draft.err = 'Renseignez la date et les heures.'; this._render(); return; }
+    const s = new Date(`${date}T${start}:00`);
+    const e = new Date(`${date}T${end}:00`);
+    if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
+    if (!prof) { this._draft.err = 'Aucun calendrier relié.'; this._render(); return; }
+    try {
+      await this._hass.callService('calendar', 'create_event', {
+        entity_id: prof.calendar,
+        summary: title.trim(),
+        start_date_time: s.toISOString(),
+        end_date_time: e.toISOString(),
+      });
+      this._dialog = false;
+      this._draft = null;
+      this._key = '';
+      await this._refresh(true);
+    } catch (err) {
+      this._draft.err = (err && err.message) || 'Création impossible sur ce calendrier.';
+      this._render();
+    }
+  }
+
+  _dayEvents(day) {
+    const out = [];
+    for (const p of this._withCal()) {
+      const evs = this._events[p.calendar] || [];
+      for (const ev of evs) {
+        const allDay = isAllDay(ev.start);
+        const s = parseWhen(ev.start);
+        const e = parseWhen(ev.end) || (s ? addDays(s, 1) : null);
+        if (!s) continue;
+        const visible = allDay ? (s <= day && (!e || day < e)) : sameDay(s, day);
+        if (!visible) continue;
+        out.push({ ev, prof: p, allDay, s, e });
+      }
+    }
+    out.sort((a, b) => {
+      if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+      return (a.s ? a.s.getTime() : 0) - (b.s ? b.s.getTime() : 0);
+    });
+    return out;
+  }
+
+  _eventHtml(item) {
+    const { ev, prof, allDay, s, e } = item;
+    const when = allDay ? 'Toute la journée' : `${timeShort(s)} – ${timeShort(e || s)}`;
+
+    return `<article class="ev" style="--ev:${esc(prof.pastel || '#EAF1FC')};--ac:${esc(prof.accent || prof.color || '#7A8596')}">
+      <div class="evt">${esc(ev.summary || 'Sans titre')}</div>
+      <div class="evm">${esc(when)}</div>
+      <span class="evo">${this._face(prof, 24)}</span>
+    </article>`;
+  }
+
+  _render() {
+    if (!this._cfg) return;
+    const root = this.shadowRoot;
+    if (!root) return;
+    const title = this._cfg.title || 'Famille';
+    const days = this._days();
+    const today = startOfDay(new Date());
+    const withCal = this._withCal();
+    const range = (() => {
+      const a = days[0];
+      const b = days[days.length - 1];
+      return `${a.getDate()} ${FR_MONTHS[a.getMonth()]} – ${b.getDate()} ${FR_MONTHS[b.getMonth()]}`;
+    })();
+    const pills = this._profiles().map((p) => `<div class="pill${p.calendar ? '' : ' off'}" style="--pb:${esc(p.pastel || '#F1F3F6')};--pc:${esc(p.pastel || '#E3E7EE')};--ac:${esc(p.accent || p.color || '#7A8596')}" title="${p.calendar ? '' : 'Aucun calendrier relié'}">
+      <span class="pa">${this._face(p, 26)}</span><span class="pn">${esc(p.name || '')}</span></div>`).join('');
+    const note = this._err
+      ? `<div class="note err">${esc(this._err)}</div>`
+      : (withCal.length ? '' : `<div class="note">Aucun calendrier relié à un profil.<button data-profiles type="button">Ouvrir Profils</button></div>`);
+    const dayHtml = days.map((d) => {
+      const items = this._dayEvents(d);
+      const isToday = sameDay(d, today);
+      return `<section class="day${isToday ? ' today' : ''}">
+        <div class="dh"><span class="dn">${dayShort(d)}</span><span class="dd">${d.getDate()}</span></div>
+        <div class="de">${this._loading ? '<div class="loading">Chargement…</div>' : (items.length ? items.map((it) => this._eventHtml(it)).join('') : '<div class="empty">Aucun événement</div>')}</div>
+      </section>`;
+    }).join('');
+
+    const sheet = this._dialog ? this._dialogHtml(withCal) : '';
+    root.innerHTML = `<style>${CSS}</style>
+      <div class="app">
+        <div class="hdr">
+          <div class="hl"><h1 class="title">${esc(title)}</h1><span class="time" data-clock>${esc(this._time())}</span><span class="weather" data-weather>${esc(this._weather())}</span></div>
+          <div class="hc">
+            <button class="nav" data-prev type="button" aria-label="Jours précédents"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <span class="range">${esc(range)}</span>
+            <button class="nav" data-next type="button" aria-label="Jours suivants"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+            <button class="todaybtn" data-today type="button">Aujourd’hui</button>
+            ${withCal.length ? `<button class="add" data-add type="button"><span style="font-size:16px;line-height:1">+</span><span class="lbl">Ajouter</span></button>` : ''}
+          </div>
+        </div>
+        ${pills ? `<div class="pills">${pills}</div>` : ''}
+        ${note}
+        <div class="grid" style="--cols:${days.length}">${dayHtml}</div>
+      </div>
+      ${sheet}`;
+    this._bind();
+  }
+
+  _dialogHtml(withCal) {
+    const d = this._draft || {};
+    const profs = withCal.map((p) => `<button type="button" class="${p.id === d.profile ? 'on' : ''}" data-cal="${esc(p.id)}">${esc(p.name || '')}</button>`).join('');
+    return `<div class="scrim" data-close></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Nouvel événement">
+        <h2 class="stitle">Nouvel événement</h2>
+        <label class="slab">Titre<input id="evt-title" maxlength="80" placeholder="Rendez-vous, école…" value="${esc(d.title || '')}"></label>
+        <div class="srow">
+          <label class="slab">Date<input id="evt-date" type="date" value="${esc(d.date || '')}"></label>
+          <label class="slab">Début<input id="evt-start" type="time" value="${esc(d.start || '')}"></label>
+          <label class="slab">Fin<input id="evt-end" type="time" value="${esc(d.end || '')}"></label>
+        </div>
+        <label class="slab">Calendrier</label>
+        <div class="calpick">${profs}</div>
+        ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
+        <p class="sfine">Création sur un calendrier relié. Google/Apple peuvent refuser la création depuis Home Assistant.</p>
+        <div class="sbtns"><button class="cancel" type="button" data-close>Annuler</button><button class="go" type="button" data-create>Créer</button></div>
+      </div>`;
+  }
+
+  _bind() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn));
+    on('[data-prev]', 'click', () => this._shift(-this._dayCount()));
+    on('[data-next]', 'click', () => this._shift(this._dayCount()));
+    on('[data-today]', 'click', () => { this._offset = 0; this._key = ''; this._refresh(true); });
+    on('[data-add]', 'click', () => this._openDialog());
+    on('[data-close]', 'click', () => this._closeDialog());
+    on('[data-create]', 'click', () => this._create());
+    on('[data-profiles]', 'click', () => {
+      try { window.dispatchEvent(new CustomEvent('skylight-navigate', { detail: { view: 'profils' } })); } catch (e) { /* ignore */ }
+    });
+    on('[data-cal]', 'click', (e) => {
+      const id = e.currentTarget.getAttribute('data-cal');
+      if (this._draft) this._draft.profile = id;
+      root.querySelectorAll('[data-cal]').forEach((b) => b.classList.toggle('on', b === e.currentTarget));
+    });
+  }
+}
+
+if (!customElements.get('skylight-calendar-card')) {
+  customElements.define('skylight-calendar-card', SkylightCalendarCard);
+}
