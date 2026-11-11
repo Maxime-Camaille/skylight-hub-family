@@ -41,6 +41,13 @@ Une mise à jour remplace uniquement le code de l'intégration : le fichier
 `.storage/skylight_hub_family.data` n'est jamais touché. Faites une sauvegarde
 Home Assistant avant, par précaution.
 
+## Thèmes
+
+Deux thèmes sont prévus : **Skylight Calendar** (actif) et **Apple** (à venir).
+Le sélecteur est dans **Réglages → Thème**. L'architecture, les règles
+d'isolation et la procédure pour développer le thème Apple sont dans
+[THEMES.md](THEMES.md).
+
 ## Prérequis
 
 - Home Assistant 2026.10 ou plus récent.

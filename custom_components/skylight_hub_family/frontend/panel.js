@@ -10,7 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.30';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.31';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.31';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -19,7 +20,9 @@ const FALLBACK = {
 };
 
 let CORE = null;
+let THEMES = null;
 const ready = import(CORE_URL).then((m) => { CORE = m; return m; }).catch(() => null);
+const themesReady = import(THEME_URL).then((m) => { THEMES = m; return m; }).catch(() => null);
 
 /* Le nuancier de l'application (14 teintes vives, mêmes valeurs que
  * `COLORS` dans skylight-profiles-card.js). L'ordre est celui de la fiche
@@ -69,7 +72,7 @@ const CSS = `
 .rail .ri.on svg.fl,.tabbar .ri.on svg.fl{display:block}
 .rail .ri.on svg.ov,.tabbar .ri.on svg.ov{display:none}
 /* ---------- installation (onboarding) — porté de maquettes/onboarding_exemple ---------- */
-.onb{min-height:100vh;background:#FAF9F7;color:#1B1B1D;
+.onb{min-height:100vh;display:flex;flex-direction:column;background:#FAF9F7;color:#1B1B1D;
   font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   -webkit-font-smoothing:antialiased;
   --o-ink:#1B1B1D;--o-ink2:#3C3C3E;--o-muted:#8B8B90;--o-muted2:#A8A8AC;
@@ -78,6 +81,13 @@ const CSS = `
   --o-sand:#FDE2CB;--o-mint:#D6F0DE;--o-green:#34C759;--o-red:#F66951;
   --o-card:#fff;--o-shadow:0 1px 2px rgba(28,28,30,.04),0 10px 30px rgba(28,32,45,.06);
   --o-soft:0 18px 50px rgba(30,55,110,.10)}
+.o-previewbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#1B1B1D;color:#F5F3EF;font-size:12px;font-weight:600;line-height:1.3;z-index:60}
+.o-previewbar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.o-previewbar button{border:0;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;flex:0 0 auto}
+.o-screen{animation:oStep .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes oStep{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.o-screen{animation:none}}
+.onb.preview .o-wrap{min-height:calc(100vh - 38px)}
 .onb .nm,.onb .nm b{font-family:inherit;letter-spacing:inherit}\n.o-wrap{min-height:100vh;display:flex;flex-direction:column;max-width:1024px;margin:0 auto;width:100%}
 .o-screen{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
 .o-left{display:none}
@@ -360,6 +370,7 @@ class FamillePanel extends HTMLElement {
     if (this._onLoc) window.removeEventListener('location-changed', this._onLoc);
     if (this._onNav) window.removeEventListener('skylight-navigate', this._onNav);
     if (this._onProfiles) window.removeEventListener('skylight-profiles-changed', this._onProfiles);
+    if (this._onTheme) window.removeEventListener('skylight-theme-changed', this._onTheme);
   }
 
   _reloadProfiles() {
@@ -377,6 +388,7 @@ class FamillePanel extends HTMLElement {
   }
   async _init() {
     await ready;
+    await themesReady;
     if (!CORE) {
       this.shadowRoot.innerHTML = `<div class="err">Tronc commun introuvable (${esc(CORE_URL)}).</div>`;
       return;
@@ -400,7 +412,22 @@ class FamillePanel extends HTMLElement {
     window.addEventListener('skylight-navigate', this._onNav);
     this._onProfiles = () => this._reloadProfiles();
     window.addEventListener('skylight-profiles-changed', this._onProfiles);
+    this._onTheme = (e) => {
+      const id = e && e.detail && e.detail.theme;
+      if (!id || !THEMES) return;
+      try { THEMES.applyTheme(this, id); } catch (err) { /* le thème ne casse pas l'app */ }
+      if (this._app) this._app.theme = id;
+    };
+    window.addEventListener('skylight-theme-changed', this._onTheme);
     await this._load();
+    if (THEMES) {
+      try { THEMES.applyTheme(this, this._app && this._app.theme); } catch (e) { /* fallback base */ }
+    }
+    if (new URLSearchParams(location.search || '').get('onboarding') === '1') {
+      this._obPreview = true;
+      this._renderOnboarding();
+      return;
+    }
     if (!this._app || !this._app.onboarding_done) { this._renderOnboarding(); return; }
     await this._show(this._view);
   }
@@ -583,6 +610,7 @@ ${CSS}</style>
   }
 
   _obSave() {
+    if (this._obPreview) return;
     const ob = this._ob;
     if (!ob || ob.step === 'existing') return;
     try {
@@ -627,7 +655,10 @@ ${CSS}</style>
   }
 
   _renderOnboarding() {
-    this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb"><div class="o-wrap" id="ob"></div></div>`;
+    const bar = this._obPreview
+      ? `<div class="o-previewbar"><span>Aperçu de la découverte — rien n'est enregistré.</span><button id="o-preview-exit" type="button">Quitter</button></div>`
+      : '';
+    this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb${this._obPreview ? ' preview' : ''}">${bar}<div class="o-wrap" id="ob"></div></div>`;
     const saved = this._obRestore();
     this._ob = {
       step: saved ? saved.step : ((this._app && this._app.existing) ? 'existing' : 0),
@@ -640,6 +671,16 @@ ${CSS}</style>
       report: null,
       sheet: null,
     };
+    if (this._obPreview) {
+      this._ob.step = 0;
+      this._ob.family = '';
+      this._ob.people = [];
+      this._ob.draft = { name: '', color: OB_COLORS[0], cal: true };
+      this._ob.edit = -1;
+      this._ob.err = null;
+      const exit = this.shadowRoot.getElementById('o-preview-exit');
+      if (exit) exit.addEventListener('click', () => { location.href = '/skylight'; });
+    }
     this._obPaint();
   }
 
@@ -850,7 +891,7 @@ ${CSS}</style>
           <div class="r"><span>Autres entités</span><span class="n">0</span></div>
         </div>
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
-      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button" ${ob.busy ? 'disabled' : ''}>Retour</button><button class="o-btn" id="o-install" type="button" ${ob.busy ? 'disabled' : ''}>${ob.busy ? 'Installation…' : 'Installer'}</button></div>`);
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button" ${ob.busy ? 'disabled' : ''}>Retour</button><button class="o-btn" id="o-install" type="button" ${ob.busy ? 'disabled' : ''}>${ob.busy ? 'Création…' : 'Terminer'}</button></div>`);
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
       root.querySelector('#o-back').addEventListener('click', () => { ob.step = 3; this._obPaint(); });
       root.querySelector('#o-install').addEventListener('click', () => this._obInstall(false));
@@ -859,7 +900,7 @@ ${CSS}</style>
 
     /* prêt */
     const rep = ob.report || {};
-    const profs = (rep.config && rep.config.profiles) || [];
+    const profs = (rep.config && rep.config.profiles) || (this._obPreview ? (ob.people || []) : []);
     const cals = profs.filter((p) => p.calendar).length;
     const famName = (rep.config && rep.config.family_name) || ob.family || 'Ma famille';
     left = this._oReadyIllu(profs, famName);
@@ -958,6 +999,18 @@ ${CSS}</style>
   async _obInstall(keep) {
     const ob = this._ob;
     if (ob.busy) return;
+    if (this._obPreview) {
+      if (!keep) {
+        const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
+        if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
+      }
+      ob.err = null;
+      ob.busy = false;
+      ob.report = { preview: true };
+      ob.step = 5;
+      this._obPaint();
+      return;
+    }
     if (!keep) {
       const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
       if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
@@ -984,12 +1037,13 @@ ${CSS}</style>
       this._obPaint();
     } catch (e) {
       ob.busy = false;
-      ob.err = 'Installation impossible : ' + ((e && e.message) || e);
+      ob.err = 'Création impossible : ' + ((e && e.message) || e);
       this._obPaint();
     }
   }
 
   async _obEnter() {
+    if (this._obPreview) { location.href = '/skylight'; return; }
     this._mounted = {};
     await this._load();
     this._paint();
@@ -1105,6 +1159,8 @@ ${CSS}</style>
         evening_from: evening,
         stars_per_task: stars,
         version: (app && app.version) || '',
+        theme: (app && app.theme) || 'skylight',
+        themes: (THEMES && THEMES.themeList) ? THEMES.themeList() : [{ id: 'skylight', name: 'Skylight Calendar', status: 'ready' }],
       },
     };
   }

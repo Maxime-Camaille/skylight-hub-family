@@ -32,6 +32,7 @@ DEFAULTS: dict[str, Any] = {
     "family_name": "Ma famille",
     "initial": "M",
     "kiosk": False,
+    "theme": "skylight",
     "stars_per_task": 10,
     "evening_from": 16,
     "profiles": [],
@@ -171,6 +172,7 @@ def payload(hass: HomeAssistant) -> dict[str, Any]:
         "family_name": data.get("family_name"),
         "initial": data.get("initial"),
         "kiosk": bool(data.get("kiosk")),
+        "theme": data.get("theme") or "skylight",
         "stars_per_task": data.get("stars_per_task"),
         "evening_from": data.get("evening_from"),
         "profiles": _profiles(hass),
@@ -233,6 +235,7 @@ async def ws_config(hass, connection, msg):
     {
         vol.Required("type"): f"{DOMAIN}/settings",
         vol.Optional("kiosk"): cv.boolean,
+        vol.Optional("theme"): vol.In(("skylight", "apple")),
         vol.Optional("order"): vol.Coerce(int),
         vol.Optional("evening_from"): vol.Coerce(int),
         vol.Optional("family_name"): cv.string,
@@ -241,7 +244,7 @@ async def ws_config(hass, connection, msg):
 @websocket_api.async_response
 async def ws_settings(hass, connection, msg):
     data = _data(hass)
-    for key in ("kiosk", "stars_per_task", "evening_from", "family_name", "order"):
+    for key in ("kiosk", "theme", "stars_per_task", "evening_from", "family_name", "order"):
         if key in msg:
             data[key] = msg[key]
     if msg.get("family_name"):

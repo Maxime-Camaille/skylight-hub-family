@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.30';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.31';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })
@@ -65,6 +65,9 @@ button.row{cursor:pointer}
 .accbody.open{display:block}
 .tag{font-size:11px;font-weight:600;border-radius:999px;padding:3px 8px;background:#F1F4F7;color:#5A6074}
 .tag.ko{background:#FDECEA;color:#FF3B30}
+.theme[disabled]{opacity:.55;cursor:default}
+.theme.on .rl b{color:var(--f-brand,#007AFF)}
+.theme .tag{white-space:nowrap}
 .foot{font-size:12px;color:#8A8F9C;text-align:center;margin-top:8px;line-height:1.5}
 .empty{padding:18px;font-size:13px;color:#8A8F9C}
 .err{margin:16px;padding:14px;border-radius:12px;background:#FDF2F0;color:#FF3B30;font-size:13px}
@@ -257,6 +260,11 @@ out.push({
     const allOk = ok === req.length;
     const kioskOn = this._st(this._kioskEnt()) && this._st(this._kioskEnt()).state === 'on';
     const name = (this._cfg && this._cfg.family_name) || 'Famille';
+    const themes = (this._cfg && this._cfg.themes) || [
+      { id: 'skylight', name: 'Skylight Calendar', status: 'ready' },
+      { id: 'apple', name: 'Apple', status: 'coming' },
+    ];
+    const theme = (this._cfg && this._cfg.theme) || 'skylight';
 
     if (sub) sub.textContent = name + ' · ' + ok + ' / ' + req.length + ' prérequis';
 
@@ -291,6 +299,21 @@ out.push({
       + '<span class="sw' + (kioskOn ? ' on' : '') + '"></span></button>'
       + '</div></div>'
 
+      + '<div class="grp"><div class="gt">Thème</div><div class="card">'
+      + themes.map((t) => {
+        const on = theme === t.id;
+        const coming = t.status && t.status !== 'ready';
+        const ic = t.id === 'apple'
+          ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M18.5 15l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7.7-2.1z"/></svg>'
+          : '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 9v11M15 9v11"/></svg>';
+        return '<button class="row theme' + (on ? ' on' : '') + '" data-theme="' + this._esc(t.id) + '"' + (coming ? ' disabled' : '') + '>'
+          + '<span class="ic">' + ic + '</span>'
+          + '<span class="rl"><b>' + this._esc(t.name) + '</b><span>' + this._esc(coming ? 'Bientôt disponible' : (t.description || '')) + '</span></span>'
+          + (coming ? '<span class="tag">Bientôt</span>' : (on ? '<span class="tag">Actif</span>' : '<span class="tag">Choisir</span>'))
+          + '</button>';
+      }).join('')
+      + '</div></div>'
+
       + '<div class="grp"><div class="gt">Application</div><div class="card">'
       + '<div class="row"><span class="rl"><b>Version</b><span>App Famille</span></span>'
       + '<span class="val">' + this._esc(this._cfg.version || '0.1.0') + '</span></div>'
@@ -304,6 +327,11 @@ out.push({
     const k = root.getElementById('kiosk');
     if (k) k.addEventListener('click', () => this._toggleKiosk());
 
+    root.querySelectorAll('.theme[data-theme]').forEach((b) => {
+      if (b.disabled) return;
+      b.addEventListener('click', () => this._setTheme(b.dataset.theme));
+    });
+
     const acc = root.getElementById('acc');
     const accBody = root.getElementById('accbody');
     if (acc && accBody) {
@@ -314,6 +342,18 @@ out.push({
         acc.classList.toggle('open', !isOpen);
       });
     }
+  }
+
+  _setTheme(id) {
+    const h = this._hass;
+    if (!h || !h.callWS) return;
+    h.callWS({ type: 'skylight_hub_family/settings', theme: id })
+      .then(() => {
+        if (this._cfg) this._cfg.theme = id;
+        this._paint();
+        try { window.dispatchEvent(new CustomEvent('skylight-theme-changed', { detail: { theme: id } })); } catch (e) { /* ignore */ }
+      })
+      .catch(() => { /* le réglage reste inchangé */ });
   }
 
   _toggleKiosk() {
