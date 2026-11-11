@@ -12,15 +12,18 @@ import json
 import logging
 import unicodedata
 import uuid
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, STORAGE_KEY, VERSION
 
@@ -189,9 +192,194 @@ def payload(hass: HomeAssistant) -> dict[str, Any]:
     }
 
 
+def _parse_when(value):
+    """Date ISO (AAAA-MM-JJ) ou datetime ISO -> date/datetime."""
+    if not value:
+        return None
+    text = str(value).strip()
+    if len(text) == 10:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            return None
+    try:
+        return dt_util.parse_datetime(text) or datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _entity_label(hass, entity_id, reg):
+    if reg is not None and reg.name:
+        return reg.name
+    if reg is not None and reg.original_name:
+        return reg.original_name
+    state = hass.states.get(entity_id)
+    return (state.attributes.get("friendly_name") if state else "") or ""
+
+
+def _caldav_work(hass, reg, msg):
+    """Prépare l'opération CalDAV directe (identifiants déjà dans HA)."""
+    entry = hass.config_entries.async_get_entry(reg.config_entry_id)
+    if entry is None or entry.domain != "caldav":
+        raise ValueError("Entrée CalDAV introuvable pour ce calendrier.")
+    label = _entity_label(hass, msg["entity_id"], reg)
+    data = entry.data
+
+    def _do():
+        import caldav
+
+        client = caldav.DAVClient(url=data["url"], username=data["username"], password=data["password"])
+        principal = client.principal()
+        wanted = (label or "").strip().casefold()
+        calendar = None
+        for candidate in principal.calendars():
+            if (candidate.name or "").strip().casefold() == wanted:
+                calendar = candidate
+                break
+        if calendar is None:
+            raise ValueError(f"Calendrier CalDAV « {label} » introuvable.")
+        event = None
+        try:
+            event = calendar.event_by_uid(msg["uid"])
+        except Exception as first:
+            # iCloud renvoie 412 sur la recherche par UID ; on liste et on matche.
+            try:
+                events = calendar.events()
+            except Exception:
+                events = []
+            for candidate in events:
+                try:
+                    if str(candidate.vobject_instance.vevent.uid.value) == msg["uid"]:
+                        event = candidate
+                        break
+                except Exception:
+                    continue
+            if event is None:
+                raise ValueError("Événement introuvable dans le calendrier CalDAV.") from first
+        if msg["op"] == "delete":
+            event.delete()
+            return True
+        vevent = event.vobject_instance.vevent
+        if msg.get("summary") is not None:
+            vevent.summary.value = msg["summary"]
+        start = _parse_when(msg.get("start"))
+        end = _parse_when(msg.get("end"))
+        all_day = bool(msg.get("allday"))
+        current_start = vevent.dtstart.value
+        current_end = vevent.dtend.value if getattr(vevent, "dtend", None) is not None else None
+        if start is not None:
+            if all_day and isinstance(start, datetime):
+                vevent.dtstart.value = start.date()
+            elif isinstance(start, datetime) and isinstance(current_start, datetime) and current_start.tzinfo is not None:
+                vevent.dtstart.value = start.astimezone(current_start.tzinfo)
+            else:
+                vevent.dtstart.value = start
+        if end is not None:
+            if all_day and isinstance(end, datetime):
+                vevent.dtend.value = end.date()
+            elif isinstance(end, datetime) and isinstance(current_end, datetime) and current_end.tzinfo is not None:
+                vevent.dtend.value = end.astimezone(current_end.tzinfo)
+            else:
+                vevent.dtend.value = end
+        event.save()
+        return True
+
+    return _do
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/cal_event",
+        vol.Required("op"): vol.In(("delete", "update")),
+        vol.Required("entity_id"): cv.string,
+        vol.Required("uid"): cv.string,
+        vol.Optional("summary"): cv.string,
+        vol.Optional("start"): cv.string,
+        vol.Optional("end"): cv.string,
+        vol.Optional("allday", default=False): cv.boolean,
+        vol.Optional("recurrence_id"): cv.string,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_cal_event(hass, connection, msg):
+    """Supprime/modifie un événement, même quand l'intégration HA l'interdit.
+
+    - CalDAV (Apple/iCloud) : accès direct au serveur avec l'entrée CalDAV de HA.
+    - Local : méthodes natives de l'entité calendrier.
+    - Google : méthodes de l'entité (si l'intégration les expose) ; le direct
+      Google pourra être ajouté de la même façon avec son jeton OAuth.
+    """
+    reg = er.async_get(hass).async_get(msg["entity_id"])
+    if reg is None:
+        raise ValueError("Entité calendrier inconnue.")
+    if reg.platform == "caldav":
+        work = _caldav_work(hass, reg, msg)
+        await hass.async_add_executor_job(work)
+    else:
+        component = hass.data.get("calendar")
+        entity = component.get_entity(msg["entity_id"]) if component is not None and hasattr(component, "get_entity") else None
+        if entity is None:
+            raise ValueError("Calendrier introuvable.")
+        if msg["op"] == "delete":
+            await entity.async_delete_event(msg["uid"])
+        else:
+            start = _parse_when(msg.get("start"))
+            end = _parse_when(msg.get("end"))
+            if start is None or end is None:
+                raise ValueError("Dates invalides.")
+            event = CalendarEvent(summary=msg.get("summary") or "", start=start, end=end)
+            await entity.async_update_event(msg["uid"], event)
+    await hass.services.async_call("homeassistant", "update_entity", {"entity_id": msg["entity_id"]}, blocking=True)
+    connection.send_result(msg["id"], {"ok": True})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/cal_test",
+        vol.Required("action"): vol.In(("create", "cleanup")),
+        vol.Optional("name", default="Test SKY direct"): cv.string,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_cal_test(hass, connection, msg):
+    """Création/nettoyage du calendrier CalDAV temporaire (test uniquement)."""
+    entry = next(
+        (e for e in hass.config_entries.async_entries("caldav") if "maxime" in (e.data.get("username") or "")),
+        None,
+    )
+    if entry is None:
+        raise ValueError("Compte CalDAV de test introuvable.")
+    data = entry.data
+    name = msg["name"]
+
+    def _do():
+        import caldav
+
+        client = caldav.DAVClient(url=data["url"], username=data["username"], password=data["password"])
+        principal = client.principal()
+        calendar = next((c for c in principal.calendars() if (c.name or "").strip() == name), None)
+        if msg["action"] == "cleanup":
+            if calendar is not None:
+                calendar.delete()
+                return {"deleted": True, "name": name}
+            return {"deleted": False, "name": name}
+        if calendar is None:
+            calendar = principal.make_calendar(name=name)
+        start = datetime.now().astimezone().replace(hour=15, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        end = start + timedelta(hours=1)
+        event = calendar.save_event(dtstart=start, dtend=end, summary="Test SKY event")
+        uid = event.vobject_instance.vevent.uid.value
+        return {"name": name, "url": str(calendar.url), "uid": uid, "start": start.isoformat(), "end": end.isoformat()}
+
+    result = await hass.async_add_executor_job(_do)
+    connection.send_result(msg["id"], result)
+
+
 @callback
 def async_register(hass: HomeAssistant) -> None:
-    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate, ws_reset):
+    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate, ws_reset, ws_cal_event, ws_cal_test):
         websocket_api.async_register_command(hass, cmd)
     async_start_schedule(hass)
 

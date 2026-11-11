@@ -144,6 +144,7 @@ class SkylightCalendarCard extends HTMLElement {
     this._dialog = false;
     this._draft = null;
     this._detail = null;
+    this._edit = null;
     this._tick = null;
     this._dayKey = '';
     this._calSig = '';
@@ -170,6 +171,7 @@ class SkylightCalendarCard extends HTMLElement {
     this._dialog = false;
     this._draft = null;
     this._detail = null;
+    this._edit = null;
     this._render();
     this._refresh(true);
   }
@@ -313,6 +315,7 @@ class SkylightCalendarCard extends HTMLElement {
     end.setHours(end.getHours() + 1);
     this._dialog = true;
     this._detail = null;
+    this._edit = null;
     this._draft = {
       title: '',
       date: dateKey(day),
@@ -329,12 +332,14 @@ class SkylightCalendarCard extends HTMLElement {
     this._dialog = false;
     this._draft = null;
     this._detail = null;
+    this._edit = null;
     this._render();
   }
 
   async _create() {
     const root = this.shadowRoot;
     if (!root) return;
+    if (this._edit) { await this._saveEdit(); return; }
     const title = (root.getElementById('evt-title') || {}).value || '';
     const date = (root.getElementById('evt-date') || {}).value || '';
     const start = (root.getElementById('evt-start') || {}).value || '';
@@ -376,6 +381,57 @@ class SkylightCalendarCard extends HTMLElement {
       await this._refresh(true);
     } catch (err) {
       this._draft.err = (err && err.message) || 'Création impossible sur ce calendrier.';
+      this._render();
+    }
+  }
+
+  async _saveEdit() {
+    const root = this.shadowRoot;
+    if (!root || !this._edit) return;
+    const item = this._edit.item;
+    const ev = item.ev;
+    const title = (root.getElementById('evt-title') || {}).value || '';
+    const date = (root.getElementById('evt-date') || {}).value || '';
+    const start = (root.getElementById('evt-start') || {}).value || '';
+    const end = (root.getElementById('evt-end') || {}).value || '';
+    const allday = !!(root.getElementById('evt-allday') || {}).checked;
+    this._draft = { title, date, start, end, allday, profile: item.prof.id, err: '' };
+    if (!title.trim()) { this._draft.err = 'Donnez un titre à l’événement.'; this._render(); return; }
+    if (!date) { this._draft.err = 'Renseignez la date.'; this._render(); return; }
+    let sIso;
+    let eIso;
+    if (allday) {
+      const d0 = parseWhen(date);
+      if (!d0) { this._draft.err = 'Date invalide.'; this._render(); return; }
+      sIso = date;
+      eIso = dateKey(addDays(d0, 1));
+    } else {
+      if (!start || !end) { this._draft.err = 'Renseignez les heures.'; this._render(); return; }
+      const s = new Date(`${date}T${start}:00`);
+      const e = new Date(`${date}T${end}:00`);
+      if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
+      sIso = s.toISOString();
+      eIso = e.toISOString();
+    }
+    try {
+      await this._hass.callWS({
+        type: 'skylight_hub_family/cal_event',
+        op: 'update',
+        entity_id: item.prof.calendar,
+        uid: ev.uid,
+        summary: title.trim(),
+        start: sIso,
+        end: eIso,
+        allday,
+      });
+      this._dialog = false;
+      this._draft = null;
+      this._edit = null;
+      this._detail = null;
+      this._key = '';
+      await this._refresh(true);
+    } catch (err) {
+      this._draft.err = (err && err.message) || 'Modification impossible sur ce calendrier.';
       this._render();
     }
   }
@@ -463,10 +519,11 @@ class SkylightCalendarCard extends HTMLElement {
 
   _dialogHtml(withCal) {
     const d = this._draft || {};
+    const edit = !!this._edit;
     const profs = withCal.map((p) => `<button type="button" class="${p.id === d.profile ? 'on' : ''}" data-cal="${esc(p.id)}">${esc(p.name || '')}</button>`).join('');
     return `<div class="scrim" data-close></div>
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="Nouvel événement">
-        <h2 class="stitle">Nouvel événement</h2>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${edit ? 'Modifier l’événement' : 'Nouvel événement'}">
+        <h2 class="stitle">${edit ? 'Modifier l’événement' : 'Nouvel événement'}</h2>
         <label class="slab">Titre<input id="evt-title" maxlength="80" placeholder="Rendez-vous, école…" value="${esc(d.title || '')}"></label>
         <div class="srow">
           <label class="slab">Date<input id="evt-date" type="date" value="${esc(d.date || '')}"></label>
@@ -474,11 +531,10 @@ class SkylightCalendarCard extends HTMLElement {
           <label class="slab">Fin<input id="evt-end" type="time" value="${esc(d.end || '')}"></label>
         </div>
         <label class="allrow"><input type="checkbox" id="evt-allday"${d.allday ? ' checked' : ''}> Toute la journée</label>
-        <label class="slab">Calendrier</label>
-        <div class="calpick">${profs}</div>
+        ${edit ? '' : `<label class="slab">Calendrier</label><div class="calpick">${profs}</div>`}
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
-        <p class="sfine">Création sur un calendrier relié. Google/Apple peuvent refuser la création depuis Home Assistant.</p>
-        <div class="sbtns"><button class="cancel" type="button" data-close>Annuler</button><button class="go" type="button" data-create>Créer</button></div>
+        <p class="sfine">${edit ? 'La modification est écrite dans le calendrier d’origine.' : 'Création sur un calendrier relié. Google/Apple peuvent refuser la création depuis Home Assistant.'}</p>
+        <div class="sbtns"><button class="cancel" type="button" data-close>Annuler</button><button class="go" type="button" data-create>${edit ? 'Enregistrer' : 'Créer'}</button></div>
       </div>`;
   }
 
@@ -487,7 +543,27 @@ class SkylightCalendarCard extends HTMLElement {
     if (!item) return;
     this._dialog = false;
     this._draft = null;
+    this._edit = null;
     this._detail = { item, confirm: false, err: '' };
+    this._render();
+  }
+
+  _openEdit() {
+    const d = this._detail;
+    if (!d || !d.item) return;
+    const { ev, prof, allDay, s, e } = d.item;
+    this._edit = { item: d.item };
+    this._detail = null;
+    this._dialog = true;
+    this._draft = {
+      title: ev.summary || '',
+      date: dateKey(s),
+      start: timeShort(s),
+      end: timeShort(e || s),
+      profile: prof.id,
+      allday: allDay,
+      err: '',
+    };
     this._render();
   }
 
@@ -497,15 +573,14 @@ class SkylightCalendarCard extends HTMLElement {
     const { ev, prof, allDay, s, e } = d.item;
     const when = allDay ? 'Toute la journée' : `${timeShort(s)} – ${timeShort(e || s)}`;
     const loc = ev.location ? `<br>${esc(ev.location)}` : '';
-    const canDel = (this._features(prof) & 2) !== 0;
     return `<div class="scrim" data-close></div>
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Événement">
         <h2 class="stitle">${esc(ev.summary || 'Sans titre')}</h2>
         <div class="dmeta">${esc(when)}<br>${esc(prof.name || '')}${loc}</div>
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
-        ${!canDel ? '<p class="sfine">Ce calendrier ne permet pas la suppression depuis Home Assistant. Supprimez l’événement dans l’application du calendrier : la synchronisation le retirera ici.</p>' : ''}
-        ${d.confirm ? '<p class="sfine">Supprimer cet événement ?</p>' : (ev.rrule ? '<p class="sfine">Événement récurrent : seule cette occurrence sera supprimée.</p>' : '')}
-        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button>${canDel && ev.uid ? `<button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button>` : ''}</div>
+        ${ev.rrule ? '<p class="sfine">Événement récurrent : la modification et la suppression portent sur toute la série.</p>' : ''}
+        ${d.confirm ? '<p class="sfine">Supprimer cet événement ?</p>' : ''}
+        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button><button class="cancel" data-edit-event type="button">Modifier</button><button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button></div>
       </div>`;
   }
 
@@ -518,7 +593,7 @@ class SkylightCalendarCard extends HTMLElement {
       this._render();
       return;
     }
-    const payload = { type: 'calendar/event/delete', entity_id: d.item.prof.calendar, uid: ev.uid };
+    const payload = { type: 'skylight_hub_family/cal_event', op: 'delete', entity_id: d.item.prof.calendar, uid: ev.uid };
     if (ev.recurrence_id) payload.recurrence_id = ev.recurrence_id;
     try {
       await this._hass.callWS(payload);
@@ -542,6 +617,7 @@ class SkylightCalendarCard extends HTMLElement {
     on('[data-close]', 'click', () => this._closeDialog());
     on('[data-create]', 'click', () => this._create());
     on('[data-ev]', 'click', (e) => this._openDetail(Number(e.currentTarget.getAttribute('data-ev'))));
+    on('[data-edit-event]', 'click', () => this._openEdit());
     on('[data-del]', 'click', () => {
       if (!this._detail) return;
       if (!this._detail.confirm) { this._detail.confirm = true; this._render(); return; }
