@@ -13,6 +13,7 @@ import logging
 from pathlib import Path
 
 from homeassistant.components import frontend
+from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _STATIC_KEY = f"{DOMAIN}_static"
 _API_KEY = f"{DOMAIN}_api"
+_ICONSET_KEY = f"{DOMAIN}_iconset"
 
 FRONTEND_DIR = Path(__file__).parent / FRONTEND_DIRNAME
 
@@ -48,6 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data.get(_API_KEY):
         api.async_register(hass)
         hass.data[_API_KEY] = True
+
+    # Jeu d'icônes de l'application. Il doit être chargé AVANT le rendu de la barre
+    # latérale : un simple module de panneau arrive trop tard, d'où add_extra_js_url.
+    if not hass.data.get(_ICONSET_KEY):
+        add_extra_js_url(hass, f"{STATIC_PATH}/panel-icon.js?v={VERSION}")
+        hass.data[_ICONSET_KEY] = True
 
     if PANEL_URL in (hass.data.get("frontend_panels") or {}):
         frontend.async_remove_panel(hass, PANEL_URL)

@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.28';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.29';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -47,7 +47,6 @@ function toDataUri(url) {
 }
 
 const CSS = `
-@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600&display=block");
 :host{--skylight-sans:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
   --skylight-serif:Literata,"Iowan Old Style",Georgia,serif;
   display:block;height:100vh;overflow:hidden;background:#fff;color:#1F2328;

@@ -26,6 +26,21 @@ n'expose que la **création** : supprimez ou modifiez le rendez-vous dans
 l'application Calendrier du téléphone, la synchronisation le répercutera ici.
 Google et local selon les fonctionnalités exposées par l'intégration.
 
+## Confidentialité
+
+Toutes les données de l'application (famille, profils, tâches, routines,
+récompenses, repas, étoiles) restent dans
+`.storage/skylight_hub_family.data` sur votre Home Assistant. L'application
+n'appelle aucun service tiers : pas de CDN, pas d'analytique, polices du
+système. Les calendriers restent ceux de Home Assistant (Google, Apple/CalDAV
+ou local selon vos intégrations).
+
+## Mises à jour
+
+Une mise à jour remplace uniquement le code de l'intégration : le fichier
+`.storage/skylight_hub_family.data` n'est jamais touché. Faites une sauvegarde
+Home Assistant avant, par précaution.
+
 ## Prérequis
 
 - Home Assistant 2026.10 ou plus récent.
