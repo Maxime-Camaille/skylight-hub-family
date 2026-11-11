@@ -340,6 +340,49 @@ def _caldav_work(hass, reg, msg):
                 return True
             event.delete()
             return True
+        recurrence_id = msg.get("recurrence_id")
+        if recurrence_id and getattr(vevent, "rrule", None) is not None:
+            # Modification d'une seule occurrence : on ajoute une exception
+            # (VEVENT du même UID + RECURRENCE-ID) dans le même objet CalDAV.
+            # La série et les autres occurrences ne bougent pas.
+            rid = _parse_when(recurrence_id)
+            if rid is None:
+                raise ValueError("Occurrence invalide.")
+            if isinstance(rid, datetime) and rid.tzinfo is None:
+                rid = rid.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+            comp = event.vobject_instance
+            sub = comp.add("vevent")
+            sub.add("uid").value = str(vevent.uid.value)
+            # vobject ne sait pas deviner un TZID pour un datetime UTC : on
+            # exprime toutes les dates dans le fuseau du DTSTART du maître.
+            master_start = vevent.dtstart.value
+            tz = master_start.tzinfo if isinstance(master_start, datetime) else None
+
+            def _same_tz(value):
+                if isinstance(value, datetime) and tz is not None and value.tzinfo is not None:
+                    return value.astimezone(tz)
+                return value
+
+            rid = _same_tz(rid)
+            sub.add("dtstamp").value = datetime.now(tz) if tz is not None else datetime.now()
+            sub.add("recurrence-id").value = rid
+            if msg.get("summary") is not None:
+                sub.add("summary").value = msg["summary"]
+            start = _same_tz(_parse_when(msg.get("start")))
+            end = _same_tz(_parse_when(msg.get("end")))
+            all_day = bool(msg.get("allday"))
+            if start is not None:
+                if all_day and isinstance(start, datetime):
+                    sub.add("dtstart").value = start.date()
+                else:
+                    sub.add("dtstart").value = start
+            if end is not None:
+                if all_day and isinstance(end, datetime):
+                    sub.add("dtend").value = end.date()
+                else:
+                    sub.add("dtend").value = end
+            event.save()
+            return True
         if msg.get("summary") is not None:
             vevent.summary.value = msg["summary"]
         start = _parse_when(msg.get("start"))

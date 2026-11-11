@@ -22,7 +22,7 @@
 export const CORE_VERSION = 'v69';
 
 /* Les icônes vivent dans leur propre module, GÉNÉRÉ depuis les .svg SF Symbols. */
-import { SF_ICON } from './skylight-icons.js?v=0.5.40';
+import { SF_ICON } from './skylight-icons.js?v=0.5.41';
 
 /* =========================================================================
  * 1. JETONS

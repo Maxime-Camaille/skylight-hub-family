@@ -430,6 +430,11 @@ class SkylightCalendarCard extends HTMLElement {
           ? dateKey(item.s)
           : dateKey(item.s) + 'T' + timeShort(item.s) + ':00';
       }
+      if (ev.rrule && this._edit.scope === 'one') {
+        payload.recurrence_id = item.allday
+          ? dateKey(item.s)
+          : dateKey(item.s) + 'T' + timeShort(item.s) + ':00';
+      }
       await this._hass.callWS(payload);
       this._dialog = false;
       this._draft = null;
@@ -538,6 +543,11 @@ class SkylightCalendarCard extends HTMLElement {
           <label class="slab">Fin<input id="evt-end" type="time" value="${esc(d.end || '')}"></label>
         </div>
         <label class="allrow"><input type="checkbox" id="evt-allday"${d.allday ? ' checked' : ''}> Toute la journée</label>
+        ${edit && this._edit.item.ev.rrule ? `<label class="slab">Appliquer à</label>
+          <div class="calpick scopepick">
+            <button type="button" class="${(this._edit.scope || 'one') === 'one' ? 'on' : ''}" data-scope="one">Cette occurrence</button>
+            <button type="button" class="${this._edit.scope === 'all' ? 'on' : ''}" data-scope="all">Toute la série</button>
+          </div>` : ''}
         ${edit ? '' : `<label class="slab">Calendrier</label><div class="calpick">${profs}</div>`}
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
         <p class="sfine">${edit ? 'La modification est écrite dans le calendrier d’origine.' : 'Création sur un calendrier relié. Google/Apple peuvent refuser la création depuis Home Assistant.'}</p>
@@ -559,7 +569,9 @@ class SkylightCalendarCard extends HTMLElement {
     const d = this._detail;
     if (!d || !d.item) return;
     const { ev, prof, allDay, s, e } = d.item;
-    this._edit = { item: d.item };
+    /* Par défaut on modifie UNE occurrence (moins destructif) ; le sélecteur
+       permet d'appliquer à toute la série. */
+    this._edit = { item: d.item, scope: 'one' };
     this._detail = null;
     this._dialog = true;
     this._draft = {
@@ -639,6 +651,13 @@ class SkylightCalendarCard extends HTMLElement {
     on('[data-create]', 'click', () => this._create());
     on('[data-ev]', 'click', (e) => this._openDetail(Number(e.currentTarget.getAttribute('data-ev'))));
     on('[data-edit-event]', 'click', () => this._openEdit());
+    on('[data-scope]', 'click', (e) => {
+      if (!this._edit) return;
+      this._edit.scope = e.currentTarget.getAttribute('data-scope');
+      root.querySelectorAll('[data-scope]').forEach((b) => {
+        b.classList.toggle('on', b.getAttribute('data-scope') === this._edit.scope);
+      });
+    });
     on('[data-del]', 'click', () => {
       if (!this._detail) return;
       if (!this._detail.confirm) { this._detail.confirm = true; this._render(); return; }
