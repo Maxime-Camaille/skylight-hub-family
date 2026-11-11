@@ -10,7 +10,7 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.23';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.24';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -388,8 +388,22 @@ class FamillePanel extends HTMLElement {
     this._removeKiosk();
     if (this._onLoc) window.removeEventListener('location-changed', this._onLoc);
     if (this._onNav) window.removeEventListener('skylight-navigate', this._onNav);
+    if (this._onProfiles) window.removeEventListener('skylight-profiles-changed', this._onProfiles);
   }
 
+  _reloadProfiles() {
+    if (this._profTimer) clearTimeout(this._profTimer);
+    this._profTimer = setTimeout(async () => {
+      try {
+        await this._load();
+        if (!this._app || !this._app.onboarding_done) return;
+        this._mounted = {};
+        const body = this.shadowRoot.getElementById('body');
+        if (body) body.innerHTML = '';
+        await this._show(this._view);
+      } catch (e) { this._trace('profiles-reload ' + (e && e.message)); }
+    }, 250);
+  }
   async _init() {
     await ready;
     if (!CORE) {
@@ -413,6 +427,8 @@ class FamillePanel extends HTMLElement {
       if (v) this._show(v);
     };
     window.addEventListener('skylight-navigate', this._onNav);
+    this._onProfiles = () => this._reloadProfiles();
+    window.addEventListener('skylight-profiles-changed', this._onProfiles);
     await this._load();
     if (!this._app || !this._app.onboarding_done) { this._renderOnboarding(); return; }
     await this._show(this._view);
@@ -1088,7 +1104,8 @@ ${CSS}</style>
       if (!p.calendar) continue;
       if (p.color) cal.colors[p.calendar] = p.color;
       if (p.name) cal.calendar_names[p.calendar] = p.name;
-      const face = p.photo || (p.glyph ? ':glyph:' + p.glyph : '');
+      const rawFace = p.photo || (p.glyph ? ':' + p.glyph : '');
+      const face = rawFace ? (rawFace.charAt(0) === ':' ? ':glyph:' + rawFace.slice(1) : rawFace) : '';
       if (face) cal.calendar_badge_icons[p.calendar] = face;
     }
     if (inner && inner.uix) cal.uix = inner.uix;
@@ -1163,7 +1180,7 @@ ${CSS}</style>
       if (!p.calendar) continue;
       if (p.color) c.colors[p.calendar] = (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : p.color;
       if (p.name) c.calendar_names[p.calendar] = p.name;
-      if (p.photo) c.calendar_badge_icons[p.calendar] = p.photo;
+      if (p.photo) c.calendar_badge_icons[p.calendar] = p.photo.charAt(0) === ':' ? ':glyph:' + p.photo.slice(1) : p.photo;
     }
 
     const jobs = Object.keys(c.calendar_badge_icons).map((k) => {
