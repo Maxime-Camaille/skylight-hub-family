@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.33';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.33';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.34';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.34';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -1091,7 +1091,7 @@ ${CSS}</style>
 
     const familyTitle = (app && app.family_name) || 'Ma famille';
     const cal = {
-      type: 'custom:skylight-calendar-card',
+      type: 'custom:skylight-hub-calendar-card',
       title: /^famille\b/i.test(familyTitle) ? familyTitle : 'Famille ' + familyTitle,
       profiles: (profiles || []).map((p) => ({
         id: p.id,

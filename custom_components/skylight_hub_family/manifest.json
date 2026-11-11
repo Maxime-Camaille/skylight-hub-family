@@ -1,7 +1,7 @@
 {
   "domain": "skylight_hub_family",
   "name": "Skylight Hub Family",
-  "version": "0.5.33",
+  "version": "0.5.34",
   "codeowners": [
     "@Maxime-Camaille"
   ],
