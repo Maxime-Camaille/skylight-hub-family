@@ -15,6 +15,17 @@ latérale, et **toutes ses données restent chez vous**.
 - **Seuls les calendriers sont des objets de Home Assistant** — c'est voulu :
   les rendez-vous doivent rester de vrais calendriers (Google, CalDAV, local).
 
+## Calendrier
+
+Reliez un calendrier **Google, Apple/CalDAV ou local** déjà ajouté à Home
+Assistant. L'application lit les événements et crée des rendez-vous sur ces
+calendriers ; la synchronisation est celle de Home Assistant.
+
+La suppression et la modification dépendent de l'intégration HA. CalDAV (Apple)
+n'expose que la **création** : supprimez ou modifiez le rendez-vous dans
+l'application Calendrier du téléphone, la synchronisation le répercutera ici.
+Google et local selon les fonctionnalités exposées par l'intégration.
+
 ## Prérequis
 
 - Home Assistant 2026.10 ou plus récent.

@@ -102,7 +102,7 @@ button{font:inherit;color:inherit}
 .sbtns button{height:42px;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:650;cursor:pointer}
 .sbtns .cancel{border:1px solid #DDE3EC;background:#fff}
 .sbtns .go{border:0;background:#0A7CFF;color:#fff}
-.sbtns .go:disabled{opacity:.45;cursor:default}.sbtns .del{border:0;background:#FDECEA;color:#B3261E}.dmeta{font-size:13.5px;line-height:1.5;color:#4A505E;margin:0 0 12px}
+.sbtns .go:disabled{opacity:.45;cursor:default}.sbtns .del{border:0;background:#FDECEA;color:#B3261E}.dmeta{font-size:13.5px;line-height:1.5;color:#4A505E;margin:0 0 12px}.allrow{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#4A505E;margin:2px 0 10px;cursor:pointer}.allrow input{width:18px;height:18px;accent-color:#0A7CFF}
 @media (max-width:899px){
   .hdr{padding:8px 12px 2px;gap:6px;flex-wrap:wrap}
   .hl{flex:1 1 100%;gap:8px;min-width:0}
@@ -146,6 +146,9 @@ class SkylightCalendarCard extends HTMLElement {
     this._detail = null;
     this._tick = null;
     this._dayKey = '';
+    this._calSig = '';
+    this._lastFetch = 0;
+    this._refreshTimer = null;
   }
 
   connectedCallback() {
@@ -174,12 +177,27 @@ class SkylightCalendarCard extends HTMLElement {
   set hass(h) {
     this._hass = h;
     if (!this._cfg) return;
+    const sig = this._withCal().map((p) => {
+      const st = h.states && h.states[p.calendar];
+      return p.calendar + ':' + (st ? st.state + '|' + st.last_updated : '');
+    }).join(';');
+    if (sig !== this._calSig) {
+      this._calSig = sig;
+      if (!this._refreshTimer) {
+        this._refreshTimer = setTimeout(() => { this._refreshTimer = null; this._refresh(true); }, 350);
+      }
+    }
     if (this._keyFor() !== this._key) this._refresh(true);
     else this._clock();
   }
 
   _profiles() { return (this._cfg && this._cfg.profiles) || []; }
   _withCal() { return this._profiles().filter((p) => p && p.calendar); }
+  _features(p) {
+    const st = this._hass && this._hass.states && this._hass.states[p.calendar];
+    return st && st.attributes ? Number(st.attributes.supported_features || 0) : 0;
+  }
+  _creatable() { return this._withCal().filter((p) => (this._features(p) & 1) !== 0); }
   _dayCount() { return Math.max(1, Math.min(7, Number(this._cfg && this._cfg.days) || 4)); }
   _start() { return addDays(startOfDay(new Date()), Number(this._offset) || 0); }
   _days() { const n = this._dayCount(); return Array.from({ length: n }, (_, i) => addDays(this._start(), i)); }
@@ -216,6 +234,11 @@ class SkylightCalendarCard extends HTMLElement {
     if (!force && key === this._key) return;
     this._key = key;
     this._dayKey = dateKey(this._start());
+    this._lastFetch = Date.now();
+    this._calSig = this._withCal().map((p) => {
+      const st = this._hass.states && this._hass.states[p.calendar];
+      return p.calendar + ':' + (st ? st.state + '|' + st.last_updated : '');
+    }).join(';');
     const ents = this._withCal().map((p) => p.calendar);
     if (!ents.length) {
       this._events = {};
@@ -271,10 +294,11 @@ class SkylightCalendarCard extends HTMLElement {
     if (w) w.textContent = this._weather();
     const today = dateKey(startOfDay(new Date()));
     if (this._dayKey && today !== this._dayKey) this._refresh(true);
+    if (!this._dialog && !this._detail && Date.now() - (this._lastFetch || 0) > 60000) this._refresh(true);
   }
 
   _openDialog() {
-    if (!this._withCal().length) return;
+    if (!this._creatable().length) return;
     const day = this._start();
     const now = new Date();
     const same = sameDay(day, now);
@@ -294,7 +318,8 @@ class SkylightCalendarCard extends HTMLElement {
       date: dateKey(day),
       start: timeShort(start),
       end: timeShort(end),
-      profile: this._withCal()[0].id,
+      profile: this._creatable()[0].id,
+      allday: false,
       err: '',
     };
     this._render();
@@ -314,22 +339,37 @@ class SkylightCalendarCard extends HTMLElement {
     const date = (root.getElementById('evt-date') || {}).value || '';
     const start = (root.getElementById('evt-start') || {}).value || '';
     const end = (root.getElementById('evt-end') || {}).value || '';
-    const profs = this._withCal();
+    const allday = !!(root.getElementById('evt-allday') || {}).checked;
+    const profs = this._creatable();
     const prof = profs.find((p) => p.id === (this._draft && this._draft.profile)) || profs[0];
-    this._draft = { title, date, start, end, profile: prof ? prof.id : '', err: '' };
+    this._draft = { title, date, start, end, allday, profile: prof ? prof.id : '', err: '' };
     if (!title.trim()) { this._draft.err = 'Donnez un titre à l’événement.'; this._render(); return; }
-    if (!date || !start || !end) { this._draft.err = 'Renseignez la date et les heures.'; this._render(); return; }
-    const s = new Date(`${date}T${start}:00`);
-    const e = new Date(`${date}T${end}:00`);
-    if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
-    if (!prof) { this._draft.err = 'Aucun calendrier relié.'; this._render(); return; }
-    try {
-      await this._hass.callService('calendar', 'create_event', {
+    if (!date) { this._draft.err = 'Renseignez la date.'; this._render(); return; }
+    if (!prof) { this._draft.err = 'Aucun calendrier ne permet la création.'; this._render(); return; }
+    let data;
+    if (allday) {
+      const d0 = parseWhen(date);
+      if (!d0) { this._draft.err = 'Date invalide.'; this._render(); return; }
+      data = {
+        entity_id: prof.calendar,
+        summary: title.trim(),
+        start_date: date,
+        end_date: dateKey(addDays(d0, 1)),
+      };
+    } else {
+      if (!start || !end) { this._draft.err = 'Renseignez les heures.'; this._render(); return; }
+      const s = new Date(`${date}T${start}:00`);
+      const e = new Date(`${date}T${end}:00`);
+      if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
+      data = {
         entity_id: prof.calendar,
         summary: title.trim(),
         start_date_time: s.toISOString(),
         end_date_time: e.toISOString(),
-      });
+      };
+    }
+    try {
+      await this._hass.callService('calendar', 'create_event', data);
       this._dialog = false;
       this._draft = null;
       this._key = '';
@@ -400,7 +440,7 @@ class SkylightCalendarCard extends HTMLElement {
       </section>`;
     }).join('');
 
-    const sheet = this._dialog ? this._dialogHtml(withCal) : (this._detail ? this._detailHtml() : '');
+    const sheet = this._dialog ? this._dialogHtml(this._creatable()) : (this._detail ? this._detailHtml() : '');
     root.innerHTML = `<style>${CSS}</style>
       <div class="app">
         <div class="hdr">
@@ -410,7 +450,7 @@ class SkylightCalendarCard extends HTMLElement {
             <span class="range">${esc(range)}</span>
             <button class="nav" data-next type="button" aria-label="Jours suivants"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
             <button class="todaybtn" data-today type="button">Aujourd’hui</button>
-            ${withCal.length ? `<button class="add" data-add type="button"><span style="font-size:16px;line-height:1">+</span><span class="lbl">Ajouter</span></button>` : ''}
+            ${this._creatable().length ? `<button class="add" data-add type="button"><span style="font-size:16px;line-height:1">+</span><span class="lbl">Ajouter</span></button>` : ''}
           </div>
         </div>
         ${pills ? `<div class="pills">${pills}</div>` : ''}
@@ -433,6 +473,7 @@ class SkylightCalendarCard extends HTMLElement {
           <label class="slab">Début<input id="evt-start" type="time" value="${esc(d.start || '')}"></label>
           <label class="slab">Fin<input id="evt-end" type="time" value="${esc(d.end || '')}"></label>
         </div>
+        <label class="allrow"><input type="checkbox" id="evt-allday"${d.allday ? ' checked' : ''}> Toute la journée</label>
         <label class="slab">Calendrier</label>
         <div class="calpick">${profs}</div>
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
@@ -456,13 +497,15 @@ class SkylightCalendarCard extends HTMLElement {
     const { ev, prof, allDay, s, e } = d.item;
     const when = allDay ? 'Toute la journée' : `${timeShort(s)} – ${timeShort(e || s)}`;
     const loc = ev.location ? `<br>${esc(ev.location)}` : '';
+    const canDel = (this._features(prof) & 2) !== 0;
     return `<div class="scrim" data-close></div>
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Événement">
         <h2 class="stitle">${esc(ev.summary || 'Sans titre')}</h2>
         <div class="dmeta">${esc(when)}<br>${esc(prof.name || '')}${loc}</div>
         ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
+        ${!canDel ? '<p class="sfine">Ce calendrier ne permet pas la suppression depuis Home Assistant. Supprimez l’événement dans l’application du calendrier : la synchronisation le retirera ici.</p>' : ''}
         ${d.confirm ? '<p class="sfine">Supprimer cet événement ?</p>' : (ev.rrule ? '<p class="sfine">Événement récurrent : seule cette occurrence sera supprimée.</p>' : '')}
-        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button>${ev.uid ? `<button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button>` : ''}</div>
+        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button>${canDel && ev.uid ? `<button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button>` : ''}</div>
       </div>`;
   }
 
@@ -504,6 +547,15 @@ class SkylightCalendarCard extends HTMLElement {
       if (!this._detail.confirm) { this._detail.confirm = true; this._render(); return; }
       this._deleteDetail();
     });
+    const allday = root.getElementById('evt-allday');
+    if (allday) {
+      const sync = () => root.querySelectorAll('#evt-start,#evt-end').forEach((el) => {
+        el.disabled = allday.checked;
+        el.style.opacity = allday.checked ? '.4' : '1';
+      });
+      allday.addEventListener('change', sync);
+      sync();
+    }
     on('[data-profiles]', 'click', () => {
       try { window.dispatchEvent(new CustomEvent('skylight-navigate', { detail: { view: 'profils' } })); } catch (e) { /* ignore */ }
     });
