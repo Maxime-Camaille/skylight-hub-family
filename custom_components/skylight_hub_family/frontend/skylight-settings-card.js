@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.24';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.25';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })
@@ -50,7 +50,7 @@ button.row{cursor:pointer}
 .rl b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .rl span{display:block;font-size:12.5px;color:#8A8F9C;margin-top:2px}
 .val{font-size:14px;color:#5A6074;font-weight:500;white-space:nowrap}
-.sw{width:44px;height:26px;border-radius:999px;background:#D8DEE6;position:relative;flex:0 0 44px;transition:background .15s}
+.ic{width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:#EAF2FD;display:grid;place-items:center;color:#0A66D6}.sw{width:44px;height:26px;border-radius:999px;background:#D8DEE6;position:relative;flex:0 0 44px;transition:background .15s}
 .sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
 .sw.on{background:var(--f-blue,#007AFF)}
 .sw.on::after{left:21px}
@@ -171,7 +171,7 @@ class SkylightSettingsCard extends HTMLElement {
       { ok: this._daylightMod === true, label: 'Carte calendrier (Daylight)', hint: this._daylightMod === null ? 'vérification…' : (this._daylightMod ? 'carte Daylight installée' : 'à installer depuis HACS (Daylight Calendar Card)') },
       { ok: this._countStates('calendar.') > 0, label: 'Calendriers', hint: this._countStates('calendar.') + ' calendrier(s) dans Home Assistant' },
       { ok: true, label: 'Remise à zéro des routines', hint: 'gérée par l\u2019intégration, chaque nuit à 4 h' },
-      { ok: true, label: 'Mode kiosque', hint: 'géré par l\u2019application, sans plugin' },
+      { ok: true, label: 'Mode plein écran', hint: 'géré par l\u2019application, sans plugin' },
     ];
     const ids = this._profiles.map((p) => p.id).filter(Boolean);
     const hasAll = (prefix, list) => list.length > 0 && list.every((id) => !!this._st(prefix + id));
@@ -237,7 +237,7 @@ class SkylightSettingsCard extends HTMLElement {
     });
     out.push({
       ok: !!this._st(this._kioskEnt()),
-      label: 'Entité du mode kiosque',
+      label: 'Entité du mode plein écran',
       hint: this._kioskEnt(),
     });
     out.push({
@@ -298,13 +298,9 @@ class SkylightSettingsCard extends HTMLElement {
       + '</div></div>'
 
       + '<div class="grp"><div class="gt">Affichage</div><div class="card">'
-      + (this._kioskMod === false
-        ? '<div class="row"><span class="rl"><b>Mode kiosque</b>'
-          + '<span>Kiosk Mode n\u2019est pas installé. Il est indispensable : c\u2019est lui qui garde l\u2019app en plein écran et empêche de revenir dans Home Assistant. À installer depuis HACS, puis recharger la page.</span></span>'
-          + '<span class="sw" style="opacity:.4"></span></div>'
-        : '<button class="row" id="kiosk"><span class="rl"><b>Mode kiosque</b>'
-          + '<span>Masque la barre et le menu de Home Assistant</span></span>'
-          + '<span class="sw' + (kioskOn ? ' on' : '') + '"></span></button>')
+      + '<button class="row" id="kiosk"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg></span><span class="rl"><b>Plein écran</b>'
+      + '<span>Masque la barre de Home Assistant, comme une application.</span></span>'
+      + '<span class="sw' + (kioskOn ? ' on' : '') + '"></span></button>'
       + '</div></div>'
 
       + '<div class="grp"><div class="gt">Application</div><div class="card">'
