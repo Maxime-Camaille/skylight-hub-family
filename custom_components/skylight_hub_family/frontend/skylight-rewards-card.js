@@ -94,7 +94,7 @@ function slug(s) {
  * Jetons, en-tête et calculs viennent de famille-core.js : cette carte n'en
  * garde plus de copie. `CORE_URL` porte la version — l'incrémenter en même
  * temps que la ressource `famille-core` (ETAT-CHANTIER.md §9.2). */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.21';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.22';
 let CORE = null;
 let localDay;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
@@ -112,7 +112,7 @@ const CSS = `
 /* ---- plateau ---- */
 .board{flex:1 1 auto;min-height:0;display:flex;gap:12px;padding:6px 14px 14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 .board::-webkit-scrollbar{display:none}
-.col{flex:0 0 calc((100% - 36px) / 4);min-width:250px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0}
+.col{flex:1 1 0;min-width:250px;min-height:0;overflow:hidden;border-radius:30px;background:var(--col);display:flex;flex-direction:column;padding:14px 14px 0}
 
 .head{flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:1px 3px 0}
 .ava{width:54px;height:54px;flex:0 0 54px;border-radius:50%;overflow:hidden;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:21px;font-weight:700;box-shadow:0 0 0 2.5px var(--halo),0 2px 9px var(--halo)}

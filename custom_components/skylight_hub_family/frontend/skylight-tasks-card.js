@@ -386,7 +386,7 @@ const CARD_VERSION = 'v127';
  * ressource `famille-core` (voir ETAT-CHANTIER.md). En production la ressource
  * est déjà chargée : cet import retrouve le MÊME module, évalué une seule fois.
  * Hors Home Assistant, le banc d'essai pose `window.FAMILLE_CORE_URL`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.21';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.22';
 
 let CORE = null;
 let esc; let mix; let alpha; let localDay; let pastelOf; let tokens;
