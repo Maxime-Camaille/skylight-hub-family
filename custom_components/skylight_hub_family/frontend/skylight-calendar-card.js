@@ -40,6 +40,8 @@ const parseWhen = (v) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 const isAllDay = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+const whenRaw = (v) => (v && typeof v === 'object') ? (v.dateTime || v.date) : v;
+const isAllDayRaw = (v) => (v && typeof v === 'object' ? !!v.date : isAllDay(v));
 
 const CSS = `
 :host{display:block;height:100%;font-family:var(--skylight-sans,Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);color:#1F2328;--line:#E9EAF1;--muted:#8A8F9C}
@@ -78,7 +80,7 @@ button{font:inherit;color:inherit}
 .de{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 12px 18px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin}
 .empty{padding:26px 6px;text-align:center;font-size:13px;color:#9AA0AC}
 .loading{padding:22px 6px;text-align:center;font-size:13px;color:#9AA0AC}
-.ev{position:relative;min-width:0;border-radius:14px;background:var(--ev);padding:10px 42px 10px 12px;min-height:54px;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 2px rgba(31,35,40,.04)}
+.ev{position:relative;min-width:0;cursor:pointer;border-radius:14px;background:var(--ev);padding:10px 42px 10px 12px;min-height:54px;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 2px rgba(31,35,40,.04)}
 .evt{font-size:13.5px;font-weight:700;line-height:1.22;color:#1F2328;overflow-wrap:anywhere}
 .evm{font-size:11.5px;font-weight:500;color:#3F4653;opacity:.88;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .evo{position:absolute;right:8px;bottom:8px;width:24px;height:24px;border-radius:50%;overflow:hidden;background:var(--ac);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;box-shadow:0 0 0 1.5px #fff}
@@ -100,7 +102,7 @@ button{font:inherit;color:inherit}
 .sbtns button{height:42px;border-radius:12px;padding:0 16px;font-size:13.5px;font-weight:650;cursor:pointer}
 .sbtns .cancel{border:1px solid #DDE3EC;background:#fff}
 .sbtns .go{border:0;background:#0A7CFF;color:#fff}
-.sbtns .go:disabled{opacity:.45;cursor:default}
+.sbtns .go:disabled{opacity:.45;cursor:default}.sbtns .del{border:0;background:#FDECEA;color:#B3261E}.dmeta{font-size:13.5px;line-height:1.5;color:#4A505E;margin:0 0 12px}
 @media (max-width:899px){
   .hdr{padding:8px 12px 2px;gap:6px;flex-wrap:wrap}
   .hl{flex:1 1 100%;gap:8px;min-width:0}
@@ -136,10 +138,12 @@ class SkylightCalendarCard extends HTMLElement {
     this._offset = 0;
     this._events = {};
     this._loading = false;
+    this._loaded = false;
     this._err = '';
     this._key = '';
     this._dialog = false;
     this._draft = null;
+    this._detail = null;
     this._tick = null;
     this._dayKey = '';
   }
@@ -159,8 +163,10 @@ class SkylightCalendarCard extends HTMLElement {
     this._offset = 0;
     this._key = '';
     this._events = {};
+    this._loaded = false;
     this._dialog = false;
     this._draft = null;
+    this._detail = null;
     this._render();
     this._refresh(true);
   }
@@ -214,32 +220,40 @@ class SkylightCalendarCard extends HTMLElement {
     if (!ents.length) {
       this._events = {};
       this._loading = false;
+      this._loaded = true;
       this._err = '';
       this._render();
       return;
     }
-    this._loading = true;
+    if (!this._loaded) {
+      this._loading = true;
+      this._render();
+    }
     this._err = '';
-    this._render();
     try {
       const start = this._start();
       const end = addDays(start, this._dayCount());
-      const res = await this._hass.callService('calendar', 'get_events', {
-        start_date_time: start.toISOString(),
-        end_date_time: end.toISOString(),
-        entity_id: ents,
-      }, {}, false, true);
-      const data = (res && res.response) ? res.response : res;
+      const qs = `?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+      let failures = 0;
+      const results = await Promise.all(ents.map(async (id) => {
+        try {
+          const arr = await this._hass.callApi('GET', 'calendars/' + id + qs);
+          if (!Array.isArray(arr)) throw new Error('réponse inattendue');
+          return [id, arr];
+        } catch (e) {
+          failures += 1;
+          return [id, []];
+        }
+      }));
       const next = {};
-      for (const id of ents) {
-        const item = data && data[id];
-        next[id] = Array.isArray(item && item.events) ? item.events : [];
-      }
+      for (const [id, arr] of results) next[id] = arr;
       this._events = next;
+      if (failures === ents.length) this._err = 'Impossible de charger les calendriers reliés.';
     } catch (e) {
       this._err = (e && e.message) || 'Impossible de charger les calendriers.';
       this._events = {};
     }
+    this._loaded = true;
     this._loading = false;
     this._render();
   }
@@ -274,6 +288,7 @@ class SkylightCalendarCard extends HTMLElement {
     const end = new Date(start);
     end.setHours(end.getHours() + 1);
     this._dialog = true;
+    this._detail = null;
     this._draft = {
       title: '',
       date: dateKey(day),
@@ -288,6 +303,7 @@ class SkylightCalendarCard extends HTMLElement {
   _closeDialog() {
     this._dialog = false;
     this._draft = null;
+    this._detail = null;
     this._render();
   }
 
@@ -329,9 +345,9 @@ class SkylightCalendarCard extends HTMLElement {
     for (const p of this._withCal()) {
       const evs = this._events[p.calendar] || [];
       for (const ev of evs) {
-        const allDay = isAllDay(ev.start);
-        const s = parseWhen(ev.start);
-        const e = parseWhen(ev.end) || (s ? addDays(s, 1) : null);
+        const allDay = isAllDayRaw(ev.start);
+        const s = parseWhen(whenRaw(ev.start));
+        const e = parseWhen(whenRaw(ev.end)) || (s ? addDays(s, 1) : null);
         if (!s) continue;
         const visible = allDay ? (s <= day && (!e || day < e)) : sameDay(s, day);
         if (!visible) continue;
@@ -345,11 +361,11 @@ class SkylightCalendarCard extends HTMLElement {
     return out;
   }
 
-  _eventHtml(item) {
+  _eventHtml(item, idx) {
     const { ev, prof, allDay, s, e } = item;
     const when = allDay ? 'Toute la journée' : `${timeShort(s)} – ${timeShort(e || s)}`;
 
-    return `<article class="ev" style="--ev:${esc(prof.pastel || '#EAF1FC')};--ac:${esc(prof.accent || prof.color || '#7A8596')}">
+    return `<article class="ev" data-ev="${idx}" role="button" tabindex="0" style="--ev:${esc(prof.pastel || '#EAF1FC')};--ac:${esc(prof.accent || prof.color || '#7A8596')}">
       <div class="evt">${esc(ev.summary || 'Sans titre')}</div>
       <div class="evm">${esc(when)}</div>
       <span class="evo">${this._face(prof, 24)}</span>
@@ -374,16 +390,17 @@ class SkylightCalendarCard extends HTMLElement {
     const note = this._err
       ? `<div class="note err">${esc(this._err)}</div>`
       : (withCal.length ? '' : `<div class="note">Aucun calendrier relié à un profil.<button data-profiles type="button">Ouvrir Profils</button></div>`);
+    this._evIndex = [];
     const dayHtml = days.map((d) => {
       const items = this._dayEvents(d);
       const isToday = sameDay(d, today);
       return `<section class="day${isToday ? ' today' : ''}">
         <div class="dh"><span class="dn">${dayShort(d)}</span><span class="dd">${d.getDate()}</span></div>
-        <div class="de">${this._loading ? '<div class="loading">Chargement…</div>' : (items.length ? items.map((it) => this._eventHtml(it)).join('') : '<div class="empty">Aucun événement</div>')}</div>
+        <div class="de">${this._loading ? '<div class="loading">Chargement…</div>' : (items.length ? items.map((it) => { const idx = this._evIndex.push(it) - 1; return this._eventHtml(it, idx); }).join('') : '<div class="empty">Aucun événement</div>')}</div>
       </section>`;
     }).join('');
 
-    const sheet = this._dialog ? this._dialogHtml(withCal) : '';
+    const sheet = this._dialog ? this._dialogHtml(withCal) : (this._detail ? this._detailHtml() : '');
     root.innerHTML = `<style>${CSS}</style>
       <div class="app">
         <div class="hdr">
@@ -424,6 +441,53 @@ class SkylightCalendarCard extends HTMLElement {
       </div>`;
   }
 
+  _openDetail(idx) {
+    const item = this._evIndex && this._evIndex[idx];
+    if (!item) return;
+    this._dialog = false;
+    this._draft = null;
+    this._detail = { item, confirm: false, err: '' };
+    this._render();
+  }
+
+  _detailHtml() {
+    const d = this._detail;
+    if (!d || !d.item) return '';
+    const { ev, prof, allDay, s, e } = d.item;
+    const when = allDay ? 'Toute la journée' : `${timeShort(s)} – ${timeShort(e || s)}`;
+    const loc = ev.location ? `<br>${esc(ev.location)}` : '';
+    return `<div class="scrim" data-close></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Événement">
+        <h2 class="stitle">${esc(ev.summary || 'Sans titre')}</h2>
+        <div class="dmeta">${esc(when)}<br>${esc(prof.name || '')}${loc}</div>
+        ${d.err ? `<div class="serr">${esc(d.err)}</div>` : ''}
+        ${d.confirm ? '<p class="sfine">Supprimer cet événement ?</p>' : (ev.rrule ? '<p class="sfine">Événement récurrent : seule cette occurrence sera supprimée.</p>' : '')}
+        <div class="sbtns"><button class="cancel" data-close type="button">Fermer</button>${ev.uid ? `<button class="del" data-del type="button">${d.confirm ? 'Confirmer' : 'Supprimer'}</button>` : ''}</div>
+      </div>`;
+  }
+
+  async _deleteDetail() {
+    const d = this._detail;
+    if (!d || !d.item) return;
+    const ev = d.item.ev;
+    if (!ev.uid) {
+      d.err = 'Home Assistant ne fournit pas l’identifiant de cet événement.';
+      this._render();
+      return;
+    }
+    const payload = { type: 'calendar/event/delete', entity_id: d.item.prof.calendar, uid: ev.uid };
+    if (ev.recurrence_id) payload.recurrence_id = ev.recurrence_id;
+    try {
+      await this._hass.callWS(payload);
+      this._detail = null;
+      this._key = '';
+      await this._refresh(true);
+    } catch (err) {
+      d.err = (err && err.message) || 'Suppression impossible sur ce calendrier.';
+      this._render();
+    }
+  }
+
   _bind() {
     const root = this.shadowRoot;
     if (!root) return;
@@ -434,6 +498,12 @@ class SkylightCalendarCard extends HTMLElement {
     on('[data-add]', 'click', () => this._openDialog());
     on('[data-close]', 'click', () => this._closeDialog());
     on('[data-create]', 'click', () => this._create());
+    on('[data-ev]', 'click', (e) => this._openDetail(Number(e.currentTarget.getAttribute('data-ev'))));
+    on('[data-del]', 'click', () => {
+      if (!this._detail) return;
+      if (!this._detail.confirm) { this._detail.confirm = true; this._render(); return; }
+      this._deleteDetail();
+    });
     on('[data-profiles]', 'click', () => {
       try { window.dispatchEvent(new CustomEvent('skylight-navigate', { detail: { view: 'profils' } })); } catch (e) { /* ignore */ }
     });
