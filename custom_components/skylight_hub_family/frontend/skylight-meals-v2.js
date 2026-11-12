@@ -17,7 +17,7 @@ const SWATCHES = [
 ];
 const ROWS_ENTITY = "input_text.repas_lignes";
 const COLORS_ENTITY = "input_text.repas_couleurs";
-const REPORT = "input_text.repas_reporte";
+const REPORT = "input_text.repas_report";
 
 const SANS = "var(--skylight-sans, Figtree, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif)";
 const SERIF = "var(--skylight-serif, Literata, 'Iowan Old Style', Georgia, serif)";
@@ -88,7 +88,7 @@ const EMOJI_PICKER = [
 /* ---------- tronc commun ----------
  * En-tête, jetons et calculs dans famille-core.js. `CORE_URL` porte la version :
  * l'incrémenter en même temps que la ressource `famille-core`. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.41';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.42';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; });

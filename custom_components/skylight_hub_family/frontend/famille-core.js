@@ -22,7 +22,7 @@
 export const CORE_VERSION = 'v69';
 
 /* Les icônes vivent dans leur propre module, GÉNÉRÉ depuis les .svg SF Symbols. */
-import { SF_ICON } from './skylight-icons.js?v=0.5.41';
+import { SF_ICON } from './skylight-icons.js?v=0.5.42';
 
 /* =========================================================================
  * 1. JETONS
@@ -676,9 +676,33 @@ export function headerDate(date = new Date(), opts = {}) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/* Choisit la météo de l'installation, sans réglage.
+ *
+ * L'app ne doit dépendre d'aucune entité nommée : on prend la première
+ * `weather.*` utilisable, en privilégiant les noms que HA crée lui-même
+ * (Met.no → `weather.forecast_home`) puis les noms courants. Un `weather.*`
+ * en `unavailable`/`unknown` est écarté. Aucune météo trouvée → chaîne vide,
+ * et l'en-tête n'affiche rien (pas d'erreur, pas de trou).
+ */
+export function autoWeatherEntity(hass) {
+  const states = (hass && hass.states) || {};
+  const ids = Object.keys(states).filter((id) => id.startsWith('weather.'));
+  if (!ids.length) return '';
+  const usable = ids.filter((id) => {
+    const st = states[id];
+    return st && st.state && st.state !== 'unavailable' && st.state !== 'unknown';
+  });
+  const pool = usable.length ? usable : ids;
+  for (const pref of ['weather.forecast_home', 'weather.home', 'weather.forecast_maison', 'weather.meteo', 'weather.maison']) {
+    if (pool.indexOf(pref) !== -1) return pref;
+  }
+  const withTemp = pool.find((id) => typeof ((states[id].attributes || {}).temperature) === 'number');
+  return withTemp || pool[0];
+}
+
 /* La météo, en une seule formule pour tous les écrans. */
 export function headerWeather(hass, cfg = {}) {
-  const eid = (cfg && cfg.weather_entity) || 'weather.forecast_maison';
+  const eid = (cfg && cfg.weather_entity) || autoWeatherEntity(hass);
   const st = hass && hass.states && hass.states[eid];
   if (!st || !st.state) return '';
   const em = WEATHER_EMOJI[st.state] || '';

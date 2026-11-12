@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.41';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.41';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.42';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.42';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -1074,7 +1074,8 @@ ${CSS}</style>
     const lists = (app && app.lists) || {};
     const meals = (app && app.meals) || {};
     const time = (app && app.time_entity) || 'sensor.heure_actuelle';
-    const weather = (app && app.weather_entity) || 'weather.forecast_maison';
+    /* pas de nom en dur : le tronc commun choisit la météo disponible */
+    const weather = (app && app.weather_entity) || '';
     const stars = (app && app.stars_per_task) || 10;
     const evening = (app && app.evening_from) || 16;
     const profs = (profiles || []).map((p) => ({
