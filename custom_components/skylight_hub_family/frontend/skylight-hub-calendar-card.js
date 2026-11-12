@@ -65,7 +65,10 @@ button{font:inherit;color:inherit}
 .pills{flex:0 0 auto;display:flex;gap:10px;padding:8px 22px 12px;overflow-x:auto;scrollbar-width:none}
 .pills::-webkit-scrollbar{display:none}
 .pill{flex:1 1 0;min-width:150px;display:flex;align-items:center;justify-content:center;gap:8px;height:40px;border-radius:999px;border:1.5px solid var(--pc);background:var(--pb);font-size:12.5px;font-weight:650;letter-spacing:-.005em;white-space:nowrap;overflow:hidden}
-.pill.off{opacity:.5}
+.pill.ghost{background:transparent;border:1.5px dashed #CFC7B8;color:#8B8B90;cursor:pointer;font:inherit;padding:0}
+.pill.ghost .pa{background:#EFEAE0;color:#8B8B90}
+.pill.ghost .plus{width:20px;height:20px;border-radius:50%;background:#007AFF;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700;line-height:1;flex:0 0 20px}
+.pill.ghost .addlbl{color:#007AFF;font-weight:650;background:none;border:0;height:auto;padding:0}
 .pa{width:26px;height:26px;flex:0 0 26px;border-radius:50%;overflow:hidden;background:var(--ac);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
 .pa img{width:100%;height:100%;object-fit:cover;display:block}
 .pn{overflow:hidden;text-overflow:ellipsis}
@@ -508,8 +511,16 @@ class SkylightCalendarCard extends HTMLElement {
       const b = days[days.length - 1];
       return `${a.getDate()} ${FR_MONTHS[a.getMonth()]} – ${b.getDate()} ${FR_MONTHS[b.getMonth()]}`;
     })();
-    const pills = this._profiles().map((p) => `<div class="pill${this._cals(p).length ? '' : ' off'}" style="--pb:${esc(p.pastel || '#F1F3F6')};--pc:${esc(p.pastel || '#E3E7EE')};--ac:${esc(p.accent || p.color || '#7A8596')}" title="${this._cals(p).length ? '' : 'Aucun calendrier relié'}">
-      <span class="pa">${this._face(p, 26)}</span><span class="pn">${esc(p.name || '')}</span></div>`).join('');
+    const pills = this._profiles().map((p) => {
+      const style = `--pb:${esc(p.pastel || '#F1F3F6')};--pc:${esc(p.pastel || '#E3E7EE')};--ac:${esc(p.accent || p.color || '#7A8596')}`;
+      if (this._cals(p).length) {
+        return `<div class="pill" style="${style}"><span class="pa">${this._face(p, 26)}</span><span class="pn">${esc(p.name || '')}</span></div>`;
+      }
+      /* Sans calendrier : c'est une action, pas un état. Un tap ouvre la
+         configuration des calendriers sur cette personne. */
+      return `<button class="pill ghost" type="button" data-addcal="${esc(p.id)}" style="${style}" aria-label="Ajouter un calendrier à ${esc(p.name || '')}">
+        <span class="pa">${this._face(p, 26)}</span><span class="pn">${esc(p.name || '')}</span><span class="plus">+</span><span class="addlbl">Ajouter</span></button>`;
+    }).join('');
     const note = this._err
       ? `<div class="note err">${esc(this._err)}</div>`
       : (withCal.length ? '' : `<div class="note">Aucun calendrier relié à un profil.<button data-profiles type="button">Ouvrir Profils</button></div>`);
@@ -689,6 +700,15 @@ class SkylightCalendarCard extends HTMLElement {
       allday.addEventListener('change', sync);
       sync();
     }
+    on('[data-addcal]', 'click', (e) => {
+      const id = e.currentTarget.getAttribute('data-addcal');
+      const p = this._profiles().find((x) => x.id === id);
+      this.dispatchEvent(new CustomEvent('skylight-calendar-config', {
+        detail: { profile: id, name: (p && p.name) || '' },
+        bubbles: true,
+        composed: true,
+      }));
+    });
     on('[data-profiles]', 'click', () => {
       try { window.dispatchEvent(new CustomEvent('skylight-navigate', { detail: { view: 'profils' } })); } catch (e) { /* ignore */ }
     });

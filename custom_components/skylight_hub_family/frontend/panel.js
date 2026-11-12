@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.43';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.43';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.45';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.45';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -406,6 +406,15 @@ class FamillePanel extends HTMLElement {
       if (v) this._show(v);
     };
     window.addEventListener('skylight-navigate', this._onNav);
+    /* Bouton « Ajouter » d'un profil sans calendrier. L'écran de configuration
+       dédié arrive avec l'onboarding calendriers ; en attendant, on ouvre
+       Profils et on garde la personne visée. */
+    this._onCalCfg = (e) => {
+      const d = (e && e.detail) || {};
+      this._calCfgProfile = d.profile || '';
+      this._show('profils');
+    };
+    window.addEventListener('skylight-calendar-config', this._onCalCfg);
     this._onProfiles = () => this._reloadProfiles();
     window.addEventListener('skylight-profiles-changed', this._onProfiles);
     this._onTheme = (e) => {
