@@ -179,9 +179,9 @@ class SkylightCalendarCard extends HTMLElement {
   set hass(h) {
     this._hass = h;
     if (!this._cfg) return;
-    const sig = this._withCal().map((p) => {
-      const st = h.states && h.states[p.calendar];
-      return p.calendar + ':' + (st ? st.state + '|' + st.last_updated : '');
+    const sig = this._allCals().map((id) => {
+      const st = h.states && h.states[id];
+      return id + ':' + (st ? st.state + '|' + st.last_updated : '');
     }).join(';');
     if (sig !== this._calSig) {
       this._calSig = sig;
@@ -194,16 +194,29 @@ class SkylightCalendarCard extends HTMLElement {
   }
 
   _profiles() { return (this._cfg && this._cfg.profiles) || []; }
-  _withCal() { return this._profiles().filter((p) => p && p.calendar); }
+  /* Plusieurs calendriers par personne : `calendars` est la source, `calendar`
+     reste le premier (compatibilité avec les anciennes données). */
+  _cals(p) {
+    const a = p && p.calendars;
+    if (Array.isArray(a) && a.length) return a.filter(Boolean);
+    return p && p.calendar ? [p.calendar] : [];
+  }
+  _allCals() {
+    const out = [];
+    for (const p of this._withCal()) for (const id of this._cals(p)) if (out.indexOf(id) === -1) out.push(id);
+    return out;
+  }
+  _withCal() { return this._profiles().filter((p) => this._cals(p).length); }
   _features(p) {
-    const st = this._hass && this._hass.states && this._hass.states[p.calendar];
+    const id = this._cals(p)[0];
+    const st = this._hass && this._hass.states && this._hass.states[id];
     return st && st.attributes ? Number(st.attributes.supported_features || 0) : 0;
   }
   _creatable() { return this._withCal().filter((p) => (this._features(p) & 1) !== 0); }
   _dayCount() { return Math.max(1, Math.min(7, Number(this._cfg && this._cfg.days) || 4)); }
   _start() { return addDays(startOfDay(new Date()), Number(this._offset) || 0); }
   _days() { const n = this._dayCount(); return Array.from({ length: n }, (_, i) => addDays(this._start(), i)); }
-  _keyFor() { return this._withCal().map((p) => p.calendar).join(',') + '|' + dateKey(this._start()) + '|' + this._dayCount(); }
+  _keyFor() { return this._allCals().join(',') + '|' + dateKey(this._start()) + '|' + this._dayCount(); }
 
   _time() {
     const st = this._hass && this._hass.states && this._hass.states[(this._cfg && this._cfg.time_entity) || 'sensor.heure_actuelle'];
@@ -237,11 +250,11 @@ class SkylightCalendarCard extends HTMLElement {
     this._key = key;
     this._dayKey = dateKey(this._start());
     this._lastFetch = Date.now();
-    this._calSig = this._withCal().map((p) => {
-      const st = this._hass.states && this._hass.states[p.calendar];
-      return p.calendar + ':' + (st ? st.state + '|' + st.last_updated : '');
+    this._calSig = this._allCals().map((id) => {
+      const st = this._hass.states && this._hass.states[id];
+      return id + ':' + (st ? st.state + '|' + st.last_updated : '');
     }).join(';');
-    const ents = this._withCal().map((p) => p.calendar);
+    const ents = this._allCals();
     if (!ents.length) {
       this._events = {};
       this._loading = false;
@@ -356,7 +369,7 @@ class SkylightCalendarCard extends HTMLElement {
       const d0 = parseWhen(date);
       if (!d0) { this._draft.err = 'Date invalide.'; this._render(); return; }
       data = {
-        entity_id: prof.calendar,
+        entity_id: this._cals(prof)[0],
         summary: title.trim(),
         start_date: date,
         end_date: dateKey(addDays(d0, 1)),
@@ -367,7 +380,7 @@ class SkylightCalendarCard extends HTMLElement {
       const e = new Date(`${date}T${end}:00`);
       if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
       data = {
-        entity_id: prof.calendar,
+        entity_id: this._cals(prof)[0],
         summary: title.trim(),
         start_date_time: s.toISOString(),
         end_date_time: e.toISOString(),
@@ -417,7 +430,7 @@ class SkylightCalendarCard extends HTMLElement {
       const payload = {
         type: 'skylight_hub_family/cal_event',
         op: 'update',
-        entity_id: item.prof.calendar,
+        entity_id: item.entity || item.prof.calendar,
         uid: ev.uid || '',
         summary: title.trim(),
         start: sIso,
@@ -451,7 +464,8 @@ class SkylightCalendarCard extends HTMLElement {
   _dayEvents(day) {
     const out = [];
     for (const p of this._withCal()) {
-      const evs = this._events[p.calendar] || [];
+      for (const entity of this._cals(p)) {
+      const evs = this._events[entity] || [];
       for (const ev of evs) {
         const allDay = isAllDayRaw(ev.start);
         const s = parseWhen(whenRaw(ev.start));
@@ -459,7 +473,8 @@ class SkylightCalendarCard extends HTMLElement {
         if (!s) continue;
         const visible = allDay ? (s <= day && (!e || day < e)) : sameDay(s, day);
         if (!visible) continue;
-        out.push({ ev, prof: p, allDay, s, e });
+        out.push({ ev, prof: p, entity, allDay, s, e });
+      }
       }
     }
     out.sort((a, b) => {
@@ -493,7 +508,7 @@ class SkylightCalendarCard extends HTMLElement {
       const b = days[days.length - 1];
       return `${a.getDate()} ${FR_MONTHS[a.getMonth()]} – ${b.getDate()} ${FR_MONTHS[b.getMonth()]}`;
     })();
-    const pills = this._profiles().map((p) => `<div class="pill${p.calendar ? '' : ' off'}" style="--pb:${esc(p.pastel || '#F1F3F6')};--pc:${esc(p.pastel || '#E3E7EE')};--ac:${esc(p.accent || p.color || '#7A8596')}" title="${p.calendar ? '' : 'Aucun calendrier relié'}">
+    const pills = this._profiles().map((p) => `<div class="pill${this._cals(p).length ? '' : ' off'}" style="--pb:${esc(p.pastel || '#F1F3F6')};--pc:${esc(p.pastel || '#E3E7EE')};--ac:${esc(p.accent || p.color || '#7A8596')}" title="${this._cals(p).length ? '' : 'Aucun calendrier relié'}">
       <span class="pa">${this._face(p, 26)}</span><span class="pn">${esc(p.name || '')}</span></div>`).join('');
     const note = this._err
       ? `<div class="note err">${esc(this._err)}</div>`
@@ -613,7 +628,7 @@ class SkylightCalendarCard extends HTMLElement {
     const ev = d.item.ev;
     /* HA n'expose pas l'uid des événements CalDAV : dans ce cas l'API retrouve
        l'événement côté serveur par son titre + son début. */
-    const payload = { type: 'skylight_hub_family/cal_event', op: 'delete', entity_id: d.item.prof.calendar, uid: ev.uid || '' };
+    const payload = { type: 'skylight_hub_family/cal_event', op: 'delete', entity_id: d.item.entity || d.item.prof.calendar, uid: ev.uid || '' };
     if (!ev.uid) {
       payload.match_summary = ev.summary || '';
       payload.match_start = d.item.allday

@@ -235,7 +235,7 @@ function mix(a, b, p) {
  * La règle (même teinte, même saturation, luminosité 82 %) vit dans le tronc
  * commun : une seule implémentation pour l'écran Profils et la vue Tâches.
  * `CORE_URL` porte la version — l'incrémenter avec la ressource famille-core. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.42';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.43';
 let CORE = null;
 let pastelOf;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
@@ -278,6 +278,7 @@ function parseProfile(item) {
     id: m.i || (item.summary || '').toLowerCase().replace(/[^a-z0-9]+/g, '_'),
     routine: m.r || '',
     calendar: m.k || '',
+    calendars: Array.isArray(m.kk) && m.kk.length ? m.kk.slice() : (m.k ? [m.k] : []),
     calendarOwned: m.kc === 'created',
     /* position d'affichage — `null` = jamais rangé, on retombe sur l'ordre de
        la liste (voir orderProfiles) */
@@ -1078,6 +1079,7 @@ class SkylightProfilesCard extends HTMLElement {
       c: d.color, a: d.accent, p: d.face, s: !!d.stars,
       i: d.id || d.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_'),
       r: d.routine || '', k: d.calendar || '',
+      kk: (Array.isArray(d.calendars) && d.calendars.length ? d.calendars : (d.calendar ? [d.calendar] : [])),
       kc: d.calendarOwned ? 'created' : '',
     };
     /* `ord` est écrit seulement s'il est connu : un profil jamais rangé garde

@@ -158,6 +158,12 @@ def _profiles(hass: HomeAssistant) -> list[dict[str, Any]]:
         if not isinstance(meta, dict):
             meta = {}
         name = item.get("summary") or ""
+        # Plusieurs calendriers par personne : `kk` est la source, `k` reste le
+        # premier pour les anciennes données et les cartes non migrées.
+        cals = meta.get("kk")
+        if not isinstance(cals, list) or not cals:
+            cals = [meta["k"]] if meta.get("k") else []
+        cals = [c for c in cals if isinstance(c, str) and c.startswith("calendar.")]
         out.append(
             {
                 "id": meta.get("i") or _slug(name),
@@ -165,7 +171,8 @@ def _profiles(hass: HomeAssistant) -> list[dict[str, Any]]:
                 "color": meta.get("c") or "#DDE3EA",
                 "accent": meta.get("a") or "#7A8596",
                 "photo": meta.get("p") or "",
-                "calendar": meta.get("k") or "",
+                "calendar": cals[0] if cals else "",
+                "calendars": cals,
                 "stars": meta.get("s") is not False,
                 "routine": meta.get("r") or "",
                 "ord": meta.get("ord") or 0,

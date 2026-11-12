@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.42';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.42';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.43';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.43';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -1098,6 +1098,7 @@ ${CSS}</style>
         pastel: (CORE && CORE.pastelOf) ? CORE.pastelOf(p.color) : (p.color || '#EAF1FC'),
         photo: p.photo || '',
         calendar: p.calendar || '',
+        calendars: Array.isArray(p.calendars) ? p.calendars : (p.calendar ? [p.calendar] : []),
       })),
       time_entity: time,
       weather_entity: weather,
