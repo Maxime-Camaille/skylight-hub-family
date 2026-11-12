@@ -25,6 +25,7 @@ from .const import (
     PANEL_ICON,
     PANEL_TITLE,
     PANEL_URL,
+    PREVIEW_URL,
     STATIC_PATH,
     VERSION,
 )
@@ -80,10 +81,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ValueError:
         _LOGGER.debug("Panneau %s déjà enregistré", PANEL_URL)
 
+    # Découverte en aperçu : même module, même élément, mais le panneau est
+    # ouvert en mode « rien n'est enregistré ». Accessible d'un clic dans la
+    # barre latérale, sans retenir d'URL.
+    if PREVIEW_URL in (hass.data.get("frontend_panels") or {}):
+        frontend.async_remove_panel(hass, PREVIEW_URL)
+    try:
+        frontend.async_register_built_in_panel(
+            hass,
+            component_name="custom",
+            sidebar_title="Découverte",
+            sidebar_icon="mdi:compass-outline",
+            frontend_url_path=PREVIEW_URL,
+            config={
+                "_panel_custom": {
+                    "name": "skylight-hub-panel",
+                    "module_url": f"{STATIC_PATH}/panel.js?v={VERSION}",
+                    "embed_iframe": False,
+                    "trust_external": False,
+                    "preview": True,
+                }
+            },
+            require_admin=False,
+        )
+    except ValueError:
+        _LOGGER.debug("Panneau %s déjà enregistré", PREVIEW_URL)
+
     _LOGGER.info("Skylight V2 prêt sur /%s", PANEL_URL)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     frontend.async_remove_panel(hass, PANEL_URL)
+    frontend.async_remove_panel(hass, PREVIEW_URL)
     return True

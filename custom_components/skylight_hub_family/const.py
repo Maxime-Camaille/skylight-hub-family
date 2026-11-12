@@ -2,9 +2,11 @@
 
 DOMAIN = "skylight_hub_family"
 NAME = "Skylight Hub Family"
-VERSION = "0.5.46"
+VERSION = "0.5.47"
 
 PANEL_URL = "skylight"
+# Second point d'entrée dans la barre latérale : la découverte en aperçu.
+PREVIEW_URL = "skylight-decouverte"
 PANEL_TITLE = "Skylight Hub Family"
 PANEL_ICON = "skylight:maison"
 STATIC_PATH = "/skylight-static"

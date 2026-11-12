@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.46';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.46';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.47';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.47';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -431,7 +431,9 @@ class FamillePanel extends HTMLElement {
     if (THEMES) {
       try { THEMES.applyTheme(this, this._app && this._app.theme); } catch (e) { /* fallback base */ }
     }
-    if (new URLSearchParams(location.search || '').get('onboarding') === '1') {
+    const pvCfg = !!(this._panel && this._panel.config && this._panel.config._panel_custom
+      && this._panel.config._panel_custom.preview);
+    if (pvCfg || new URLSearchParams(location.search || '').get('onboarding') === '1') {
       this._obPreview = true;
       this._renderOnboarding();
       return;
