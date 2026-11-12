@@ -203,6 +203,7 @@ def payload(hass: HomeAssistant) -> dict[str, Any]:
         "meals": data.get("meals") or {},
         "stars": data.get("stars") or {},
         "order": data.get("order") or 0,
+        "dev_preview": bool(data.get("dev_preview")),
         "existing": bool((data.get("lists") or {}).get("todo.profils")),
     }
 
@@ -588,12 +589,13 @@ async def ws_config(hass, connection, msg):
         vol.Optional("order"): vol.Coerce(int),
         vol.Optional("evening_from"): vol.Coerce(int),
         vol.Optional("family_name"): cv.string,
+        vol.Optional("dev_preview"): cv.boolean,
     }
 )
 @websocket_api.async_response
 async def ws_settings(hass, connection, msg):
     data = _data(hass)
-    for key in ("kiosk", "theme", "stars_per_task", "evening_from", "family_name", "order"):
+    for key in ("kiosk", "theme", "stars_per_task", "evening_from", "family_name", "order", "dev_preview"):
         if key in msg:
             data[key] = msg[key]
     if msg.get("family_name"):
