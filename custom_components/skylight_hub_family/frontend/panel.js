@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.45';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.45';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.46';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.46';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -80,6 +80,9 @@ const CSS = `
 .o-previewbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#1B1B1D;color:#F5F3EF;font-size:12px;font-weight:600;line-height:1.3;z-index:60}
 .o-previewbar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .o-previewbar button{border:0;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;flex:0 0 auto}
+.o-pvnav{display:flex;align-items:center;gap:8px}
+.o-pvnav b{font-size:11.5px;font-weight:600;letter-spacing:.02em;opacity:.85;white-space:nowrap}
+.o-pvnav button{width:26px;height:26px;padding:0;display:grid;place-items:center;font-size:16px;line-height:1}
 .o-screen{animation:oStep .32s cubic-bezier(.2,.8,.2,1) both}
 @keyframes oStep{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.o-screen{animation:none}}
@@ -661,7 +664,15 @@ ${CSS}</style>
 
   _renderOnboarding() {
     const bar = this._obPreview
-      ? `<div class="o-previewbar"><span>Aperçu de la découverte — rien n'est enregistré.</span><button id="o-preview-exit" type="button">Quitter</button></div>`
+      ? `<div class="o-previewbar">
+          <span>Aperçu — rien n'est enregistré</span>
+          <div class="o-pvnav" role="group" aria-label="Navigation de l'aperçu">
+            <button type="button" data-pv="prev" aria-label="Écran précédent">‹</button>
+            <b id="o-pv-step">Écran 1</b>
+            <button type="button" data-pv="next" aria-label="Écran suivant">›</button>
+          </div>
+          <button id="o-preview-exit" type="button">Quitter</button>
+        </div>`
       : '';
     this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb${this._obPreview ? ' preview' : ''}">${bar}<div class="o-wrap" id="ob"></div></div>`;
     const saved = this._obRestore();
@@ -683,8 +694,35 @@ ${CSS}</style>
       this._ob.draft = { name: '', color: OB_COLORS[0], cal: true };
       this._ob.edit = -1;
       this._ob.err = null;
+      /* Paramètres du studio : ?onboarding=1&step=3&scenario=famille
+         — permet de juger un écran précis sans traverser tout le parcours. */
+      const params = new URLSearchParams(location.search || '');
+      const scen = String(params.get('scenario') || '').toLowerCase();
+      if (scen === 'famille' || scen === 'family') {
+        this._ob.family = 'Camaille';
+        this._ob.people = [
+          { name: 'Maxime', color: OB_COLORS[4], cal: true },
+          { name: 'Matéo', color: OB_COLORS[0], cal: true },
+          { name: 'Noémie', color: OB_COLORS[6], cal: true },
+        ];
+      }
+      const asked = Number(params.get('step'));
+      if (Number.isFinite(asked) && asked >= 0 && asked <= 5) this._ob.step = asked;
       const exit = this.shadowRoot.getElementById('o-preview-exit');
       if (exit) exit.addEventListener('click', () => { location.href = '/skylight'; });
+      const pvBar = this.shadowRoot.querySelector('.o-previewbar');
+      const pvLabel = this.shadowRoot.getElementById('o-pv-step');
+      const go = (d) => {
+        const cur = typeof this._ob.step === 'number' ? this._ob.step : 0;
+        this._ob.step = Math.max(0, Math.min(5, cur + d));
+        if (pvLabel) pvLabel.textContent = 'Écran ' + (this._ob.step + 1) + ' / 6';
+        this._obPaint();
+      };
+      if (pvBar) {
+        pvBar.querySelector('[data-pv="prev"]').addEventListener('click', () => go(-1));
+        pvBar.querySelector('[data-pv="next"]').addEventListener('click', () => go(1));
+      }
+      if (pvLabel) pvLabel.textContent = 'Écran ' + ((typeof this._ob.step === 'number' ? this._ob.step : 0) + 1) + ' / 6';
     }
     this._obPaint();
   }
