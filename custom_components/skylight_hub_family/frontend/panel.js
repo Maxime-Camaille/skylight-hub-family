@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.50';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.50';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.52';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.52';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -169,6 +169,26 @@ const CSS = `
 .o-select.alt{background-color:#F7F5F1;border-color:#EAE7E2;color:#8B8B90;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'><path d='M1 1.2 4.5 4.8 8 1.2' stroke='%238B8B90' stroke-width='1.7' fill='none' stroke-linecap='round'/></svg>")}
 .o-callist{flex:1 1 100%;display:flex;gap:8px;align-items:center;margin-top:2px}
 .o-callist .o-select{flex:1 1 auto;font-size:13px;padding:8px 26px 8px 10px}
+.o-calrow{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid #F1EFEB}
+.o-calrow:first-child{border-top:0}
+.o-calhead{display:flex;align-items:center;gap:10px}
+.o-calname{font-size:15px;font-weight:650}
+.o-calsrc{font-size:12.5px;color:#8B8B90;margin-top:1px}
+.o-calchips{display:flex;gap:6px;flex-wrap:wrap}
+.o-chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 6px;border-radius:999px;border:1px solid #E3E7EE;background:#fff;font:inherit;font-size:12px;font-weight:600;color:#5B6472;cursor:pointer}
+.o-chip .av{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:9.5px;font-weight:700}
+.o-chip.on{border-color:#007AFF;background:#F4F8FE;color:#0A66D6}
+.o-ways{display:grid;gap:10px;margin-top:16px}
+.o-way{display:flex;align-items:center;gap:12px;border:1px solid #EBE8E3;border-radius:14px;padding:12px 14px;background:#fff}
+.o-way .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:#F5F3EF;flex:0 0 38px}
+.o-way .nm{font-size:14.5px;font-weight:650}
+.o-way .sub{font-size:12.5px;color:#8B8B90;margin-top:1px}
+.o-way .go{margin-left:auto;flex:0 0 auto}
+.o-mask{position:absolute;inset:0;background:rgba(24,24,28,.42);display:grid;place-items:center;padding:18px;z-index:6}
+.o-mask .box{background:#fff;border-radius:20px;max-width:460px;padding:20px 22px;box-shadow:0 24px 60px rgba(20,20,30,.3)}
+.o-mask h3{margin:0 0 8px;font-size:17px}
+.o-mask p{margin:0 0 8px;font-size:13px;color:#5B6472;line-height:1.5}
+.o-mask .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .o-table{margin-top:22px;background:#fff;border:1px solid var(--o-line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(28,32,45,.055)}
 .o-table .r{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid #F2F0EC;font-size:15px;letter-spacing:-.01em;color:var(--o-ink2)}
 .o-table .r:first-child{border-top:0}
@@ -874,50 +894,57 @@ ${CSS}</style>
     if (step === 3) {
       left = this._oWeek();
       const cals = this._oCalendars();
-      const LABEL = { create: 'Créer', link: 'Relier', later: 'Plus tard' };
-      const rows = ob.people.map((p, i) => {
-        const mode = p.mode || 'later';
-        const calName = p.calendar ? ((cals.find((c) => c.id === p.calendar) || {}).name || p.calendar) : '';
-        return `<div class="o-selrow">${this._oAv((p.name[0] || '?').toUpperCase(), p.color, 32)}
-        <div style="flex:1 1 auto;min-width:0"><div class="nm">${esc(p.name)}</div><div class="sub">${mode === 'create' ? 'Créer un calendrier' : (mode === 'link' ? 'Relier un calendrier' : 'Plus tard')}${mode === 'link' && calName ? ' · ' + esc(calName) : ''}</div></div>
-        <button class="o-select${mode === 'later' ? ' alt' : ''}" data-mode-open="${i}" type="button" aria-haspopup="dialog">${LABEL[mode]}</button>
-        ${mode === 'link' ? `<div class="o-callist"><button class="o-select" data-cal-open="${i}" type="button" aria-haspopup="dialog">${esc(calName || 'Choisir un calendrier')}</button></div>` : ''}
-      </div>`;
-      }).join('');
-      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">Les calendriers</h2>
-        <p class="o-sub tight">Choisissez pour chaque personne : créer un calendrier, relier un calendrier déjà connecté à Home Assistant (Google, Apple, CalDAV…), ou plus tard.</p></div>
-        <div class="o-people" style="margin-top:18px;gap:10px">${rows}</div>
-        ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}`;
-      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
-      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>${this._oSheetHtml()}`;
-      root.querySelectorAll('[data-mode-open]').forEach((b) => b.addEventListener('click', () => this._obOpenSheet('mode', Number(b.dataset.modeOpen))));
-      root.querySelectorAll('[data-cal-open]').forEach((b) => b.addEventListener('click', () => this._obOpenSheet('cal', Number(b.dataset.calOpen))));
+      const mine = (calId) => ob.people.findIndex((p) => p.mode === 'link' && p.calendar === calId);
+      const chip = (c, j) => {
+        const p = ob.people[j];
+        const on = mine(c.id) === j;
+        return `<button class="o-chip${on ? ' on' : ''}" type="button" data-assign="${esc(c.id)}:${j}"><span class="av" style="background:${esc(p.color)}">${esc(((p.name || '?')[0] || '?').toUpperCase())}</span>${esc(p.name)}</button>`;
+      };
+      const rows = cals.map((c) => `
+        <div class="o-calrow">
+          <div class="o-calhead"><div style="flex:1 1 auto;min-width:0"><div class="o-calname">${esc(c.name)}</div><div class="o-calsrc">${esc(c.id)}</div></div></div>
+          <div class="o-calchips">${ob.people.map((p, j) => chip(c, j)).join('')}</div>
+        </div>`).join('');
+      const ways = `
+        <div class="o-ways">
+          <div class="o-way"><span class="ic">🍎</span><div><div class="nm">Mon calendrier Apple</div><div class="sub">iCloud, environ 2 minutes, une seule fois</div></div><button class="o-btn soft go" type="button" data-prov="apple">Connecter</button></div>
+          <div class="o-way"><span class="ic">🔵</span><div><div class="nm">Mon calendrier Google</div><div class="sub">Environ 10 minutes, une seule fois</div></div><button class="o-btn soft go" type="button" data-prov="google">Connecter</button></div>
+          <div class="o-way"><span class="ic">🏠</span><div><div class="nm">Créer un calendrier</div><div class="sub">Dans Home Assistant, chez toi, immédiat</div></div><button class="o-btn soft go" type="button" data-local>Créer</button></div>
+        </div>`;
+      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">${cals.length ? 'Tes calendriers' : 'Ajoute ton calendrier'}</h2>
+        <p class="o-sub tight">${cals.length ? 'Ce que l’app affiche, et pour qui. Tu pourras modifier à tout moment dans Profils.' : 'L’app affiche les calendriers qui sont déjà dans ton Home Assistant. Choisis le tien une fois.'}</p></div>
+        ${cals.length ? `<div class="o-people" style="margin-top:18px;gap:2px">${rows}</div><div style="margin-top:14px"><button class="o-btn soft" type="button" data-local>＋ Créer un calendrier local</button></div>` : ways}
+        ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}
+        ${ob.provider ? `<div class="o-mask"><div class="box"><h3>${ob.provider === 'apple' ? 'Calendrier Apple' : 'Calendrier Google'}</h3>
+          <p>La connexion se fait dans Home Assistant : <b>Paramètres → Appareils et services → Ajouter une intégration</b>, puis <b>${ob.provider === 'apple' ? 'Apple (CalDAV)' : 'Google'}</b>.</p>
+          <p>${ob.provider === 'apple' ? 'Il te faudra ton identifiant Apple et un mot de passe d’application (16 caractères), pas ton mot de passe de compte.' : 'Google demande une autorisation unique lors de la configuration.'}</p>
+          <p>Une fois connecté, reviens ici : le calendrier apparaîtra tout seul dans la liste.</p>
+          <div class="btns"><button class="o-btn" type="button" data-prov-close>J’ai compris</button></div></div></div>` : ''}`;
+      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><span style="flex:1 1 auto"></span><button class="o-back" id="o-later" type="button" style="border:0">Configurer plus tard</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
+      root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
+      root.querySelectorAll('[data-assign]').forEach((b) => b.addEventListener('click', () => {
+        const [cid, js] = b.dataset.assign.split(':');
+        const j = Number(js);
+        const p = ob.people[j];
+        if (!p) return;
+        if (p.mode === 'link' && p.calendar === cid) { p.mode = 'later'; p.calendar = ''; }
+        else { p.mode = 'link'; p.calendar = cid; }
+        ob.err = null;
+        this._obPaint();
+      }));
+      root.querySelectorAll('[data-prov]').forEach((b) => b.addEventListener('click', () => { ob.provider = b.dataset.prov; this._obPaint(); }));
+      const pc = root.querySelector('[data-prov-close]');
+      if (pc) pc.addEventListener('click', () => { ob.provider = null; this._obPaint(); });
+      root.querySelectorAll('[data-local]').forEach((b) => b.addEventListener('click', () => this._obCreateLocal()));
       root.querySelector('#o-back').addEventListener('click', () => { ob.step = 2; this._obPaint(); });
+      root.querySelector('#o-later').addEventListener('click', () => { ob.people.forEach((p) => { if (p.mode === 'link' && !p.calendar) { p.mode = 'later'; } }); ob.err = null; ob.step = 4; this._obPaint(); });
       root.querySelector('#o-next').addEventListener('click', () => {
         const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
-        if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + ', ou passez à « Plus tard ».'; this._obPaint(); return; }
+        if (missing) { ob.err = 'Choisis un calendrier pour ' + missing.name + ', ou passe à « Plus tard ».'; this._obPaint(); return; }
         ob.err = null;
         ob.step = 4;
         this._obPaint();
       });
-      const sheet = root.querySelector('#o-sheet');
-      if (sheet) {
-        sheet.querySelectorAll('[data-sheet-close]').forEach((b) => b.addEventListener('click', () => { ob.sheet = null; this._obPaint(); }));
-        sheet.querySelectorAll('[data-sheet-opt]').forEach((b) => b.addEventListener('click', () => {
-          const i = Number(b.dataset.person);
-          const p = ob.people[i];
-          if (!p) return;
-          if (b.dataset.sheetOpt === 'mode') {
-            p.mode = b.dataset.value;
-            if (p.mode !== 'link') p.calendar = '';
-          } else {
-            p.mode = 'link';
-            p.calendar = b.dataset.value;
-          }
-          ob.sheet = null;
-          this._obPaint();
-        }));
-      }
       return;
     }
 
@@ -990,6 +1017,26 @@ ${CSS}</style>
       const el = this.shadowRoot.getElementById('o-pname');
       if (el) { el.focus(); el.select(); }
     }, 40);
+  }
+
+  async _obCreateLocal() {
+    const ob = this._ob;
+    if (!ob || ob.busy) return;
+    if (this._obPreview) {
+      ob.err = "Aperçu : la création d’un calendrier n’est pas exécutée ici.";
+      this._obPaint();
+      return;
+    }
+    try {
+      ob.busy = true;
+      const flow = await this._hass.callApi('POST', 'config/config_entries/flow', { handler: 'local_calendar' });
+      await this._hass.callApi('POST', 'config/config_entries/flow/' + flow.flow_id, { calendar_name: 'Famille', import: 'create_empty' });
+      setTimeout(() => { ob.busy = false; this._obPaint(); }, 1200);
+    } catch (e) {
+      ob.busy = false;
+      ob.err = "Création impossible : " + ((e && e.message) || e);
+      this._obPaint();
+    }
   }
 
   _obOpenSheet(kind, i) {
