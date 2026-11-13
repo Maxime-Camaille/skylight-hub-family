@@ -235,7 +235,7 @@ function mix(a, b, p) {
  * La règle (même teinte, même saturation, luminosité 82 %) vit dans le tronc
  * commun : une seule implémentation pour l'écran Profils et la vue Tâches.
  * `CORE_URL` porte la version — l'incrémenter avec la ressource famille-core. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.48';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.49';
 let CORE = null;
 let pastelOf;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
