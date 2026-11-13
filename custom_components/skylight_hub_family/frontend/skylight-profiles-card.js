@@ -235,7 +235,7 @@ function mix(a, b, p) {
  * La règle (même teinte, même saturation, luminosité 82 %) vit dans le tronc
  * commun : une seule implémentation pour l'écran Profils et la vue Tâches.
  * `CORE_URL` porte la version — l'incrémenter avec la ressource famille-core. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.49';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.50';
 let CORE = null;
 let pastelOf;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
@@ -315,6 +315,8 @@ class SkylightProfilesCard extends HTMLElement {
     this._built = false;
     this._view = 'list';
     this._draft = null;
+    this._sig = undefined;
+    this._itemsSig = undefined;
     if (this.shadowRoot) this.shadowRoot.innerHTML = '';
   }
 
@@ -364,8 +366,10 @@ class SkylightProfilesCard extends HTMLElement {
       .then((r) => {
         const raw = (r && r.items) || [];
         const sig = raw.map((x) => x.uid + ':' + (x.summary || '') + ':' + (x.description || '')).join('|');
-        if (this._sig !== undefined && sig !== this._sig) this._notify();
-        this._sig = sig;
+        /* `_sig` est la signature de l'ENTITÉ (set hass) : ne pas la réutiliser
+           ici, sinon chaque lecture se croit modifiée et déclenche une boucle. */
+        if (this._itemsSig !== undefined && sig !== this._itemsSig) this._notify();
+        this._itemsSig = sig;
         /* description brute conservée : réordonner ne doit réécrire QUE `ord`,
            sans risquer de perdre une clé qu'on ne modélise pas */
         this._rawDesc = new Map(raw.map((x) => [x.uid, x.description || '']));

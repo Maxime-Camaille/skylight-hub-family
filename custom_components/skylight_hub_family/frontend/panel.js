@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.49';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.49';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.50';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.50';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
