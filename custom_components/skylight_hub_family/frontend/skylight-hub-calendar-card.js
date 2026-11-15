@@ -778,7 +778,15 @@ class SkylightCalendarCard extends HTMLElement {
       allday.addEventListener('change', sync);
       sync();
     }
-    on('[data-addcal]', 'click', (e) => this._openConfig(e.currentTarget.getAttribute('data-addcal')));
+    on('[data-addcal]', 'click', (e) => {
+      const id = e.currentTarget.getAttribute('data-addcal');
+      const prof = this._profiles().find((x) => x.id === id);
+      this.dispatchEvent(new CustomEvent('skylight-calendar-config', {
+        detail: { profile: id, name: (prof && prof.name) || '' },
+        bubbles: true,
+        composed: true,
+      }));
+    });
     on('[data-cfg-chip]', 'click', (e) => {
       const [cid, pid] = e.currentTarget.getAttribute('data-cfg-chip').split(':');
       const a = this._calCfg && this._calCfg.assign;

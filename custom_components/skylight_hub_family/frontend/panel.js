@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.55';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.55';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.56';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.56';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -429,6 +429,8 @@ class FamillePanel extends HTMLElement {
       if (v) this._show(v);
     };
     window.addEventListener('skylight-navigate', this._onNav);
+    this._onCalCfg = () => this._openCalendars();
+    window.addEventListener('skylight-calendar-config', this._onCalCfg);
     this._onProfiles = () => this._reloadProfiles();
     window.addEventListener('skylight-profiles-changed', this._onProfiles);
     this._onTheme = (e) => {
@@ -674,7 +676,10 @@ ${CSS}</style>
   }
 
   _renderOnboarding() {
-    const bar = this._obPreview
+    const cfg = !!this._obConfig;
+    const bar = cfg
+      ? `<div class="o-previewbar"><span>Calendriers</span><span style="flex:1 1 auto"></span><button id="o-cfg-close" type="button">Fermer</button></div>`
+      : (this._obPreview
       ? `<div class="o-previewbar">
           <span>Aperçu — rien n'est enregistré</span>
           <div class="o-pvnav" role="group" aria-label="Navigation de l'aperçu">
@@ -684,10 +689,11 @@ ${CSS}</style>
           </div>
           <button id="o-preview-exit" type="button">Quitter</button>
         </div>`
-      : '';
+      : '');
     this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}${CSS}</style><div class="onb${this._obPreview ? ' preview' : ''}">${bar}<div class="o-wrap" id="ob"></div></div>`;
-    const saved = this._obRestore();
-    this._ob = {
+    const keep = cfg && this._ob;
+    const saved = keep ? null : this._obRestore();
+    if (!keep) this._ob = {
       step: saved ? saved.step : ((this._app && this._app.existing) ? 'existing' : 0),
       family: saved ? saved.family : '',
       people: saved ? saved.people : [],
@@ -698,6 +704,11 @@ ${CSS}</style>
       report: null,
       sheet: null,
     };
+    if (cfg) {
+      this._ob.step = 3;
+      const close = this.shadowRoot.getElementById('o-cfg-close');
+      if (close) close.addEventListener('click', () => this._closeCalendars());
+    }
     if (this._obPreview) {
       this._ob.step = 0;
       this._ob.family = '';
@@ -888,7 +899,9 @@ ${CSS}</style>
       const mine = (calId) => ob.people.findIndex((p) => p.mode === 'link' && p.calendar === calId);
       const chip = (c, j) => {
         const p = ob.people[j];
-        const on = mine(c.id) === j;
+        const on = this._obConfig
+          ? (p.calendars || []).indexOf(c.id) !== -1
+          : mine(c.id) === j;
         return `<button class="o-chip${on ? ' on' : ''}" type="button" data-assign="${esc(c.id)}:${j}"><span class="av" style="background:${esc(p.color)}">${esc(((p.name || '?')[0] || '?').toUpperCase())}</span>${esc(p.name)}</button>`;
       };
       const rows = cals.map((c) => `
@@ -911,14 +924,23 @@ ${CSS}</style>
           <p>${ob.provider === 'apple' ? 'Il te faudra ton identifiant Apple et un mot de passe d’application (16 caractères), pas ton mot de passe de compte.' : 'Google demande une autorisation unique lors de la configuration.'}</p>
           <p>Une fois connecté, reviens ici : le calendrier apparaîtra tout seul dans la liste.</p>
           <div class="btns"><button class="o-btn" type="button" data-prov-close>J’ai compris</button></div></div></div>` : ''}`;
-      foot = this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><span style="flex:1 1 auto"></span><button class="o-back" id="o-later" type="button" style="border:0">Configurer plus tard</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
+      foot = this._obConfig
+        ? this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-cancel" type="button">Annuler</button><span style="flex:1 1 auto"></span><button class="o-btn" id="o-save" type="button">Enregistrer</button></div>`)
+        : this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><span style="flex:1 1 auto"></span><button class="o-back" id="o-later" type="button" style="border:0">Configurer plus tard</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
       root.querySelectorAll('[data-assign]').forEach((b) => b.addEventListener('click', () => {
         const [cid, js] = b.dataset.assign.split(':');
         const j = Number(js);
         const p = ob.people[j];
         if (!p) return;
-        if (p.mode === 'link' && p.calendar === cid) { p.mode = 'later'; p.calendar = ''; }
+        if (this._obConfig) {
+          const list = (p.calendars || []).slice();
+          const i = list.indexOf(cid);
+          if (i === -1) list.push(cid); else list.splice(i, 1);
+          p.calendars = list;
+          p.mode = list.length ? 'link' : 'later';
+          p.calendar = list[0] || '';
+        } else if (p.mode === 'link' && p.calendar === cid) { p.mode = 'later'; p.calendar = ''; }
         else { p.mode = 'link'; p.calendar = cid; }
         ob.err = null;
         this._obPaint();
@@ -927,8 +949,14 @@ ${CSS}</style>
       const pc = root.querySelector('[data-prov-close]');
       if (pc) pc.addEventListener('click', () => { ob.provider = null; this._obPaint(); });
       root.querySelectorAll('[data-local]').forEach((b) => b.addEventListener('click', () => this._obCreateLocal()));
-      root.querySelector('#o-back').addEventListener('click', () => { ob.step = 2; this._obPaint(); });
-      root.querySelector('#o-later').addEventListener('click', () => { ob.people.forEach((p) => { if (p.mode === 'link' && !p.calendar) { p.mode = 'later'; } }); ob.err = null; ob.step = 4; this._obPaint(); });
+      const backBtn = root.querySelector('#o-back');
+      if (backBtn) backBtn.addEventListener('click', () => { ob.step = 2; this._obPaint(); });
+      const laterBtn = root.querySelector('#o-later');
+      if (laterBtn) laterBtn.addEventListener('click', () => { ob.people.forEach((p) => { if (p.mode === 'link' && !p.calendar) { p.mode = 'later'; } }); ob.err = null; ob.step = 4; this._obPaint(); });
+      const cancelBtn = root.querySelector('#o-cancel');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => this._closeCalendars());
+      const saveBtn = root.querySelector('#o-save');
+      if (saveBtn) saveBtn.addEventListener('click', () => this._saveCalendars());
       root.querySelector('#o-next').addEventListener('click', () => {
         const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
         if (missing) { ob.err = 'Choisis un calendrier pour ' + missing.name + ', ou passe à « Plus tard ».'; this._obPaint(); return; }
@@ -1028,6 +1056,55 @@ ${CSS}</style>
       ob.err = "Création impossible : " + ((e && e.message) || e);
       this._obPaint();
     }
+  }
+
+  _openCalendars() {
+    const profs = (this._app && this._app.profiles) || [];
+    this._obConfig = true;
+    this._ob = {
+      step: 3,
+      family: (this._app && this._app.family_name) || '',
+      people: profs.map((p) => {
+        const cals = (p.calendars && p.calendars.length ? p.calendars : (p.calendar ? [p.calendar] : [])).slice();
+        return { id: p.id, name: p.name, color: p.accent || p.color || '#4677A8', mode: cals.length ? 'link' : 'later', calendar: cals[0] || '', calendars: cals };
+      }),
+      draft: { name: '', color: OB_COLORS[0], cal: true },
+      edit: -1,
+      err: null,
+      busy: false,
+      report: null,
+      sheet: null,
+      provider: null,
+    };
+    this._renderOnboarding();
+  }
+
+  _closeCalendars() {
+    this._obConfig = false;
+    this._ob = null;
+    this._mounted = {};
+    this._paint();
+    this._show(this._view || 'calendrier');
+  }
+
+  async _saveCalendars() {
+    const ob = this._ob;
+    if (!ob || ob.busy) return;
+    ob.busy = true;
+    ob.err = null;
+    try {
+      for (const p of ob.people) {
+        if (!p.id) continue;
+        await this._hass.callWS({ type: 'skylight_hub_family/calendars', profile: p.id, calendars: p.calendars || [] });
+      }
+    } catch (e) {
+      ob.busy = false;
+      ob.err = 'Enregistrement impossible : ' + ((e && e.message) || e);
+      this._obPaint();
+      return;
+    }
+    ob.busy = false;
+    await this._closeCalendars();
   }
 
   _obOpenSheet(kind, i) {
