@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.56';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.56';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.57';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.57';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -189,6 +189,9 @@ const CSS = `
 .o-mask h3{margin:0 0 8px;font-size:17px}
 .o-mask p{margin:0 0 8px;font-size:13px;color:#5B6472;line-height:1.5}
 .o-mask .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.o-inp{width:100%;height:44px;margin-top:8px;border:1.5px solid #E0DCD6;border-radius:12px;padding:0 13px;font:inherit;font-size:14.5px;background:#fff}
+.o-hint2{font-size:11.8px;color:#8B8B90;margin:7px 0 0;line-height:1.4}
+.o-btn.ghost{background:none;color:#6B6B70}
 .o-table{margin-top:22px;background:#fff;border:1px solid var(--o-line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(28,32,45,.055)}
 .o-table .r{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid #F2F0EC;font-size:15px;letter-spacing:-.01em;color:var(--o-ink2)}
 .o-table .r:first-child{border-top:0}
@@ -915,15 +918,23 @@ ${CSS}</style>
           <div class="o-way"><span class="ic">🔵</span><div><div class="nm">Mon calendrier Google</div><div class="sub">Environ 10 minutes, une seule fois</div></div><button class="o-btn soft go" type="button" data-prov="google">Connecter</button></div>
           <div class="o-way"><span class="ic">🏠</span><div><div class="nm">Créer un calendrier</div><div class="sub">Dans Home Assistant, chez toi, immédiat</div></div><button class="o-btn soft go" type="button" data-local>Créer</button></div>
         </div>`;
-      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">${cals.length ? 'Tes calendriers' : 'Ajoute ton calendrier'}</h2>
-        <p class="o-sub tight">${cals.length ? 'Ce que l’app affiche, et pour qui. Tu pourras modifier à tout moment dans Profils.' : 'L’app affiche les calendriers qui sont déjà dans ton Home Assistant. Choisis le tien une fois.'}</p></div>
-        ${cals.length ? `<div class="o-people" style="margin-top:18px;gap:2px">${rows}</div><div style="margin-top:14px"><button class="o-btn soft" type="button" data-local>＋ Créer un calendrier local</button></div>` : ways}
+      const showWays = !cals.length || ob.add;
+      body = `${this._oProgress(3)}<div style="padding-top:22px"><h2 class="o-h1 sm">${showWays ? 'Ajoute un calendrier' : 'Tes calendriers'}</h2>
+        <p class="o-sub tight">${showWays ? 'Apple, Google, ou un calendrier créé dans Home Assistant. Tu choisis une fois, et il apparaît pour la personne que tu veux.' : 'Ce que l’app affiche, et pour qui. Tu pourras modifier à tout moment dans Profils.'}</p></div>
+        ${showWays ? ways : `<div class="o-people" style="margin-top:18px;gap:2px">${rows}</div><div style="margin-top:14px"><button class="o-btn soft" type="button" data-addcal-open>＋ Ajouter un calendrier</button></div>`}
         ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}
-        ${ob.provider ? `<div class="o-mask"><div class="box"><h3>${ob.provider === 'apple' ? 'Calendrier Apple' : 'Calendrier Google'}</h3>
-          <p>La connexion se fait dans Home Assistant : <b>Paramètres → Appareils et services → Ajouter une intégration</b>, puis <b>${ob.provider === 'apple' ? 'Apple (CalDAV)' : 'Google'}</b>.</p>
-          <p>${ob.provider === 'apple' ? 'Il te faudra ton identifiant Apple et un mot de passe d’application (16 caractères), pas ton mot de passe de compte.' : 'Google demande une autorisation unique lors de la configuration.'}</p>
-          <p>Une fois connecté, reviens ici : le calendrier apparaîtra tout seul dans la liste.</p>
-          <div class="btns"><button class="o-btn" type="button" data-prov-close>J’ai compris</button></div></div></div>` : ''}`;
+        ${ob.provider === 'apple' ? `<div class="o-mask"><div class="box"><h3>Ton calendrier Apple</h3>
+          <p style="margin-top:6px">Ton identifiant Apple, et un mot de passe d’application (16 caractères). Pas ton mot de passe de compte.</p>
+          <input class="o-inp" id="ap-user" placeholder="prenom@icloud.com" autocomplete="off">
+          <input class="o-inp" id="ap-pass" placeholder="xxxx-xxxx-xxxx-xxxx" autocomplete="off">
+          <p class="o-hint2">Mot de passe d’application : Réglages → ton nom → Connexion et sécurité → Mot de passe d’application.</p>
+          ${ob.err ? `<div class="o-err">${esc(ob.err)}</div>` : ''}
+          <div class="btns"><button class="o-btn ghost" type="button" data-prov-close>Annuler</button><button class="o-btn" type="button" data-apple-connect>${ob.busy ? 'Connexion…' : 'Connecter'}</button></div></div></div>` : (ob.provider === 'google' ? `<div class="o-mask"><div class="box"><h3>Ton calendrier Google</h3>
+          <p style="margin-top:6px">Google demande une autorisation de sa part, une seule fois. Elle se fait dans Home Assistant :</p>
+          <p><b>Paramètres → Appareils et services → Ajouter une intégration → Google</b></p>
+          <p>Une fois autorisé, reviens ici : tes calendriers apparaîtront dans la liste.</p>
+          <p class="o-hint2">L’app ne voit jamais ton mot de passe Google, et ne demande pas accès à tes mails.</p>
+          <div class="btns"><button class="o-btn" type="button" data-prov-close>J’ai compris</button></div></div></div>` : '')}`;
       foot = this._obConfig
         ? this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-cancel" type="button">Annuler</button><span style="flex:1 1 auto"></span><button class="o-btn" id="o-save" type="button">Enregistrer</button></div>`)
         : this._oboFoot(`<div class="o-btnrow"><button class="o-back" id="o-back" type="button">Retour</button><span style="flex:1 1 auto"></span><button class="o-back" id="o-later" type="button" style="border:0">Configurer plus tard</button><button class="o-btn" id="o-next" type="button">Continuer</button></div>`);
@@ -945,12 +956,20 @@ ${CSS}</style>
         ob.err = null;
         this._obPaint();
       }));
-      root.querySelectorAll('[data-prov]').forEach((b) => b.addEventListener('click', () => { ob.provider = b.dataset.prov; this._obPaint(); }));
+      root.querySelectorAll('[data-prov]').forEach((b) => b.addEventListener('click', () => { ob.provider = b.dataset.prov; ob.err = null; this._obPaint(); }));
+      const addOpen = root.querySelector('[data-addcal-open]');
+      if (addOpen) addOpen.addEventListener('click', () => { ob.add = true; ob.err = null; this._obPaint(); });
+      const appleGo = root.querySelector('[data-apple-connect]');
+      if (appleGo) appleGo.addEventListener('click', () => this._obConnectApple());
       const pc = root.querySelector('[data-prov-close]');
       if (pc) pc.addEventListener('click', () => { ob.provider = null; this._obPaint(); });
       root.querySelectorAll('[data-local]').forEach((b) => b.addEventListener('click', () => this._obCreateLocal()));
       const backBtn = root.querySelector('#o-back');
-      if (backBtn) backBtn.addEventListener('click', () => { ob.step = 2; this._obPaint(); });
+      if (backBtn) backBtn.addEventListener('click', () => {
+        if (ob.add && cals.length) { ob.add = false; this._obPaint(); return; }
+        ob.step = 2;
+        this._obPaint();
+      });
       const laterBtn = root.querySelector('#o-later');
       if (laterBtn) laterBtn.addEventListener('click', () => { ob.people.forEach((p) => { if (p.mode === 'link' && !p.calendar) { p.mode = 'later'; } }); ob.err = null; ob.step = 4; this._obPaint(); });
       const cancelBtn = root.querySelector('#o-cancel');
@@ -1058,6 +1077,41 @@ ${CSS}</style>
     }
   }
 
+  async _obConnectApple() {
+    const ob = this._ob;
+    if (!ob || ob.busy) return;
+    const root = this.shadowRoot;
+    const user = (root.getElementById('ap-user') || {}).value || '';
+    const pass = (root.getElementById('ap-pass') || {}).value || '';
+    if (!user.trim() || !pass.trim()) {
+      ob.err = 'Renseigne ton identifiant Apple et le mot de passe d’application.';
+      this._obPaint();
+      return;
+    }
+    ob.busy = true;
+    ob.err = null;
+    this._obPaint();
+    try {
+      const flow = await this._hass.callApi('POST', 'config/config_entries/flow', { handler: 'caldav' });
+      await this._hass.callApi('POST', 'config/config_entries/flow/' + flow.flow_id, {
+        url: 'https://caldav.icloud.com',
+        username: user.trim(),
+        password: pass.trim(),
+        verify_ssl: true,
+      });
+      setTimeout(() => {
+        ob.busy = false;
+        ob.provider = null;
+        ob.add = false;
+        this._obPaint();
+      }, 1500);
+    } catch (e) {
+      ob.busy = false;
+      ob.err = 'Connexion impossible : ' + ((e && e.message) || e);
+      this._obPaint();
+    }
+  }
+
   _openCalendars() {
     const profs = (this._app && this._app.profiles) || [];
     this._obConfig = true;
@@ -1075,6 +1129,7 @@ ${CSS}</style>
       report: null,
       sheet: null,
       provider: null,
+      add: false,
     };
     this._renderOnboarding();
   }
