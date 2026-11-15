@@ -382,8 +382,8 @@ class SkylightCalendarCard extends HTMLElement {
     const profs = this._creatable();
     const prof = profs.find((p) => p.id === (this._draft && this._draft.profile)) || profs[0];
     this._draft = { title, date, start, end, allday, profile: prof ? prof.id : '', err: '' };
-    if (!title.trim()) { this._draft.err = 'Donnez un titre à l’événement.'; this._render(); return; }
-    if (!date) { this._draft.err = 'Renseignez la date.'; this._render(); return; }
+    if (!title.trim()) { this._draft.err = 'Donne un titre à l’événement.'; this._render(); return; }
+    if (!date) { this._draft.err = 'Renseigne la date.'; this._render(); return; }
     if (!prof) { this._draft.err = 'Aucun calendrier ne permet la création.'; this._render(); return; }
     let data;
     if (allday) {
@@ -396,7 +396,7 @@ class SkylightCalendarCard extends HTMLElement {
         end_date: dateKey(addDays(d0, 1)),
       };
     } else {
-      if (!start || !end) { this._draft.err = 'Renseignez les heures.'; this._render(); return; }
+      if (!start || !end) { this._draft.err = 'Renseigne les heures.'; this._render(); return; }
       const s = new Date(`${date}T${start}:00`);
       const e = new Date(`${date}T${end}:00`);
       if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
@@ -430,8 +430,8 @@ class SkylightCalendarCard extends HTMLElement {
     const end = (root.getElementById('evt-end') || {}).value || '';
     const allday = !!(root.getElementById('evt-allday') || {}).checked;
     this._draft = { title, date, start, end, allday, profile: item.prof.id, err: '' };
-    if (!title.trim()) { this._draft.err = 'Donnez un titre à l’événement.'; this._render(); return; }
-    if (!date) { this._draft.err = 'Renseignez la date.'; this._render(); return; }
+    if (!title.trim()) { this._draft.err = 'Donne un titre à l’événement.'; this._render(); return; }
+    if (!date) { this._draft.err = 'Renseigne la date.'; this._render(); return; }
     let sIso;
     let eIso;
     if (allday) {
@@ -440,7 +440,7 @@ class SkylightCalendarCard extends HTMLElement {
       sIso = date;
       eIso = dateKey(addDays(d0, 1));
     } else {
-      if (!start || !end) { this._draft.err = 'Renseignez les heures.'; this._render(); return; }
+      if (!start || !end) { this._draft.err = 'Renseigne les heures.'; this._render(); return; }
       const s = new Date(`${date}T${start}:00`);
       const e = new Date(`${date}T${end}:00`);
       if (!(s.getTime() && e.getTime()) || e <= s) { this._draft.err = 'L’heure de fin doit être après le début.'; this._render(); return; }
@@ -608,7 +608,7 @@ class SkylightCalendarCard extends HTMLElement {
     }).join('');
     return `<div class="mask"><div class="cfgbox">
       <h3>Calendriers</h3>
-      <p class="cfgsub">Choisissez ce que chaque personne voit. Un calendrier peut être sur plusieurs personnes.</p>
+      <p class="cfgsub">Choisis ce que chaque personne voit. Un calendrier peut être sur plusieurs personnes.</p>
       ${c.err ? `<div class="cfgerr">${esc(c.err)}</div>` : ''}
       <div class="cfglist">${rows || '<div class="cfgempty">Aucun calendrier dans Home Assistant.</div>'}</div>
       <div class="cfgfoot"><button class="cfgbtn ghost" type="button" data-cfg-close>Annuler</button><span style="flex:1"></span><button class="cfgbtn" type="button" data-cfg-save>Enregistrer</button></div>

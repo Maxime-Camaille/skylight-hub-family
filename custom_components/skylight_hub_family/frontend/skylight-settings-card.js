@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.54';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.55';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })
@@ -351,7 +351,7 @@ out.push({
       + '</div></div>'
 
       + '<div class="grp"><div class="gt">Désinstallation</div><div class="card">'
-      + '<div class="row dangerrow"><span class="rl"><b>Désinstaller Skylight Hub Family</b><span>Retire l’application et efface ce que vous y avez saisi. Vos calendriers restent dans Home Assistant.</span></span>'
+      + '<div class="row dangerrow"><span class="rl"><b>Désinstaller Skylight Hub Family</b><span>Retire l’application et efface ce que tu y as saisi. Tes calendriers restent dans Home Assistant.</span></span>'
       + '<button class="btn soft" type="button" data-uninstall>Désinstaller…</button></div>'
       + '</div></div>'
 
@@ -402,9 +402,9 @@ out.push({
     if (this._uninstall === 'confirm') {
       return '<div class="mask"><div class="sheet">'
         + '<h3>Retirer Skylight Hub Family ?</h3>'
-        + '<div class="ss">Cette action est définitive : ce qui est listé ci-dessous ne pourra pas être récupéré, sauf si vous enregistrez une copie.</div>'
+        + '<div class="ss">Cette action est définitive : ce qui est listé ci-dessous ne pourra pas être récupéré, sauf si tu enregistres une copie.</div>'
         + '<div class="blk gone"><b>Ce qui sera effacé</b><ul><li>La famille et les profils</li><li>Les repas de la semaine</li><li>Les étoiles et les récompenses</li><li>Les réglages de l’application (thème, affichage)</li></ul></div>'
-        + '<div class="blk stays"><b>Ce qui ne change pas</b><ul><li>Vos calendriers, y compris ceux créés depuis l’application</li><li>Le reste de votre Home Assistant</li></ul></div>'
+        + '<div class="blk stays"><b>Ce qui ne change pas</b><ul><li>Tes calendriers, y compris ceux créés depuis l’application</li><li>Le reste de ton Home Assistant</li></ul></div>'
         + '<div class="foot2"><button class="btn soft" type="button" data-u-export>Garder une copie</button><span class="hint2" style="margin:0">Un fichier avec la famille, les repas et les étoiles.</span></div>'
         + '<div style="margin-top:14px"><div style="font-size:12.5px;font-weight:650;margin-bottom:6px">Pour confirmer, tapez SUPPRIMER</div>'
         + '<input class="inp2" id="u-type" placeholder="SUPPRIMER" autocomplete="off"><div class="hint2">Cette étape évite une suppression par erreur.</div></div>'
@@ -414,7 +414,7 @@ out.push({
     }
     return '<div class="mask"><div class="sheet">'
       + '<h3>Il reste trois gestes</h3>'
-      + '<div class="ss">Ce que vous aviez saisi dans l’application a été effacé. Pour la retirer complètement :</div>'
+      + '<div class="ss">Ce que tu avais saisi dans l’application a été effacé. Pour la retirer complètement :</div>'
       + '<div style="margin-top:12px">'
       + '<div class="stepline"><span class="n">1</span><div class="rl"><b>Supprimer l’intégration</b><span>Paramètres → Appareils et services → Skylight Hub Family → Supprimer</span></div><button class="btn soft" type="button" data-u-open="/config/integrations/integration/skylight_hub_family">Ouvrir</button></div>'
       + '<div class="stepline"><span class="n">2</span><div class="rl"><b>Retirer de HACS</b><span>HACS → Skylight Hub Family → Retirer</span></div><button class="btn soft" type="button" data-u-open="/hacs">Ouvrir</button></div>'

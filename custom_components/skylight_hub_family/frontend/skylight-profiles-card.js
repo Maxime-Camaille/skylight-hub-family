@@ -235,7 +235,7 @@ function mix(a, b, p) {
  * La règle (même teinte, même saturation, luminosité 82 %) vit dans le tronc
  * commun : une seule implémentation pour l'écran Profils et la vue Tâches.
  * `CORE_URL` porte la version — l'incrémenter avec la ressource famille-core. */
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.54';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.55';
 let CORE = null;
 let pastelOf;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
@@ -696,7 +696,7 @@ class SkylightProfilesCard extends HTMLElement {
        (l'action est isolée, on ne la déclenche jamais depuis le bouton principal). */
     if (isNew) {
       this._footEl.innerHTML = `<button class="btn go" id="save" ${d.name.trim() ? '' : 'disabled'}>Créer le profil</button>
-        <div class="legend">Vous pourrez modifier ces informations à tout moment.</div>`;
+        <div class="legend">Tu pourras modifier ces informations à tout moment.</div>`;
     } else {
       this._footEl.innerHTML = `<button class="btn go" id="save" ${d.name.trim() ? '' : 'disabled'}>Enregistrer</button>
         <button class="btn soft deltext" id="manage">Supprimer le profil…</button>`;
@@ -778,7 +778,7 @@ class SkylightProfilesCard extends HTMLElement {
         <div class="sttl" id="attl">Changer l'avatar</div>
         <button class="sx" id="s-x" aria-label="Fermer">${ICON.close}</button>
       </div>
-      <p class="stxt">Une illustration, ou votre photo.</p>
+      <p class="stxt">Une illustration, ou ta photo.</p>
       <div class="strip">${cells}</div>
       <button class="btn soft" id="a-photo">Importer une photo</button>
       <button class="btn go" id="a-done">Terminé</button>
@@ -890,7 +890,7 @@ class SkylightProfilesCard extends HTMLElement {
         <div class="sttl" id="cttl">Calendrier</div>
         <button class="sx" id="c-x" aria-label="Fermer">${ICON.close}</button>
       </div>
-      <p class="stxt">Sélectionnez le calendrier de cette personne.</p>
+      <p class="stxt">Sélectionne le calendrier de cette personne.</p>
       <div style="display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow-y:auto">
         <button class="calrow" data-cal="" data-on="${d.calendar ? 0 : 1}">
           <span class="cb">${ICON.close}</span><span class="cn">Aucun calendrier</span></button>
@@ -959,7 +959,7 @@ class SkylightProfilesCard extends HTMLElement {
         <div class="sttl" id="ptl">Calendrier du téléphone</div>
         <button class="sx" id="p-x" aria-label="Fermer">${ICON.close}</button>
       </div>
-      <p class="stxt">Ce calendrier doit d'abord être ajouté à Home Assistant. C'est la personne qui administre votre Home Assistant qui peut le faire.</p>
+      <p class="stxt">Ce calendrier doit d'abord être ajouté à Home Assistant. C'est la personne qui administre ton Home Assistant qui peut le faire.</p>
       <div class="sblock"><div class="slabel">Ce qu'il faut lui demander</div>
         <ul class="slist">
           <li>Ajouter l'intégration « Google Agenda » ou « CalDAV » (iPhone)</li>

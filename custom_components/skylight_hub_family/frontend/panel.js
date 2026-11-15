@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.54';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.54';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.55';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.55';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -760,7 +760,7 @@ ${CSS}</style>
       let tasks = 0;
       for (const items of Object.values((this._app && this._app.lists) || {})) tasks += (items || []).length;
       body = `<div style="padding-top:24px"><h2 class="o-h1 sm">Des données<br>existent déjà</h2>
-        <p class="o-sub tight">Vous avez déjà une famille sur cet appareil. Reprenez-la, ou partez d'une famille vide.</p>
+        <p class="o-sub tight">Tu as déjà une famille sur cet appareil. Reprends-la, ou pars d'une famille vide.</p>
         <div class="o-table"><div class="r"><span>${esc((this._app && this._app.family_name) || 'Ma famille')}</span><span class="n">${profs.length}</span></div>
           <div class="r"><span>Profils</span><span class="n">${profs.length}</span></div>
           <div class="r"><span>Tâches et routines</span><span class="n">${tasks}</span></div>
@@ -775,10 +775,10 @@ ${CSS}</style>
     if (step === 0) {
       left = this._oBoard();
       body = `<div class="o-welcome">
-        ${this._oAppIcon(52)}<h2 class="o-h1" style="margin-top:16px">Votre famille,<br>au même endroit.</h2>
+        ${this._oAppIcon(52)}<h2 class="o-h1" style="margin-top:16px">Ta famille,<br>au même endroit.</h2>
         <p class="o-sub" style="max-width:420px">Les tâches de chacun, les étoiles gagnées, les repas de la semaine et les rendez-vous.</p>
         <div style="width:100%;text-align:left;margin-top:20px">${this._oBenefits()}</div>
-        <div class="o-welcome-foot"><button class="o-btn" id="o-go" type="button">Commencer</button><div class="o-legal">2 minutes · tout reste chez vous</div></div>
+        <div class="o-welcome-foot"><button class="o-btn" id="o-go" type="button">Commencer</button><div class="o-legal">2 minutes · tout reste chez toi</div></div>
       </div>`;
       foot = '';
       root.innerHTML = `<div class="o-screen"><div class="o-left">${left}</div><div class="o-right"><div class="o-content">${body}</div>${foot}</div></div>`;
@@ -788,7 +788,7 @@ ${CSS}</style>
 
     if (step === 1) {
       left = `<div class="o-illu-panel" style="max-width:446px;padding:20px">${this._oPreviewApp(family)}</div>`;
-      body = `${this._oProgress(1)}<div style="padding-top:26px"><h2 class="o-h1">Comment s'appelle<br>votre famille ?</h2>
+      body = `${this._oProgress(1)}<div style="padding-top:26px"><h2 class="o-h1">Comment s'appelle<br>ta famille ?</h2>
         <p class="o-sub">C'est le nom affiché en haut de chaque écran.</p></div>
         <div class="o-field"><div class="lab">Nom de la famille</div><input class="o-input" id="o-fam" maxlength="40" placeholder="Ma famille" autocomplete="off" value="${esc(ob.family)}"></div>
         <div class="o-preview"><span id="o-prev-av">${this._oAv((family[0] || 'M').toUpperCase(), '#B4A6E6', 38)}</span><div><div class="nm" id="o-prev-nm">${esc(family)}</div></div></div>`;
@@ -825,7 +825,7 @@ ${CSS}</style>
       </div>`).join('');
       const canNext = ob.people.length > 0 && editing < 0;
       body = `${this._oProgress(2)}<div style="padding-top:22px"><h2 class="o-h1 sm">Qui vit ici ?</h2>
-        <p class="o-sub tight">Ajoutez les personnes du foyer. Vous pourrez en ajouter d'autres plus tard.</p></div>
+        <p class="o-sub tight">Ajoute les personnes du foyer. Tu pourras en ajouter d'autres plus tard.</p></div>
         <div class="o-people">${rows || ''}</div>
         <div class="o-addzone">
           ${editing >= 0 ? `<div class="o-edithead"><span>Modifier ${esc(ob.people[editing].name)}</span><button id="o-cancel" type="button">Annuler</button></div>` : ''}
@@ -967,8 +967,8 @@ ${CSS}</style>
     left = this._oReadyIllu(profs, famName);
     body = `<div class="o-ready-body">
       <div class="o-phone-only" style="gap:18px">${this._oCheckAvatars()}</div>
-      <h2 class="o-h1" style="margin-top:30px">Votre famille <br class="o-br">est prête.</h2>
-      <p class="o-sub" style="max-width:420px">Les tâches, les étoiles et les repas vous attendent.</p>
+      <h2 class="o-h1" style="margin-top:30px">Ta famille <br class="o-br">est prête.</h2>
+      <p class="o-sub" style="max-width:420px">Les tâches, les étoiles et les repas t'attendent.</p>
       <div class="o-pillsum" style="margin-top:22px"><b>${esc(famName)}</b><span class="o-dotsep"></span>${profs.length} personne${profs.length > 1 ? 's' : ''}<span class="o-dotsep"></span>${cals} calendrier${cals > 1 ? 's' : ''}</div>
     </div>`;
     foot = this._oboFoot(`<button class="o-btn" id="o-enter" type="button">Entrer dans Skylight Hub Family</button>`);
@@ -1052,7 +1052,7 @@ ${CSS}</style>
     if (!p) return '';
     const cals = this._oCalendars();
     let title = 'Calendrier de ' + p.name;
-    let sub = 'Choisissez ce qui doit être fait.';
+    let sub = 'Choisis ce qui doit être fait.';
     let opts = '';
     if (s.kind === 'mode') {
       const mode = p.mode || 'later';
@@ -1063,7 +1063,7 @@ ${CSS}</style>
       ].map(([v, l, d]) => this._oSheetOpt('mode', s.person, v, l, d, mode === v)).join('');
     } else {
       sub = 'Les calendriers déjà connectés à Home Assistant.';
-      opts = cals.length ? cals.map((c) => this._oSheetOpt('cal', s.person, c.id, c.name, '', p.calendar === c.id)).join('') : '<div class="o-sheet-empty">Aucun calendrier connecté. Choisissez « Créer un calendrier » ou « Plus tard ».</div>';
+      opts = cals.length ? cals.map((c) => this._oSheetOpt('cal', s.person, c.id, c.name, '', p.calendar === c.id)).join('') : '<div class="o-sheet-empty">Aucun calendrier connecté. Choisis « Créer un calendrier » ou « Plus tard ».</div>';
     }
     return `<div class="o-sheetwrap" id="o-sheet">
       <div class="o-sheet-backdrop" data-sheet-close></div>
@@ -1083,7 +1083,7 @@ ${CSS}</style>
     if (this._obPreview) {
       if (!keep) {
         const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
-        if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
+        if (missing) { ob.err = 'Choisis un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
       }
       ob.err = null;
       ob.busy = false;
@@ -1094,7 +1094,7 @@ ${CSS}</style>
     }
     if (!keep) {
       const missing = ob.people.find((p) => p.mode === 'link' && !p.calendar);
-      if (missing) { ob.err = 'Choisissez un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
+      if (missing) { ob.err = 'Choisis un calendrier pour ' + missing.name + '.'; ob.step = 3; this._obPaint(); return; }
     }
     ob.busy = true;
     ob.err = null;
