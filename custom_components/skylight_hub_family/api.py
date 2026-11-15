@@ -540,7 +540,7 @@ async def ws_cal_test(hass, connection, msg):
 
 @callback
 def async_register(hass: HomeAssistant) -> None:
-    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate, ws_reset, ws_cal_event, ws_cal_test):
+    for cmd in (ws_config, ws_onboard, ws_settings, ws_list, ws_todo, ws_stars, ws_text, ws_listcreate, ws_reset, ws_cal_event, ws_cal_test, ws_wipe, ws_calendars):
         websocket_api.async_register_command(hass, cmd)
     async_start_schedule(hass)
 
@@ -834,6 +834,58 @@ async def ws_text(hass, connection, msg):
         meals[entity] = msg["value"]
         await _save(hass)
     connection.send_result(msg["id"], {"entity": entity, "value": meals.get(entity, "")})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/calendars",
+        vol.Required("profile"): cv.string,
+        vol.Required("calendars"): [cv.string],
+    }
+)
+@websocket_api.async_response
+async def ws_calendars(hass, connection, msg):
+    """Assigne la liste des calendriers d'une personne.
+
+    `kk` porte la liste ; `k` garde le premier, pour les cartes qui ne lisent
+    encore qu'un seul calendrier.
+    """
+    data = _data(hass)
+    cals = [c for c in (msg["calendars"] or []) if isinstance(c, str) and c.startswith("calendar.")]
+    found = False
+    for item in data["lists"].get("todo.profils", []):
+        try:
+            meta = json.loads(item.get("description") or "{}") or {}
+        except ValueError:
+            continue
+        if not isinstance(meta, dict) or meta.get("i") != msg["profile"]:
+            continue
+        meta["kk"] = cals
+        meta["k"] = cals[0] if cals else ""
+        item["description"] = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
+        found = True
+        break
+    if not found:
+        connection.send_error(msg["id"], "not_found", "Profil introuvable")
+        return
+    await _save(hass)
+    connection.send_result(msg["id"], {"ok": True, "calendars": cals})
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/wipe"})
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_wipe(hass, connection, msg):
+    """Supprime tout ce que l'application a enregistré (désinstallation).
+
+    Réservé aux administrateurs : c'est une opération irréversible, déclenchée
+    uniquement par l'écran de désinstallation après confirmation écrite.
+    """
+    data = _data(hass)
+    data.clear()
+    data.update(json.loads(json.dumps(DEFAULTS)))
+    await _save(hass)
+    connection.send_result(msg["id"], {"ok": True})
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/reset"})

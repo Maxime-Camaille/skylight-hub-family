@@ -69,6 +69,23 @@ button{font:inherit;color:inherit}
 .pill.ghost .pa{background:#EFEAE0;color:#8B8B90}
 .pill.ghost .plus{width:20px;height:20px;border-radius:50%;background:#007AFF;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700;line-height:1;flex:0 0 20px}
 .pill.ghost .addlbl{color:#007AFF;font-weight:650;background:none;border:0;height:auto;padding:0}
+.mask{position:fixed;inset:0;background:rgba(24,24,28,.42);display:grid;place-items:center;padding:18px;z-index:40}
+.cfgbox{background:#fff;border-radius:20px;max-width:640px;width:100%;padding:20px 22px;box-shadow:0 24px 60px rgba(20,20,30,.3);max-height:86vh;display:flex;flex-direction:column}
+.cfgbox h3{margin:0;font-size:18px;letter-spacing:-.015em}
+.cfgsub{font-size:13px;color:#8B8B90;margin:4px 0 10px;line-height:1.45}
+.cfgerr{background:#FFF5F3;border:1px solid #F3DCD6;color:#7A3B31;border-radius:10px;padding:8px 10px;font-size:12.5px;margin-bottom:8px}
+.cfglist{overflow:auto;min-height:0}
+.cfgrow{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid #F3F1ED}
+.cfgrow:first-child{border-top:0}
+.cfgnm{font-size:14.5px;font-weight:650}
+.cfgchips{display:flex;gap:6px;flex-wrap:wrap}
+.cfgchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 6px;border-radius:999px;border:1px solid #E3E7EE;background:#fff;font:inherit;font-size:12px;font-weight:600;color:#5B6472;cursor:pointer}
+.cfgchip .pa{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;background:#F1F3F6;overflow:hidden}
+.cfgchip.on{border-color:#007AFF;background:#F4F8FE;color:#0A66D6}
+.cfgempty{padding:18px 0;font-size:13px;color:#8B8B90}
+.cfgfoot{display:flex;align-items:center;gap:10px;margin-top:12px}
+.cfgbtn{height:38px;padding:0 16px;border-radius:19px;border:0;background:#007AFF;color:#fff;font:inherit;font-size:13.5px;font-weight:650;cursor:pointer}
+.cfgbtn.ghost{background:none;color:#6B6B70}
 .pa{width:26px;height:26px;flex:0 0 26px;border-radius:50%;overflow:hidden;background:var(--ac);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
 .pa img{width:100%;height:100%;object-fit:cover;display:block}
 .pn{overflow:hidden;text-overflow:ellipsis}
@@ -145,6 +162,7 @@ class SkylightCalendarCard extends HTMLElement {
     this._err = '';
     this._key = '';
     this._dialog = false;
+    this._calCfg = null;
     this._draft = null;
     this._detail = null;
     this._edit = null;
@@ -535,6 +553,7 @@ class SkylightCalendarCard extends HTMLElement {
     }).join('');
 
     const sheet = this._dialog ? this._dialogHtml(this._creatable()) : (this._detail ? this._detailHtml() : '');
+    const cfgSheet = this._calCfg ? this._calCfgHtml() : '';
     root.innerHTML = `<style>${CSS}</style>
       <div class="app">
         <div class="hdr">
@@ -551,8 +570,67 @@ class SkylightCalendarCard extends HTMLElement {
         ${note}
         <div class="grid" style="--cols:${days.length}">${dayHtml}</div>
       </div>
-      ${sheet}`;
+      ${sheet}${cfgSheet}`;
     this._bind();
+  }
+
+  _openConfig(profileId) {
+    const profs = this._profiles();
+    const assign = {};
+    const before = {};
+    for (const p of profs) {
+      assign[p.id] = this._cals(p).slice();
+      before[p.id] = assign[p.id].join(',');
+    }
+    this._calCfg = { profile: profileId || (profs[0] && profs[0].id) || '', assign, before, err: '' };
+    this._dialog = false;
+    this._detail = null;
+    this._render();
+  }
+
+  _allCalendars() {
+    const st = (this._hass && this._hass.states) || {};
+    return Object.values(st)
+      .filter((x) => x.entity_id && x.entity_id.indexOf('calendar.') === 0 && x.state !== 'unavailable')
+      .map((x) => ({ id: x.entity_id, name: (x.attributes && x.attributes.friendly_name) || x.entity_id }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  }
+
+  _calCfgHtml() {
+    const c = this._calCfg;
+    const profs = this._profiles();
+    const rows = this._allCalendars().map((cal) => {
+      const chips = profs.map((p) => {
+        const on = (c.assign[p.id] || []).indexOf(cal.id) !== -1;
+        return `<button class="cfgchip${on ? ' on' : ''}" type="button" data-cfg-chip="${esc(cal.id)}:${esc(p.id)}"><span class="pa">${this._face(p, 18)}</span>${esc(p.name || '')}</button>`;
+      }).join('');
+      return `<div class="cfgrow"><div class="cfgnm">${esc(cal.name)}</div><div class="cfgchips">${chips}</div></div>`;
+    }).join('');
+    return `<div class="mask"><div class="cfgbox">
+      <h3>Calendriers</h3>
+      <p class="cfgsub">Choisissez ce que chaque personne voit. Un calendrier peut être sur plusieurs personnes.</p>
+      ${c.err ? `<div class="cfgerr">${esc(c.err)}</div>` : ''}
+      <div class="cfglist">${rows || '<div class="cfgempty">Aucun calendrier dans Home Assistant.</div>'}</div>
+      <div class="cfgfoot"><button class="cfgbtn ghost" type="button" data-cfg-close>Annuler</button><span style="flex:1"></span><button class="cfgbtn" type="button" data-cfg-save>Enregistrer</button></div>
+    </div></div>`;
+  }
+
+  async _saveCalCfg() {
+    const c = this._calCfg;
+    if (!c) return;
+    const changed = this._profiles().filter((p) => (c.assign[p.id] || []).join(',') !== c.before[p.id]);
+    try {
+      for (const p of changed) {
+        await this._hass.callWS({ type: 'skylight_hub_family/calendars', profile: p.id, calendars: c.assign[p.id] || [] });
+      }
+      this._calCfg = null;
+      this._key = '';
+      this._calSig = '';
+      await this._refresh(true);
+    } catch (e) {
+      c.err = (e && e.message) || 'Enregistrement impossible.';
+      this._render();
+    }
   }
 
   _dialogHtml(withCal) {
@@ -700,15 +778,17 @@ class SkylightCalendarCard extends HTMLElement {
       allday.addEventListener('change', sync);
       sync();
     }
-    on('[data-addcal]', 'click', (e) => {
-      const id = e.currentTarget.getAttribute('data-addcal');
-      const p = this._profiles().find((x) => x.id === id);
-      this.dispatchEvent(new CustomEvent('skylight-calendar-config', {
-        detail: { profile: id, name: (p && p.name) || '' },
-        bubbles: true,
-        composed: true,
-      }));
+    on('[data-addcal]', 'click', (e) => this._openConfig(e.currentTarget.getAttribute('data-addcal')));
+    on('[data-cfg-chip]', 'click', (e) => {
+      const [cid, pid] = e.currentTarget.getAttribute('data-cfg-chip').split(':');
+      const a = this._calCfg && this._calCfg.assign;
+      if (!a || !a[pid]) return;
+      const i = a[pid].indexOf(cid);
+      if (i === -1) a[pid].push(cid); else a[pid].splice(i, 1);
+      this._render();
     });
+    on('[data-cfg-save]', 'click', () => this._saveCalCfg());
+    on('[data-cfg-close]', 'click', () => { this._calCfg = null; this._render(); });
     on('[data-profiles]', 'click', () => {
       try { window.dispatchEvent(new CustomEvent('skylight-navigate', { detail: { view: 'profils' } })); } catch (e) { /* ignore */ }
     });

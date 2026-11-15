@@ -87,3 +87,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     frontend.async_remove_panel(hass, PANEL_URL)
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Supprime le fichier de données quand l'intégration est retirée.
+
+    Sans ça, la famille, les repas et les étoiles restaient sur le disque après
+    une désinstallation.
+    """
+    from homeassistant.helpers.storage import Store
+
+    from .const import STORAGE_KEY
+
+    await Store(hass, 1, STORAGE_KEY).async_remove()
+    hass.data.pop(api.DATA, None)
+    _LOGGER.info("Skylight : données de l'application supprimées")

@@ -10,7 +10,7 @@
  * config du dashboard (`kiosk_mode:` + template), pas ici.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.52';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.53';
 let CORE = null;
 const coreReady = import((typeof window !== 'undefined' && window.FAMILLE_CORE_URL) || CORE_URL)
   .then((m) => { CORE = m; return m; })
@@ -71,6 +71,31 @@ button.row{cursor:pointer}
 .foot{font-size:12px;color:#8A8F9C;text-align:center;margin-top:8px;line-height:1.5}
 .empty{padding:18px;font-size:13px;color:#8A8F9C}
 .err{margin:16px;padding:14px;border-radius:12px;background:#FDF2F0;color:#FF3B30;font-size:13px}
+.btn{height:36px;padding:0 14px;border-radius:18px;border:0;font:inherit;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--f-brand,#007AFF);color:#fff}
+.btn.soft{background:#F1F6FF;color:#0A66D6}
+.btn.ghost{background:none;color:#6B7280}
+.btn.danger{background:#C0392B;color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.dangerrow .rl b{color:#C0392B}
+.mask{position:fixed;inset:0;background:rgba(24,24,28,.42);display:grid;place-items:center;padding:18px;z-index:30}
+.sheet{background:#fff;border-radius:20px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 24px 60px rgba(20,20,30,.3);max-height:90vh;overflow:auto}
+.sheet h3{margin:0;font-size:18px;letter-spacing:-.015em}
+.sheet .ss{font-size:13px;color:#8A8F9C;margin-top:3px;line-height:1.45}
+.blk{margin-top:12px;border-radius:12px;padding:10px 12px;font-size:12.8px;line-height:1.5}
+.blk.gone{background:#FFF5F3;border:1px solid #F3DCD6;color:#7A3B31}
+.blk.stays{background:#F3F8F4;border:1px solid #DCEBE0;color:#2F5A3C}
+.blk b{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;opacity:.8}
+.blk ul{margin:0;padding-left:17px}
+.inp2{width:100%;height:42px;border:1.5px solid #E9EAF1;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;background:#fff}
+.hint2{font-size:12px;color:#8A8F9C;margin-top:5px}
+.foot2{display:flex;gap:9px;align-items:center;margin-top:14px}
+.foot2 .sp{flex:1}
+.stepline{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid #F1F4F7}
+.stepline:first-of-type{border-top:0}
+.stepline .n{width:22px;height:22px;border-radius:50%;background:#EEF4FF;color:#0A66D6;display:grid;place-items:center;font-size:11.5px;font-weight:700;flex:0 0 22px}
+.stepline .rl b{font-size:14px}
+.stepline .rl span{font-size:12px}
 @media (max-width:600px){.hdr{flex:0 0 60px;padding:0 12px}.hdr h1{font-size:20px}.body{padding:0 12px 88px}.row{padding:11px 13px}}
 `;
 
@@ -82,6 +107,7 @@ class SkylightSettingsCard extends HTMLElement {
     this._profiles = [];
     this._loaded = false;
     this._kioskMod = null;   /* Kiosk Mode présent ? (null = pas encore vérifié) */
+    this._uninstall = null;  /* null | confirm | guide */
 
   }
 
@@ -322,7 +348,14 @@ out.push({
          annonce — les deux causes de bug qu'on ne peut pas deviner à distance. */
       + '<div class="row"><span class="rl"><b>Affichage mesuré</b><span>Tronc commun, fenêtre, zone visible</span></span>'
       + '<span class="val" style="font-size:11px">' + this._esc(displayProbe()) + '</span></div>'
-      + '</div></div>';
+      + '</div></div>'
+
+      + '<div class="grp"><div class="gt">Désinstallation</div><div class="card">'
+      + '<div class="row dangerrow"><span class="rl"><b>Désinstaller Skylight Hub Family</b><span>Retire l’application et efface ce que vous y avez saisi. Vos calendriers restent dans Home Assistant.</span></span>'
+      + '<button class="btn soft" type="button" data-uninstall>Désinstaller…</button></div>'
+      + '</div></div>'
+
+      + this._uninstallHtml();
 
     const k = root.getElementById('kiosk');
     if (k) k.addEventListener('click', () => this._toggleKiosk());
@@ -331,6 +364,26 @@ out.push({
       if (b.disabled) return;
       b.addEventListener('click', () => this._setTheme(b.dataset.theme));
     });
+
+    const u = root.querySelector('[data-uninstall]');
+    if (u) u.addEventListener('click', () => { this._uninstall = 'confirm'; this._paint(); });
+    const uc = root.querySelector('[data-u-cancel]');
+    if (uc) uc.addEventListener('click', () => { this._uninstall = null; this._paint(); });
+    const ug = root.querySelector('[data-u-guide]');
+    if (ug) ug.addEventListener('click', () => { this._uninstall = 'guide'; this._paint(); });
+    const ue = root.querySelector('[data-u-export]');
+    if (ue) ue.addEventListener('click', () => this._exportJson());
+    const ut = root.querySelector('#u-type');
+    const ud = root.querySelector('[data-u-delete]');
+    if (ut && ud) {
+      ut.addEventListener('input', () => { ud.disabled = ut.value.trim().toUpperCase() !== 'SUPPRIMER'; });
+      ud.addEventListener('click', () => this._doWipe());
+    }
+    root.querySelectorAll('[data-u-open]').forEach((b) => b.addEventListener('click', () => {
+      window.open(b.dataset.uOpen, '_blank', 'noopener');
+    }));
+    const uf = root.querySelector('[data-u-finish]');
+    if (uf) uf.addEventListener('click', () => { this._uninstall = null; this._paint(); });
 
     const acc = root.getElementById('acc');
     const accBody = root.getElementById('accbody');
@@ -342,6 +395,60 @@ out.push({
         acc.classList.toggle('open', !isOpen);
       });
     }
+  }
+
+  _uninstallHtml() {
+    if (!this._uninstall) return '';
+    if (this._uninstall === 'confirm') {
+      return '<div class="mask"><div class="sheet">'
+        + '<h3>Retirer Skylight Hub Family ?</h3>'
+        + '<div class="ss">Rien n’est envoyé sur Internet : tout reste dans votre installation Home Assistant.</div>'
+        + '<div class="blk gone"><b>Ce qui sera effacé</b><ul><li>La famille et les profils</li><li>Les repas de la semaine</li><li>Les étoiles et les récompenses</li><li>Les réglages de l’application (thème, affichage)</li></ul></div>'
+        + '<div class="blk stays"><b>Ce qui ne change pas</b><ul><li>Vos calendriers, y compris ceux créés depuis l’application</li><li>Le reste de votre Home Assistant</li></ul></div>'
+        + '<div class="foot2"><button class="btn soft" type="button" data-u-export>Garder une copie</button><span class="hint2" style="margin:0">Un fichier avec la famille, les repas et les étoiles.</span></div>'
+        + '<div style="margin-top:14px"><div style="font-size:12.5px;font-weight:650;margin-bottom:6px">Pour confirmer, tapez SUPPRIMER</div>'
+        + '<input class="inp2" id="u-type" placeholder="SUPPRIMER" autocomplete="off"><div class="hint2">Cette étape évite une suppression par erreur.</div></div>'
+        + '<div class="foot2"><button class="btn ghost" type="button" data-u-cancel>Annuler</button><span class="sp"></span>'
+        + '<button class="btn danger" type="button" data-u-delete disabled>Supprimer et continuer</button></div>'
+        + '</div></div>';
+    }
+    return '<div class="mask"><div class="sheet">'
+      + '<h3>Il reste trois gestes</h3>'
+      + '<div class="ss">Ce que vous aviez saisi dans l’application a été effacé. Pour la retirer complètement :</div>'
+      + '<div style="margin-top:12px">'
+      + '<div class="stepline"><span class="n">1</span><div class="rl"><b>Supprimer l’intégration</b><span>Paramètres → Appareils et services → Skylight Hub Family → Supprimer</span></div><button class="btn soft" type="button" data-u-open="/config/integrations/integration/skylight_hub_family">Ouvrir</button></div>'
+      + '<div class="stepline"><span class="n">2</span><div class="rl"><b>Retirer de HACS</b><span>HACS → Skylight Hub Family → Retirer</span></div><button class="btn soft" type="button" data-u-open="/hacs">Ouvrir</button></div>'
+      + '<div class="stepline"><span class="n">3</span><div class="rl"><b>Redémarrer Home Assistant</b><span>Le raccourci Skylight disparaît au redémarrage.</span></div><button class="btn soft" type="button" data-u-open="/developer-tools/restart">Redémarrer</button></div>'
+      + '</div>'
+      + '<div class="hint2" style="margin-top:10px">L’application ne peut pas se retirer elle-même : c’est Home Assistant et HACS qui installent et désinstallent.</div>'
+      + '<div class="foot2"><span class="sp"></span><button class="btn primary" type="button" data-u-finish>J’ai terminé</button></div>'
+      + '</div></div>';
+  }
+
+  _exportJson() {
+    const h = this._hass;
+    if (!h || !h.callWS) return;
+    h.callWS({ type: 'skylight_hub_family/config' })
+      .then((cfg) => {
+        const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        const d = new Date();
+        a.href = URL.createObjectURL(blob);
+        a.download = 'skylight-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      })
+      .catch(() => { /* l'export reste optionnel */ });
+  }
+
+  _doWipe() {
+    const h = this._hass;
+    if (!h || !h.callWS) return;
+    h.callWS({ type: 'skylight_hub_family/wipe' })
+      .then(() => { this._uninstall = 'guide'; this._paint(); })
+      .catch((e) => { this._uninstall = 'confirm'; this._paint(); });
   }
 
   _setTheme(id) {
