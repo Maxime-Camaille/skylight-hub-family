@@ -612,6 +612,65 @@ export const APPLE = {
   .ri{color:rgba(60,60,67,.9)}
   .ri.on{background:rgba(120,120,128,.26);color:#000}
 }
+/* ============================== INSTALLATION ==============================
+   L'écran d'onboarding vit dans le shadow root du PANNEAU (pas dans une carte) :
+   il ne reçoit donc pas le CSS de carte. Sa palette est entièrement pilotée par
+   les variables --o-* posées sur .onb : les redéfinir suffit à le mettre à la
+   DA, sans toucher une ligne de sa structure. */
+.onb{
+  background:#F2F2F7!important;
+  color:#000!important;
+  font-family:${SANS}!important;
+  --o-ink:#000;--o-ink2:rgba(60,60,67,.6);--o-muted:rgba(60,60,67,.6);--o-muted2:rgba(60,60,67,.4);
+  --o-line:rgba(60,60,67,.14);--o-line2:rgba(60,60,67,.22);
+  --o-blue:#007AFF;--o-blue2:#0060DF;
+  --o-blue050:rgba(0,122,255,.08);--o-blue100:rgba(0,122,255,.14);--o-blue200:rgba(0,122,255,.22);
+  --o-lav:rgba(88,86,214,.14);--o-sand:rgba(255,149,0,.16);--o-mint:rgba(52,199,89,.16);
+  --o-green:#34C759;--o-red:#FF3B30;
+  --o-card:#fff;
+  --o-shadow:0 0 0 .5px rgba(60,60,67,.10),0 1px 2px rgba(0,0,0,.04);
+  --o-soft:0 10px 30px rgba(0,0,0,.08);
+}
+.onb .o-h1,.onb .o-h1.sm{
+  font-family:${DISPLAY}!important;
+  letter-spacing:-.012em!important;font-weight:600!important;
+}
+.onb .o-sub{font-family:${SANS}!important;letter-spacing:-.016em!important}
+.onb .o-btn{
+  border-radius:999px!important;
+  font-family:${SANS}!important;
+  font-weight:600!important;letter-spacing:-.016em!important;
+  box-shadow:none!important;
+  transition:transform 200ms ${SPRING.press},background-color 180ms ease-out!important;
+}
+.onb .o-btn:active{transform:scale(.97)!important}
+.onb .o-btn.soft{background:rgba(0,122,255,.12)!important;color:#007AFF!important}
+.onb .o-input,.onb .o-addzone .mini{
+  border:0!important;
+  background:#fff!important;
+  box-shadow:0 0 0 .5px rgba(60,60,67,.18)!important;
+  border-radius:12px!important;
+  font-family:${SANS}!important;
+}
+.onb .o-input:focus,.onb .o-addzone .mini:focus{box-shadow:0 0 0 3px rgba(0,122,255,.25)!important}
+.onb .o-prow,.onb .o-card,.onb .o-table,.onb .o-addzone,.onb .o-preview,.onb .o-selrow,.onb .o-way{
+  background:#fff!important;
+  border:0!important;
+  border-radius:14px!important;
+  box-shadow:0 0 0 .5px rgba(60,60,67,.10)!important;
+}
+.onb .o-tg{border-radius:999px!important}
+.onb .o-tg.on{background:#34C759!important}
+.onb .o-prog i{background:rgba(60,60,67,.18)!important}
+.onb .o-prog i.on{background:#007AFF!important}
+.onb .o-screen{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .onb .o-btn{transition:none!important}
+  .onb .o-btn:active{transform:none!important}
+}
+@media (prefers-contrast:more){
+  .onb{--o-muted:rgba(60,60,67,.85);--o-line:rgba(60,60,67,.5)}
+}
 `;
   },
 
