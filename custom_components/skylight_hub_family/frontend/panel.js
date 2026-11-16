@@ -10,9 +10,15 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.63';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.63';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.64';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.64';
 const DASH = 'famille-home';
+
+/* Version du code CHARGÉ, lue dans l'URL du module (`?v=` posé par l'intégration).
+   Sert à détecter qu'une mise à jour a été installée pendant que l'onglet est
+   ouvert : l'app se recharge alors d'elle-même, pour que l'utilisateur n'ait
+   jamais à le faire. */
+const SELF_VERSION = (String(import.meta.url).match(/[?&]v=([^&]+)/) || [])[1] || '';
 const PROFILES = 'todo.profils';
 
 let CORE = null;
@@ -456,6 +462,31 @@ class FamillePanel extends HTMLElement {
     }
     if (!this._app || !this._app.onboarding_done) { this._renderOnboarding(); return; }
     await this._show(this._view);
+
+    /* Surveillance de version : si une mise à jour a été installée alors que
+       l'onglet était ouvert, on recharge de soi-même. Jamais pendant une
+       saisie, jamais en arrière-plan, et une seule fois par version. */
+    if (SELF_VERSION) {
+      if (this._verTimer) clearInterval(this._verTimer);
+      this._verTimer = setInterval(() => this._checkVersion(), 60000);
+      setTimeout(() => this._checkVersion(), 4000);
+    }
+  }
+
+  async _checkVersion() {
+    try {
+      const cfg = await this._hass.callWS({ type: 'skylight_hub_family/config' });
+      if (!cfg || !cfg.version || cfg.version === SELF_VERSION) return;
+      if (document.visibilityState && document.visibilityState !== 'visible') return;
+      /* ne pas arracher une saisie en cours */
+      const ae = document.activeElement;
+      if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+      if (ae && ae.shadowRoot && ae.shadowRoot.activeElement) return;
+      const key = 'skylight-applied-' + cfg.version;
+      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) { /* stockage indisponible */ }
+      this._trace('version ' + SELF_VERSION + ' -> ' + cfg.version + ' : rechargement');
+      location.reload();
+    } catch (e) { /* le contrôle ne casse jamais l'app */ }
   }
 
   /* ---------- coquille ---------- */
