@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.60';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.60';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.61';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.61';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -470,13 +470,26 @@ class FamillePanel extends HTMLElement {
     return `<button class="ri${on ? ' on' : ''}" type="button" data-view="${esc(n.view)}" aria-current="${on ? 'page' : 'false'}">${ic.o}${ic.f}<span class="tx">${esc(n.label)}</span></button>`;
   }
 
+  /* CSS du thème actif, à inclure DANS le premier <style>.
+     Sans ça, `_paint()` peint le panneau avec le CSS de base (Skylight) et
+     `applyTheme()` ne remplace qu'après : on voit l'ancienne interface pendant
+     une frame — le « thème Apple superposé au thème Skylight ». */
+  _themeCss() {
+    try {
+      const id = this._themeId || (this._app && this._app.theme) || 'skylight';
+      const t = THEMES && THEMES.THEMES ? THEMES.THEMES[id] : null;
+      return t && t.css ? t.css : '';
+    } catch (e) { return ''; }
+  }
+
   _paint() {
     const items = this._items();
     const main = items.filter((n) => !n.last);
     const bottom = items.filter((n) => n.last);
     this.shadowRoot.innerHTML = `<style>${CORE.coreCss()}
 ${CORE.NAV_CSS}
-${CSS}</style>
+${CSS}
+${this._themeCss()}</style>
       <div class="app">
         <nav class="rail" aria-label="Navigation">
           <div class="logo"><img src="/skylight-static/icon.png" alt="Skylight Hub Family"></div>
@@ -1456,6 +1469,12 @@ ${CSS}</style>
     }
     wrap.appendChild(el);
     try { el.hass = this._appHass(); } catch (e) { this._trace('hass-err ' + (e && e.message)); }
+    /* Le CSS du thème entre dans la carte AVANT son premier rendu utile.
+       Avant, un balayage toutes les 500 ms s'en chargeait : la carte
+       apparaissait d'abord en Skylight, puis basculait. */
+    try {
+      if (THEMES && typeof THEMES.onCard === 'function') THEMES.onCard(this, el);
+    } catch (e) { this._trace('theme-card-err ' + (e && e.message)); }
     this._trace('ok ' + tag);
     return el;
   }
