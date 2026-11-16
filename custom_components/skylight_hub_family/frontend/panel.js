@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.64';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.64';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.65';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.65';
 const DASH = 'famille-home';
 
 /* Version du code CHARGÉ, lue dans l'URL du module (`?v=` posé par l'intégration).

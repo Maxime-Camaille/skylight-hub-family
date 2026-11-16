@@ -16,7 +16,7 @@
  * DÉCISION DE DA (traitement des pastels, option B) :
  *   la teinte de la personne reste l'identité, mais elle ne s'étale plus sur des
  *   surfaces imbriquées. Elle est portée par
- *     1. le fond de colonne (déjà très clair, laissé tel quel) ;
+ *     1. le fond de colonne, en teinte très claire (18 % → 8 %), et une arête de 3 px ;
  *     2. l'avatar et la pastille de validation (inchangés, vifs) ;
  *     3. une arête de 3 px en tête de colonne.
  *   Tout ce qui était « teinté » à l'intérieur (tuiles, corvées, barres, boutons
@@ -119,7 +119,7 @@ header.hdr span.time{
   font-family:${SANS}!important;
   font-size:17px!important;line-height:22px!important;
   font-weight:400!important;letter-spacing:-.026em!important;
-  color:rgba(60,60,67,.6)!important;
+  color:rgba(60,60,67,.75)!important;
   font-variant-numeric:tabular-nums;
 }
 header.hdr .wx,
@@ -128,7 +128,7 @@ header.hdr .wemo{
   font-family:${SANS}!important;
   font-size:17px!important;line-height:22px!important;
   font-weight:400!important;letter-spacing:-.026em!important;
-  color:rgba(60,60,67,.6)!important;
+  color:rgba(60,60,67,.75)!important;
 }
 
 /* Contrôles de l'en-tête : capsules neutres, plus de bordure fantôme. */
@@ -203,7 +203,7 @@ section.col .head{padding:2px 4px 0!important}
   font-size:12px!important;line-height:16px!important;
   font-weight:600!important;letter-spacing:.06em!important;
   text-transform:uppercase!important;
-  color:rgba(60,60,67,.6)!important;
+  color:rgba(60,60,67,.75)!important;
   margin:16px 2px 8px!important;
 }
 
@@ -239,7 +239,7 @@ section.col .head{padding:2px 4px 0!important}
 .chore .sub,.chore .rel{font-family:${SANS}!important;font-size:13px!important;line-height:18px!important;font-weight:400!important;letter-spacing:-.006em!important;color:rgba(60,60,67,.55)!important}
 .chore .gtag{background:rgba(255,255,255,.85)!important;border-radius:999px!important}
 .chore .cchip .n{font-family:${SANS}!important;font-size:11px!important;font-weight:600!important;letter-spacing:.006em!important;color:rgba(60,60,67,.8)!important}
-.chore.done .ctxt{color:rgba(60,60,67,.6)!important}
+.chore.done .ctxt{color:rgba(60,60,67,.75)!important}
 /* le prix en étoiles : capsule discrète, jamais un bloc coloré */
 .chore .cchip{
   background:rgba(118,118,128,.10)!important;
@@ -361,7 +361,7 @@ h1.title{
 }
 span.time,span.weather{
   font-family:${SANS}!important;font-size:17px!important;line-height:22px!important;
-  font-weight:400!important;letter-spacing:-.026em!important;color:rgba(60,60,67,.6)!important;
+  font-weight:400!important;letter-spacing:-.026em!important;color:rgba(60,60,67,.75)!important;
 }
 button.nav{
   background:rgba(118,118,128,.12)!important;border:0!important;
@@ -379,7 +379,7 @@ span.range{
 /* En-tête de jour. La classe .dh sert aux DEUX écrans (repas et calendrier) : on
    ne touche donc pas à sa bordure — chacune garde la sienne, réglée par sa carte. */
 .dh{font-family:${SANS}!important;color:#000!important}
-.dh .dow{font-family:${SANS}!important;font-weight:400!important;color:rgba(60,60,67,.6)!important}
+.dh .dow{font-family:${SANS}!important;font-weight:400!important;color:rgba(60,60,67,.75)!important}
 .dh .num{font-family:${SANS}!important;font-weight:600!important;font-size:15px!important}
 .dh.today .num{background:#FF3B30!important;color:#fff!important;border-radius:999px!important}
 
@@ -424,14 +424,14 @@ div.pill,button.pill.ghost{
   font-size:15px!important;line-height:20px!important;font-weight:600!important;
   letter-spacing:-.016em!important;padding:12px 8px 10px!important;
 }
-.day .dh .dn{font-family:${SANS}!important;font-weight:400!important;color:rgba(60,60,67,.6)!important}
+.day .dh .dn{font-family:${SANS}!important;font-weight:400!important;color:rgba(60,60,67,.75)!important}
 .day .dh .dd{font-family:${SANS}!important;font-weight:600!important;font-size:15px!important}
 .day.today .dh .dd{background:#FF3B30!important;color:#fff!important;border-radius:999px!important}
 .de .empty{
   font-family:${SANS}!important;font-size:13px!important;
   color:rgba(60,60,67,.4)!important;
 }
-.stitle{font-family:${SANS}!important;font-size:13px!important;font-weight:600!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:rgba(60,60,67,.6)!important}
+.stitle{font-family:${SANS}!important;font-size:13px!important;font-weight:600!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:rgba(60,60,67,.75)!important}
 
 /* ================================= PROFILS ================================
    Les lignes étaient pleines de couleur saturée avec une ombre colorée : deux
@@ -455,7 +455,7 @@ span.av{box-shadow:none!important}
 .gt{
   font-family:${SANS}!important;font-size:13px!important;line-height:18px!important;
   font-weight:400!important;letter-spacing:-.006em!important;
-  text-transform:uppercase!important;color:rgba(60,60,67,.6)!important;
+  text-transform:uppercase!important;color:rgba(60,60,67,.75)!important;
   margin:0 0 7px 4px!important;
 }
 .card{
@@ -474,13 +474,13 @@ span.av{box-shadow:none!important}
 }
 .card .rl span,.card small{
   font-family:${SANS}!important;font-size:13px!important;line-height:18px!important;
-  color:rgba(60,60,67,.6)!important;
+  color:rgba(60,60,67,.75)!important;
 }
 h1{
   font-family:${DISPLAY}!important;font-size:26px!important;line-height:32px!important;
   font-weight:600!important;letter-spacing:-.012em!important;color:#000!important;
 }
-span.sub{font-family:${SANS}!important;font-size:13px!important;color:rgba(60,60,67,.6)!important}
+span.sub{font-family:${SANS}!important;font-size:13px!important;color:rgba(60,60,67,.75)!important}
 
 /* ------------------------------ bouton flottant --------------------------- */
 .fab{
@@ -547,7 +547,7 @@ section.col .bar,section.col .bar.st{
   background:transparent!important;box-shadow:none!important;padding:0!important;
   width:auto!important;flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:4px!important;
   font-size:13px!important;font-weight:400!important;letter-spacing:-.006em!important;
-  color:rgba(60,60,67,.6)!important;
+  color:rgba(60,60,67,.75)!important;
 }
 section.col .bar .fill{display:none!important}
 section.col .bar .txt{display:flex!important;align-items:center!important;gap:4px!important}
@@ -590,10 +590,10 @@ section.col .bar svg{width:12px!important;height:12px!important;fill:currentColo
   letter-spacing:-.016em!important;color:#000!important;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.tile.done .lb{color:rgba(60,60,67,.6)!important;text-decoration:line-through!important;
+.tile.done .lb{color:rgba(60,60,67,.75)!important;text-decoration:line-through!important;
   text-decoration-color:rgba(60,60,67,.3)!important}
 .tile .schip{margin-left:auto!important;background:transparent!important;box-shadow:none!important;
-  padding:0!important;font-size:13px!important;font-weight:400!important;color:rgba(60,60,67,.6)!important}
+  padding:0!important;font-size:13px!important;font-weight:400!important;color:rgba(60,60,67,.75)!important}
 .tile .schip svg{width:11px!important;height:11px!important;fill:#FF9500!important}
 .tile .mng{display:none!important}
 /* les corvees suivent exactement la meme grammaire */
@@ -610,13 +610,13 @@ section.col .bar svg{width:12px!important;height:12px!important;fill:currentColo
 .chore.done{background:#fff!important}
 .chore .ctxt{gap:0!important}
 .chore .lb{font-size:15px!important;font-weight:400!important;color:#000!important}
-.chore.done .lb{color:rgba(60,60,67,.6)!important;text-decoration:line-through!important;
+.chore.done .lb{color:rgba(60,60,67,.75)!important;text-decoration:line-through!important;
   text-decoration-color:rgba(60,60,67,.3)!important}
 .chore .sub,.chore .rel{font-size:13px!important;color:rgba(60,60,67,.55)!important}
 .chore .gtag{display:none!important}
 .chore .cchip{background:transparent!important;box-shadow:none!important;padding:0!important;
   margin-left:auto!important;font-size:13px!important;font-weight:400!important;
-  color:rgba(60,60,67,.6)!important}
+  color:rgba(60,60,67,.75)!important}
 .chore .cchip svg{width:11px!important;height:11px!important;fill:#FF9500!important}
 .chore .chk{order:-1!important;flex:0 0 22px!important;width:22px!important;height:22px!important;margin-right:10px!important}
 /* etat vide : discret, dans la carte */
@@ -695,7 +695,7 @@ function _inject(el) {
 export const APPLE = {
   id: 'apple',
   name: 'Apple',
-  description: 'Liquid Glass sur le chrome seulement, SF Pro, surfaces neutres, couleur de la personne en arête.',
+  description: 'Liquid Glass sur le chrome seulement, SF Pro, colonnes pastel très claires, cartes blanches, couleur de la personne en surface + arête.',
 
   status: 'ready',
 
@@ -703,8 +703,8 @@ export const APPLE = {
     sans: SANS,
     serif: DISPLAY,
     ink: '#000000',
-    inkSoft: 'rgba(60,60,67,.60)',
-    muted: 'rgba(60,60,67,.34)',
+    inkSoft: 'rgba(60,60,67,.75)',
+    muted: 'rgba(60,60,67,.45)',
     line: 'rgba(60,60,67,.29)',
     surface: '#FFFFFF',
     rail: '#F2F2F7',
@@ -719,10 +719,10 @@ export const APPLE = {
   --theme-sans:${SANS};
   --theme-serif:${DISPLAY};
 
-  --theme-ink:#000;--theme-ink-soft:rgba(60,60,67,.6);--theme-muted:rgba(60,60,67,.34);
+  --theme-ink:#000;--theme-ink-soft:rgba(60,60,67,.75);--theme-muted:rgba(60,60,67,.45);
   --theme-line:rgba(60,60,67,.29);
   --theme-surface:#fff;--theme-rail:#F2F2F7;
-  --theme-rail-ink:rgba(60,60,67,.6);--theme-logo-ink:#fff;
+  --theme-rail-ink:rgba(60,60,67,.75);--theme-logo-ink:#fff;
   --theme-chip:rgba(118,118,128,.12);
   --theme-brand:#007AFF;--theme-brand-soft:rgba(0,122,255,.15);
   --theme-star:#FF9500;--theme-today:#FF3B30;
@@ -744,15 +744,14 @@ export const APPLE = {
 /* ============================== COUCHE MATIERE ==============================
    HIG materials : Liquid Glass vit sur la couche de navigation, qui FLOTTE
    au-dessus du contenu. Pour que le verre ait quelque chose a refleter, le fond
-   porte des reflets de la palette familiale : c'est ce qui donne la profondeur
+   porte des reflets très légers de la palette familiale : c'est ce qui donne la profondeur
    et la vitalite, la ou un gris plat donnait un prototype. */
 .app{
   background:
-    radial-gradient(720px 520px at 4% 2%, rgba(245,166,35,.34), transparent 62%),
-    radial-gradient(640px 460px at 96% 6%, rgba(142,91,217,.30), transparent 60%),
-    radial-gradient(720px 540px at 76% 104%, rgba(79,195,208,.32), transparent 62%),
-    radial-gradient(560px 420px at 34% 96%, rgba(255,149,0,.16), transparent 64%),
-    #EEF0F4!important;
+    radial-gradient(720px 520px at 4% 2%, rgba(245,166,35,.10), transparent 62%),
+    radial-gradient(640px 460px at 96% 6%, rgba(142,91,217,.08), transparent 60%),
+    radial-gradient(720px 540px at 76% 104%, rgba(79,195,208,.09), transparent 62%),
+    #F2F2F7!important;
 }
 /* Barre laterale : ilot de verre flottant, arete speculaire en haut, ombre
    adaptative. Elle ne mange plus une bande opaque. */
@@ -799,7 +798,7 @@ export const APPLE = {
 }
 .logo{background:#1C1C1E;color:#fff;box-shadow:none;border-radius:9px}
 .ri{
-  color:rgba(60,60,67,.6);
+  color:rgba(60,60,67,.75);
   border-radius:12px;
   transition:background-color 250ms ${SPRING.settle},color 180ms ease-out,transform 200ms ${SPRING.press};
 }
@@ -833,7 +832,7 @@ ${VIEWS_CSS}
   .tabbar{background:#F9F9F9;-webkit-backdrop-filter:none;backdrop-filter:none;border-top:1px solid rgba(60,60,67,.29)}
 }
 @media (prefers-contrast:more){
-  :host{--theme-ink-soft:rgba(60,60,67,.9);--theme-muted:rgba(60,60,67,.6);--theme-line:rgba(60,60,67,.55)}
+  :host{--theme-ink-soft:rgba(60,60,67,.9);--theme-muted:rgba(60,60,67,.75);--theme-line:rgba(60,60,67,.55)}
   .ri{color:rgba(60,60,67,.9)}
   .ri.on{background:rgba(120,120,128,.26);color:#000}
 }
@@ -846,7 +845,7 @@ ${VIEWS_CSS}
   background:#F2F2F7!important;
   color:#000!important;
   font-family:${SANS}!important;
-  --o-ink:#000;--o-ink2:rgba(60,60,67,.6);--o-muted:rgba(60,60,67,.6);--o-muted2:rgba(60,60,67,.4);
+  --o-ink:#000;--o-ink2:rgba(60,60,67,.75);--o-muted:rgba(60,60,67,.75);--o-muted2:rgba(60,60,67,.4);
   --o-line:rgba(60,60,67,.14);--o-line2:rgba(60,60,67,.22);
   --o-blue:#007AFF;--o-blue2:#0060DF;
   --o-blue050:rgba(0,122,255,.08);--o-blue100:rgba(0,122,255,.14);--o-blue200:rgba(0,122,255,.22);

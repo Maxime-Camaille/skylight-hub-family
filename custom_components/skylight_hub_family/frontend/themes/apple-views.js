@@ -119,7 +119,7 @@ async function renderTasks(host, wrap) {
     const total = routines.length + data.chores.length;
     const done = [...routines.map((x) => x.item), ...data.chores].filter((i) => i.status === 'completed').length;
     const balance = ((app.stars || {})[p.id]) || 0;
-    return `<section class="av-col">
+    return `<section class="av-col" style="--p:${esc(p.color || '#E5E5EA')};--a:${esc(p.accent || '#8E8E93')}">
       <div class="av-who">
         <span class="av-av" style="background:${esc(p.accent || p.color || '#8E8E93')}">${esc(colIcon(p))}</span>
         <span class="av-nm">${esc(p.name)}</span>
@@ -133,7 +133,7 @@ async function renderTasks(host, wrap) {
   };
 
   const openHtml = open.map((c) => rowsHtml(c, choresEnt, '')).join('');
-  const openCol = `<section class="av-col">
+  const openCol = `<section class="av-col" style="--p:#E5E5EA;--a:#6B5CA5">
     <div class="av-who">
       <span class="av-av" style="background:#6B5CA5">＋</span>
       <span class="av-nm">À faire</span>
@@ -360,7 +360,7 @@ async function renderRewards(host, wrap) {
     const open = list.filter((i) => i.status !== 'completed');
     const done = list.filter((i) => i.status === 'completed');
     const solde = Number(((app.stars || {})[p.id]) || 0);
-    return `<section class="av-col">
+    return `<section class="av-col" style="--p:${esc(p.color || '#E5E5EA')};--a:${esc(p.accent || '#8E8E93')}">
       <div class="av-who">
         <span class="av-av" style="background:${esc(p.accent || p.color || '#8E8E93')}">${esc(p.photo && p.photo.indexOf(':') === 0 ? p.photo.slice(1) : (p.name || '?').charAt(0).toUpperCase())}</span>
         <span class="av-nm">${esc(p.name)}</span>
@@ -634,7 +634,7 @@ export const VIEWS_CSS = `
 }
 .av-titles{min-width:0;flex:1 1 auto}
 .av-t1{margin:0;font:600 28px/34px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif;letter-spacing:-.012em;color:#000}
-.av-t2{margin:2px 0 0;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.6)}
+.av-t2{margin:2px 0 0;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.75)}
 .av-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .av-btn{
   height:34px;padding:0 16px;border:0;border-radius:999px;background:#007AFF;color:#fff;
@@ -645,18 +645,26 @@ export const VIEWS_CSS = `
 .av-btn.ghost{background:rgba(118,118,128,.14);color:#000;box-shadow:none}
 .av-body{flex:1 1 auto;min-height:0;overflow:auto;padding:0 16px 16px}
 
-.av-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start}
-.av-col{min-width:0;display:flex;flex-direction:column;gap:8px}
-.av-who{display:flex;align-items:center;gap:9px;padding:0 4px}
+.av-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;align-items:stretch}
+.av-col{
+  min-width:0;display:flex;flex-direction:column;gap:8px;height:100%;
+  padding:10px 8px 8px;border-radius:22px;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--p,#E5E5EA) 18%,#fff) 0%,
+    color-mix(in srgb,var(--p,#E5E5EA) 8%,#F2F2F7) 100%);
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.75),0 0 0 .5px rgba(20,24,40,.05);
+}
+.av-col::before{content:"";display:block;height:3px;margin:0 6px 2px;border-radius:99px;background:var(--a,#8E8E93);opacity:.75}
+.av-who{display:flex;align-items:center;gap:9px;padding:0 6px}
 .av-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;color:#fff;font-weight:600;flex:0 0 30px}
 .av-nm{font:600 17px/22px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:-.026em;color:#000}
-.av-score{margin-left:auto;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.6);font-variant-numeric:tabular-nums}
+.av-score{margin-left:auto;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.75);font-variant-numeric:tabular-nums}
 .av-card{
   background:#fff;border-radius:18px;overflow:hidden;
-  box-shadow:inset 0 .5px 0 rgba(255,255,255,.95),0 0 0 .5px rgba(20,24,40,.09),0 12px 30px rgba(20,24,40,.10),0 2px 6px rgba(20,24,40,.06);
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.95),0 0 0 .5px rgba(20,24,40,.07),0 8px 20px rgba(20,24,40,.08),0 1px 3px rgba(20,24,40,.04);
 }
 .av-card.pad{padding:6px 0}
-.av-sect{padding:14px 16px 6px;font:600 12px/16px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.55)}
+.av-sect{padding:14px 16px 6px;font:600 12px/16px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.7)}
 .av-row{
   width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 14px;
   border:0;border-top:.5px solid rgba(60,60,67,.22);background:#fff;text-align:left;cursor:pointer;
@@ -671,10 +679,10 @@ export const VIEWS_CSS = `
 .av-row.is-done .av-chk svg{opacity:1}
 .av-emo{font-size:16px;line-height:1;flex:0 0 auto}
 .av-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.av-row.is-done .av-lbl{color:rgba(60,60,67,.6);text-decoration:line-through;text-decoration-color:rgba(60,60,67,.3)}
-.av-val{display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;font-size:13px;color:rgba(60,60,67,.6)}
+.av-row.is-done .av-lbl{color:rgba(60,60,67,.75);text-decoration:line-through;text-decoration-color:rgba(60,60,67,.3)}
+.av-val{display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;font-size:13px;color:rgba(60,60,67,.75)}
 .av-val svg{width:11px;height:11px;fill:#FF9500}
-.av-empty{padding:18px 16px;text-align:center;font:400 15px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.35)}
+.av-empty{padding:18px 16px;text-align:center;font:400 15px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.5)}
 .av-add{display:flex;gap:8px;padding:10px 12px;border-top:.5px solid rgba(60,60,67,.22)}
 .av-in{flex:1 1 auto;min-width:0;height:34px;border:0;border-radius:10px;padding:0 12px;background:rgba(118,118,128,.12);
   font:400 15px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#000;outline:none}
@@ -682,7 +690,7 @@ export const VIEWS_CSS = `
 .av-week{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
 .av-day{display:flex;flex-direction:column;gap:8px;min-width:0}
 .av-dayh{display:flex;align-items:baseline;gap:6px;padding:0 4px;font:600 15px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#000}
-.av-dayh span{font-weight:400;color:rgba(60,60,67,.6)}
+.av-dayh span{font-weight:400;color:rgba(60,60,67,.75)}
 .av-day.is-today .av-dayh b{background:#FF3B30;color:#fff;border-radius:999px;padding:1px 8px}
 .av-meal{
   min-height:120px;border-radius:16px;background:#fff;padding:12px;
@@ -697,13 +705,13 @@ export const VIEWS_CSS = `
 .av-seg button.on{background:#fff;color:#000;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.10)}
 
 .av-group{margin:18px 0}
-.av-gt{margin:0 0 7px 4px;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:-.006em;text-transform:uppercase;color:rgba(60,60,67,.6)}
+.av-gt{margin:0 0 7px 4px;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:-.006em;text-transform:uppercase;color:rgba(60,60,67,.75)}
 .av-choice{display:flex;flex-direction:column;gap:2px;width:100%;border:0;background:none;text-align:left;padding:14px 16px;cursor:pointer;border-top:.5px solid rgba(60,60,67,.22)}
 .av-choice:first-child{border-top:0}
 .av-choice.on{background:rgba(0,122,255,.06)}
 .av-choice-t{font:400 17px/22px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:-.026em;color:#000}
 .av-choice.on .av-choice-t{color:#007AFF;font-weight:600}
-.av-choice-s{font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.6)}
+.av-choice-s{font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:rgba(60,60,67,.75)}
 .av-kv{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-top:.5px solid rgba(60,60,67,.22);font:400 15px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#000}
 .av-kv:first-child{border-top:0}
 .av-kv b{font-weight:600}
@@ -718,7 +726,7 @@ export const VIEWS_CSS = `
 .av-reward-c{flex:0 0 auto;font:600 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:#FF9500;font-variant-numeric:tabular-nums}
 .av-mini{height:30px;padding:0 12px;border:0;border-radius:999px;background:#007AFF;color:#fff;
   font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;cursor:pointer;flex:0 0 auto}
-.av-mini.off{background:rgba(118,118,128,.14);color:rgba(60,60,67,.55)}
+.av-mini.off{background:rgba(118,118,128,.14);color:rgba(60,60,67,.7)}
 .av-mini.ghost{background:rgba(118,118,128,.14);color:#007AFF}
 
 /* --- profils --- */
@@ -729,7 +737,7 @@ export const VIEWS_CSS = `
 .av-chev{width:18px;height:18px;margin-left:auto;stroke:rgba(60,60,67,.3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .av-edit .av-card{margin-top:14px}
 .av-form{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.av-lab{font:600 12px/16px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.55)}
+.av-lab{font:600 12px/16px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.7)}
 .av-swatches{display:flex;flex-wrap:wrap;gap:10px}
 .av-sw{width:30px;height:30px;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.9)}
 .av-sw.on{box-shadow:0 0 0 2px #007AFF,inset 0 0 0 2px #fff}
@@ -742,8 +750,8 @@ export const VIEWS_CSS = `
 .av-evt-dot{width:8px;height:8px;border-radius:50%;background:var(--p);flex:0 0 8px}
 .av-evt-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font:400 15px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;letter-spacing:-.016em;color:#000}
-.av-evt-h{font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:rgba(60,60,67,.55);font-variant-numeric:tabular-nums}
-.av-meal-void{padding:14px 4px;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:rgba(60,60,67,.35)}
+.av-evt-h{font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:rgba(60,60,67,.7);font-variant-numeric:tabular-nums}
+.av-meal-void{padding:14px 4px;font:400 13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:rgba(60,60,67,.5)}
 
 @media (max-width:900px){
   .av-hdr{margin:10px 12px 8px;padding:10px 14px;border-radius:18px}
