@@ -30,6 +30,8 @@
  *   - `skylight.js` n'est jamais touché.
  */
 
+import { renderView as renderThemedView, VIEWS_CSS } from './apple-views.js';
+
 /* ------------------------------------------------------------------ ressorts
  * Un ressort amorti n'a pas de durée : il a une `response` et un `damping ratio`.
  * On l'échantillonne en `linear()` pour que le CSS se comporte comme le ressort.
@@ -816,6 +818,9 @@ export const APPLE = {
 }
 .tabbar .ri.on{background:transparent;color:#007AFF}
 
+/* Écrans rendus par le thème (refonte) */
+${VIEWS_CSS}
+
 .hdr.title .name,.hdr .name{letter-spacing:-.012em;font-weight:600}
 .hdr.title .sub,.hdr .sub{letter-spacing:-.026em}
 
@@ -928,6 +933,15 @@ export const APPLE = {
   /* Le CSS que le panneau pose dans chaque carte à son montage. */
   cardStyle() {
     return CARD_CSS;
+  },
+
+  /* -------------------------------------------------------------- les ÉCRANS
+   * Refonte : le thème dessine lui-même Tâches, Repas et Réglages. Les autres
+   * vues renvoient `false` et gardent les cartes d'origine — aucune régression
+   * pendant que la refonte se termine écran par écran.
+   */
+  renderView(host, view, wrap) {
+    return renderThemedView(host, view, wrap);
   },
 
   teardown(host) {

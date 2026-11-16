@@ -10,8 +10,8 @@
  * C'est une transition : ces configurations deviendront des réglages de l'app.
  */
 
-const CORE_URL = '/skylight-static/famille-core.js?v=0.5.62';
-const THEME_URL = '/skylight-static/themes/index.js?v=0.5.62';
+const CORE_URL = '/skylight-static/famille-core.js?v=0.5.63';
+const THEME_URL = '/skylight-static/themes/index.js?v=0.5.63';
 const DASH = 'famille-home';
 const PROFILES = 'todo.profils';
 
@@ -61,6 +61,8 @@ const CSS = `
 .placeholder{height:100%;display:grid;place-items:center;padding:32px;text-align:center;color:#8A8F9C;font-size:14px;line-height:1.5}
 .err{padding:24px;color:#D9534F;font-size:13px;line-height:1.5}
 .loading{height:100%;display:grid;place-items:center;color:#8A8F9C;font-size:13px}
+/* le placeholder de chargement disparait des qu'une vue est montee */
+.body:has(.view.on) > .loading{display:none}
 .logo img{width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit}
 /* Le tronc commun ne bascule contour/plein que sous 900 px : sur grand écran,
    les deux dessins s'afficheraient l'un sous l'autre. */
@@ -1699,6 +1701,19 @@ ${this._themeCss()}</style>
     wrap.className = 'view';
     wrap.dataset.view = view;
     body.appendChild(wrap);
+
+    /* Un thème peut FOURNIR SES PROPRES ÉCRANS.
+       C'est ce qui permet une vraie refonte : le thème ne réhabille pas les
+       cartes, il rend son propre DOM (dans le shadow root du panneau, donc son
+       CSS s'applique sans traverser de frontière). Skylight n'implémente rien :
+       il garde exactement les cartes d'origine. */
+    if (THEMES && typeof THEMES.renderView === 'function') {
+      try {
+        if (THEMES.renderView(this, view, wrap)) return { wrap, themed: true };
+      } catch (e) {
+        this._trace('theme-view-err ' + (e && e.message));
+      }
+    }
 
     const cfg = this._cfgs[view];
     if (!cfg || !cfg.type) {

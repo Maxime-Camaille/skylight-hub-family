@@ -69,7 +69,38 @@ export function applyTheme(host, id) {
   }
 
   watchShadowRoot(host);
+
+  /* Un thème peut changer le RENDU d'une vue (écran du thème ou carte). Au
+     changement, la vue montée est donc jetée et reconstruite : sans ça, on
+     garderait les cartes Skylight en passant sur Apple, et inversement. */
+  try {
+    const mounted = host._mounted || {};
+    if (Object.keys(mounted).length && host.shadowRoot && typeof host._show === 'function') {
+      host._mounted = {};
+      const body = host.shadowRoot.getElementById('body');
+      if (body) body.innerHTML = '';
+      host._show(host._view);
+    }
+  } catch (e) { /* un thème ne casse pas l'app */ }
+
   return t;
+}
+
+/* Un thème peut rendre ses propres écrans.
+ *
+ * Le panneau appelle `renderView(host, view, wrap)` AVANT de monter les cartes.
+ * Si le thème actif sait dessiner cette vue, il renvoie `true` et le panneau
+ * s'arrête là : aucune carte n'est créée. Sinon on retombe sur les cartes
+ * d'origine — c'est ainsi que Skylight reste intact, quel que soit le thème.
+ */
+export function renderView(host, view, wrap) {
+  const t = host && THEMES[host._themeId];
+  if (!t || typeof t.renderView !== 'function') return false;
+  try {
+    return t.renderView(host, view, wrap) === true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /* Le CSS du thème actif, posé dans une carte AU MOMENT où elle est montée.
