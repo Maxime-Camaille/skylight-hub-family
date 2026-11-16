@@ -30,7 +30,7 @@
  *   - `skylight.js` n'est jamais touché.
  */
 
-import { renderView as renderThemedView, VIEWS_CSS } from './apple-views.js';
+import { renderView as renderThemedView, VIEWS_CSS } from './apple-views.js?v=0.5.66';
 
 /* ------------------------------------------------------------------ ressorts
  * Un ressort amorti n'a pas de durée : il a une `response` et un `damping ratio`.

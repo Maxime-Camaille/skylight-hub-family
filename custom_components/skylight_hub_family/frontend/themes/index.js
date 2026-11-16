@@ -10,8 +10,8 @@
  * un thème les redéfinit. Voir ../../../../THEMES.md (racine du dépôt) et
  * ./README.md.
  */
-import { SKYLIGHT } from './skylight.js';
-import { APPLE } from './apple.js';
+import { SKYLIGHT } from './skylight.js?v=0.5.66';
+import { APPLE } from './apple.js?v=0.5.66';
 
 export const THEMES = { skylight: SKYLIGHT, apple: APPLE };
 export const DEFAULT_THEME = 'skylight';
