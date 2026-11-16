@@ -514,6 +514,167 @@ span.sub{font-family:${SANS}!important;font-size:13px!important;color:rgba(60,60
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:1ms!important;animation-duration:1ms!important}
 }
+
+/* ========================================================================
+   COUCHE DE CONTENU — la traduction Apple, en CSS seul.
+   Constat : rhabiller les surfaces ne suffisait pas. Un aplat pastel de
+   370x900 px et un emoji de 80 px font « Skylight en gris », pas iOS.
+
+   On garde l'INFORMATION et le découpage (une colonne par personne) mais on
+   change la PRESENTATION : une seule surface blanche par personne, une tache
+   = une ligne de 52 px, la couleur de la personne uniquement sur l'avatar et
+   la case a cocher.
+
+   Aucune carte n'est modifiee : .foot passe en display:contents pour que la
+   case a cocher devienne un enfant direct de la ligne (ordre visuel).
+   ======================================================================== */
+
+/* la colonne devient une surface blanche, plus un aplat de couleur */
+section.col{
+  background:#fff!important;
+  border-radius:18px!important;
+  box-shadow:0 0 0 .5px rgba(60,60,67,.10)!important;
+  padding:0!important;
+}
+section.col .head{padding:12px 14px 10px!important;gap:10px!important;display:flex!important;align-items:center!important}
+section.col .who{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;flex:1 1 auto!important}
+section.col .nm{flex:0 1 auto!important;color:#000!important}
+/* compteurs : du texte secondaire aligne a droite, sans capsule ni jauge */
+section.col .bars{margin-left:auto!important;display:flex!important;align-items:center!important;gap:12px!important;flex:0 0 auto!important}
+section.col .bar,section.col .bar.st{
+  background:transparent!important;box-shadow:none!important;padding:0!important;
+  width:auto!important;flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:4px!important;
+  font-size:13px!important;font-weight:400!important;letter-spacing:-.006em!important;
+  color:rgba(60,60,67,.6)!important;
+}
+section.col .bar .fill{display:none!important}
+section.col .bar .txt{display:flex!important;align-items:center!important;gap:4px!important}
+section.col .bar svg{width:12px!important;height:12px!important;fill:currentColor!important}
+/* en-tete de section : sur la surface, 12 px capitales secondaires */
+.sect,.sect2{
+  margin:0!important;padding:14px 14px 6px!important;
+  background:transparent!important;font-size:12px!important;
+}
+.scroll{padding:0!important}
+.chores{padding:0!important;gap:0!important}
+
+/* la TUILE devient une LIGNE */
+.tile{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-height:52px!important;
+  padding:8px 14px!important;
+  border-radius:0!important;
+  border-top:.5px solid rgba(60,60,67,.29)!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+.tile:first-child,.rw:first-child .tile{border-top:0!important}
+/* display:contents fait remonter .txt et .chk au niveau de la ligne */
+.tile .foot{display:contents!important}
+.tile .chk{order:-1!important;flex:0 0 22px!important;width:22px!important;height:22px!important;margin:0!important}
+.tile .ill{
+  order:0!important;flex:0 0 auto!important;width:auto!important;height:auto!important;
+  padding:0!important;font-size:16px!important;line-height:1!important;
+}
+.tile .txt{order:1!important;flex:1 1 auto!important;min-width:0!important;display:flex!important;
+  align-items:center!important;gap:8px!important;padding:0!important}
+.tile .lb{
+  font-size:15px!important;line-height:20px!important;font-weight:400!important;
+  letter-spacing:-.016em!important;color:#000!important;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.tile.done .lb{color:rgba(60,60,67,.6)!important;text-decoration:line-through!important;
+  text-decoration-color:rgba(60,60,67,.3)!important}
+.tile .schip{margin-left:auto!important;background:transparent!important;box-shadow:none!important;
+  padding:0!important;font-size:13px!important;font-weight:400!important;color:rgba(60,60,67,.6)!important}
+.tile .schip svg{width:11px!important;height:11px!important;fill:#FF9500!important}
+.tile .mng{display:none!important}
+/* les corvees suivent exactement la meme grammaire */
+.chore,.chore.tall{
+  border-radius:0!important;box-shadow:none!important;background:#fff!important;
+  border-top:.5px solid rgba(60,60,67,.29)!important;min-height:52px!important;
+  padding:8px 14px!important;
+  display:flex!important;align-items:center!important;gap:10px!important;
+}
+.chore .ctxt{flex:1 1 auto!important;min-width:0!important;display:flex!important;
+  flex-direction:column!important;gap:1px!important}
+.chore .cchip{flex:0 0 auto!important}
+.chore:first-child{border-top:0!important}
+.chore.done{background:#fff!important}
+.chore .ctxt{gap:0!important}
+.chore .lb{font-size:15px!important;font-weight:400!important;color:#000!important}
+.chore.done .lb{color:rgba(60,60,67,.6)!important;text-decoration:line-through!important;
+  text-decoration-color:rgba(60,60,67,.3)!important}
+.chore .sub,.chore .rel{font-size:13px!important;color:rgba(60,60,67,.55)!important}
+.chore .gtag{display:none!important}
+.chore .cchip{background:transparent!important;box-shadow:none!important;padding:0!important;
+  margin-left:auto!important;font-size:13px!important;font-weight:400!important;
+  color:rgba(60,60,67,.6)!important}
+.chore .cchip svg{width:11px!important;height:11px!important;fill:#FF9500!important}
+.chore .chk{order:-1!important;flex:0 0 22px!important;width:22px!important;height:22px!important;margin-right:10px!important}
+/* etat vide : discret, dans la carte */
+.empty{padding:20px 14px!important;font-size:15px!important;color:rgba(60,60,67,.35)!important}
+.empty .e{font-size:16px!important;margin-right:6px!important}
+
+/* ---- le fond ambiant du panneau doit traverser la carte ----
+   Sans ca, chaque carte peint son propre blanc et la profondeur disparait. */
+.app,.page{background:transparent!important}
+
+/* ---- en-tete : barre de verre flottante au-dessus du contenu ----
+   C'est le seul verre de la carte, et il est sur du CHROME (HIG materials).
+   Arete speculaire en haut, ombre portee : la barre se detache du contenu. */
+header.hdr{
+  position:relative;
+  margin:10px 14px 6px!important;
+  padding:10px 16px!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.55)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(190%);
+  backdrop-filter:blur(28px) saturate(190%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -1px 0 rgba(255,255,255,.25),
+    0 10px 30px rgba(20,24,40,.12),
+    0 2px 6px rgba(20,24,40,.07)!important;
+}
+header.hdr.split{margin:10px 16px 6px!important}
+
+/* ---- les colonnes sont du CONTENU : opaques, mais elevees ----
+   HIG materials : le verre ne va pas dans la couche de contenu. On donne donc
+   la profondeur par l'ombre et l'arete, pas par la transparence. */
+section.col{
+  background:rgba(255,255,255,.90)!important;
+  border-radius:20px!important;
+  box-shadow:
+    inset 0 .5px 0 rgba(255,255,255,.95),
+    0 0 0 .5px rgba(20,24,40,.09),
+    0 12px 32px rgba(20,24,40,.10),
+    0 2px 6px rgba(20,24,40,.06)!important;
+  padding:0!important;
+}
+/* bandeau d'information : meme grammaire que l'en-tete, plus discret */
+.pvband{
+  margin:0 14px 6px!important;border-radius:14px!important;
+  background:rgba(255,255,255,.6)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  backdrop-filter:blur(18px) saturate(160%);
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.9),0 4px 14px rgba(20,24,40,.07)!important;
+}
+/* bouton flottant : verre proeminent teinte, comme l'action principale iOS 26 */
+.fab{
+  background:rgba(0,122,255,.92)!important;
+  -webkit-backdrop-filter:blur(12px) saturate(180%);
+  backdrop-filter:blur(12px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.45),
+    0 12px 30px rgba(0,90,200,.38),
+    0 2px 8px rgba(0,0,0,.14)!important;
+}
 `;
 
 /* ============================================================== LE THÈME */
@@ -565,7 +726,55 @@ export const APPLE = {
   font-family:${SANS};
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
-.app{background:#F2F2F7}
+.app{background:#EEF0F4}
+
+/* ============================== COUCHE MATIERE ==============================
+   HIG materials : Liquid Glass vit sur la couche de navigation, qui FLOTTE
+   au-dessus du contenu. Pour que le verre ait quelque chose a refleter, le fond
+   porte des reflets de la palette familiale : c'est ce qui donne la profondeur
+   et la vitalite, la ou un gris plat donnait un prototype. */
+.app{
+  background:
+    radial-gradient(720px 520px at 4% 2%, rgba(245,166,35,.34), transparent 62%),
+    radial-gradient(640px 460px at 96% 6%, rgba(142,91,217,.30), transparent 60%),
+    radial-gradient(720px 540px at 76% 104%, rgba(79,195,208,.32), transparent 62%),
+    radial-gradient(560px 420px at 34% 96%, rgba(255,149,0,.16), transparent 64%),
+    #EEF0F4!important;
+}
+/* Barre laterale : ilot de verre flottant, arete speculaire en haut, ombre
+   adaptative. Elle ne mange plus une bande opaque. */
+.rail{
+  margin:12px 0 12px 12px;
+  border-radius:26px;
+  border:0!important;
+  background:rgba(255,255,255,.52)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(200%);
+  backdrop-filter:blur(30px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -1px 0 rgba(255,255,255,.28),
+    0 18px 44px rgba(20,24,40,.16),
+    0 2px 6px rgba(20,24,40,.08)!important;
+}
+/* libelles vibrants sur le verre (HIG materials : vibrant colors on top) */
+.rail .ri .tx,.tabbar .ri .tx{
+  color:rgba(28,28,30,.72);
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
+}
+.ri.on{background:rgba(255,255,255,.82)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 1px 3px rgba(20,24,40,.14)!important}
+/* Barre du bas : meme matiere, flottante, avec respiration sur les bords */
+.tabbar{
+  margin:0 12px 10px;
+  border-radius:24px;
+  border:0!important;
+  background:rgba(255,255,255,.56)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(200%);
+  backdrop-filter:blur(30px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 -8px 30px rgba(20,24,40,.12),
+    0 2px 6px rgba(20,24,40,.08)!important;
+}
 
 /* ================================ CHROME ==================================
    HIG materials : verre réservé à la couche fonctionnelle. */
