@@ -38,10 +38,15 @@ export function resolveTheme(id) {
 export function applyTheme(host, id) {
   const t = resolveTheme(id);
   if (!t) return null;
-  if (host._themeId === t.id) return t;
+  /* La garde vérifie AUSSI que le <style> est encore là : le panneau reconstruit
+     son shadow root (`_paint()`), ce qui détruit la feuille du thème. Sans ce
+     test, `applyTheme` sortait tôt et le thème restait perdu jusqu'au rechargement
+     — constaté en fin d'onboarding et à la fermeture du panneau calendriers. */
+  const hasStyle = !!(host.shadowRoot && host.shadowRoot.getElementById('skylight-theme'));
+  if (host._themeId === t.id && hasStyle) return t;
 
   const prev = THEMES[host._themeId];
-  if (prev && typeof prev.teardown === 'function') {
+  if (prev && prev !== t && typeof prev.teardown === 'function') {
     try { prev.teardown(host); } catch (e) { /* un thème ne casse pas l'app */ }
   }
 
@@ -62,5 +67,36 @@ export function applyTheme(host, id) {
   if (typeof t.setup === 'function') {
     try { t.setup(host); } catch (e) { /* idem */ }
   }
+
+  watchShadowRoot(host);
   return t;
+}
+
+/* ---------------------------------------------------------------------------
+ * Filet de sécurité : le panneau remplace son innerHTML (`_paint()`), ce qui
+ * supprime la feuille du thème ET le CSS injecté dans les cartes. On surveille
+ * donc le shadow root de l'hôte : si la feuille disparaît, on la remet, puis on
+ * relance `setup()` qui réinjecte le CSS de carte (idempotent par construction).
+ * C'est le registre qui tient cette promesse, pas les cartes ni le panneau.
+ */
+const OBS = new WeakMap();
+
+function watchShadowRoot(host) {
+  if (!host.shadowRoot || OBS.has(host)) return;
+  const mo = new MutationObserver(() => {
+    const t = THEMES[host._themeId];
+    if (!t || !host.shadowRoot) return;
+    if (host.shadowRoot.getElementById('skylight-theme')) return;
+    const style = document.createElement('style');
+    style.id = 'skylight-theme';
+    style.textContent = t.css || '';
+    host.shadowRoot.appendChild(style);
+    if (typeof t.setup === 'function') {
+      try { t.setup(host); } catch (e) { /* idem */ }
+    }
+  });
+  /* childList seulement : le contenu des cartes vit dans leurs propres shadow
+     roots, donc cette surveillance ne voit rien de leur activité. */
+  mo.observe(host.shadowRoot, { childList: true });
+  OBS.set(host, mo);
 }
