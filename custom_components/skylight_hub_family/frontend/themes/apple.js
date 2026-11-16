@@ -677,6 +677,17 @@ section.col{
 }
 `;
 
+/* Pose la feuille du thème dans une carte. Idempotent : une carte ne porte
+   jamais deux fois le même style. */
+function _inject(el) {
+  const sr = el && el.shadowRoot;
+  if (!sr || sr.querySelector('style[data-theme="apple"]')) return;
+  const st = document.createElement('style');
+  st.setAttribute('data-theme', 'apple');
+  st.textContent = CARD_CSS;
+  sr.appendChild(st);
+}
+
 /* ============================================================== LE THÈME */
 
 export const APPLE = {
@@ -898,25 +909,25 @@ export const APPLE = {
       st.textContent = FONT_CSS;
       document.head.appendChild(st);
     }
-    /* 2. la feuille de carte, injectée dans chaque shadow root de carte */
+    /* 2. la feuille de carte, posée dans les cartes DÉJÀ montées (cas d'un
+          changement de thème à chaud). Les cartes montées ensuite passent par
+          `cardStyle()`, appelé par le panneau au moment du montage — plus de
+          balayage périodique, donc plus de bascule visible. */
     const scan = () => {
       const root = host.shadowRoot;
       if (!root) return;
       for (const el of root.querySelectorAll('.view *')) {
-        const sr = el.shadowRoot;
-        if (!sr || sr.querySelector('style[data-theme="apple"]')) continue;
-        const st = document.createElement('style');
-        st.setAttribute('data-theme', 'apple');
-        st.textContent = CARD_CSS;
-        sr.appendChild(st);
+        if (el.shadowRoot) {
+          try { _inject(el); } catch (e) { /* une carte ne casse pas le thème */ }
+        }
       }
     };
     scan();
-    /* les cartes se montent à la première visite d'une vue : on repasse après.
-       Le balayage est trivial (les enfants du .view sont les cartes, pas leur
-       contenu, qui vit dans leur shadow root). */
-    if (host.__appleTimer) clearInterval(host.__appleTimer);
-    host.__appleTimer = setInterval(scan, 500);
+  },
+
+  /* Le CSS que le panneau pose dans chaque carte à son montage. */
+  cardStyle() {
+    return CARD_CSS;
   },
 
   teardown(host) {

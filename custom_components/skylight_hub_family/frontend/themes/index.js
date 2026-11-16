@@ -72,6 +72,31 @@ export function applyTheme(host, id) {
   return t;
 }
 
+/* Le CSS du thème actif, posé dans une carte AU MOMENT où elle est montée.
+ *
+ * Le panneau appelle ceci depuis `_card()`, juste après avoir créé la carte.
+ * Sans ce point d'entrée, le thème des cartes était posé par un balayage
+ * périodique : la carte s'affichait d'abord dans le style de base, puis
+ * basculait — le « thème superposé » visible au chargement.
+ */
+export function onCard(host, el) {
+  const t = host && THEMES[host._themeId];
+  if (!t || typeof t.cardStyle !== 'function') return;
+  const apply = () => {
+    const sr = el && el.shadowRoot;
+    if (!sr) return false;
+    if (sr.querySelector('style[data-theme="' + t.id + '"]')) return true;
+    const st = document.createElement('style');
+    st.setAttribute('data-theme', t.id);
+    st.textContent = t.cardStyle();
+    sr.appendChild(st);
+    return true;
+  };
+  if (apply()) return;
+  /* la carte n'a pas encore de shadow root : on repasse au frame suivant */
+  requestAnimationFrame(() => { apply(); });
+}
+
 /* ---------------------------------------------------------------------------
  * Filet de sécurité : le panneau remplace son innerHTML (`_paint()`), ce qui
  * supprime la feuille du thème ET le CSS injecté dans les cartes. On surveille
