@@ -46,8 +46,8 @@ function toDataUri(url) {
 }
 
 const CSS = `
-:host{--skylight-sans:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --skylight-serif:Literata,"Iowan Old Style",Georgia,serif;
+:host{--skylight-sans:var(--theme-sans,Figtree,system-ui,-apple-system,"Segoe UI",sans-serif);
+  --skylight-serif:var(--theme-serif,Literata,"Iowan Old Style",Georgia,serif);
   display:block;height:100vh;overflow:hidden;background:#fff;color:#1F2328;
   font-family:var(--skylight-sans)}
 .app{display:flex;height:100vh;overflow:hidden;background:#fff}
